@@ -339,34 +339,29 @@ function unoverlap(n){var r=cur().root,PAD=14;size(r);place(r,0,0);
   if(!best||(best.x===tx&&best.y===ty))break;
   tx=best.x;ty=best.y}
  n.dx=(n.dx||0)+tx;n.dy=(n.dy||0)+ty}
-function reorganize(){var r=cur().root,SNAP=45,ALIGN=16,f={snap:0,align:0,ov:0};
+function reorganize(){var r=cur().root,ALIGN=24,f={align:0,ov:0};
  function lay(){size(r);place(r,0,0)}
- lay();var P={};vis(r,[]).forEach(function(n){P[n.id]={x:n.x,y:n.y}});
- var old={};(function w(n){old[n.id]=[n.dx,n.dy];delete n.dx;delete n.dy;n.ch.forEach(w)})(r);
- lay();var A={};vis(r,[]).forEach(function(n){A[n.id]={x:n.x,y:n.y}});
- (function w(n){var o=old[n.id];if(o[0]!==undefined)n.dx=o[0];if(o[1]!==undefined)n.dy=o[1];n.ch.forEach(w)})(r);
- /* 1. les nœuds presque à leur place automatique y retournent */
- (function g(n,ptx,pty){var p=P[n.id],a=A[n.id];if(!p||!a)return;var ex=p.x-a.x,ey=p.y-a.y;
-  var snap=(Math.abs(ex)>.5||Math.abs(ey)>.5)&&Math.abs(ex)<=SNAP&&Math.abs(ey)<=SNAP;
-  var tx=snap?0:ex,ty=snap?0:ey;if(snap)f.snap++;
-  var dx=tx-ptx,dy=ty-pty;if(Math.abs(dx)>.01)n.dx=dx;else delete n.dx;if(Math.abs(dy)>.01)n.dy=dy;else delete n.dy;
-  if(!n.col)n.ch.forEach(function(c){g(c,tx,ty)})})(r,0,0);
- /* 2. les nœuds déplacés à la main s'alignent sur un nœud voisin presque aligné */
- vis(r,[]).filter(function(n){return n.dx||n.dy}).forEach(function(n){lay();var sub={};vis(n,[]).forEach(function(m){sub[m.id]=1});var bx=null,by=null;
-  vis(r,[]).forEach(function(m){if(sub[m.id])return;var ddx=m.x-n.x,ddy=(m.y+m.h/2)-(n.y+n.h/2);
-   if(Math.abs(ddx)>.5&&Math.abs(ddx)<=ALIGN&&(bx===null||Math.abs(ddx)<Math.abs(bx)))bx=ddx;
-   if(Math.abs(ddy)>.5&&Math.abs(ddy)<=ALIGN&&(by===null||Math.abs(ddy)<Math.abs(by)))by=ddy});
-  if(bx!==null)n.dx=(n.dx||0)+bx;if(by!==null)n.dy=(n.dy||0)+by;if(bx!==null||by!==null)f.align++});
- /* 3. les chevauchements restants : on écarte le nœud déplacé à la main */
- for(var it=0;it<60;it++){lay();var vs=vis(r,[]),par={};
+ /* écart vers la valeur la plus partagée parmi les voisins proches ; rien si le nœud est déjà aligné sur l'un d'eux */
+ function pick(vals,c){var groups={},best=null;if(vals.some(function(v){return Math.abs(v-c)<=.5}))return null;
+  vals.forEach(function(v){var d=v-c;if(Math.abs(d)<=ALIGN){var k=Math.round(v);(groups[k]=groups[k]||{v:v,c:0}).c++}});
+  Object.keys(groups).forEach(function(k){var g=groups[k];if(!best||g.c>best.c||(g.c===best.c&&Math.abs(g.v-c)<Math.abs(best.v-c)))best=g});
+  return best?best.v-c:null}
+ /* un nœud déplacé à la main s'aligne sur ses voisins presque alignés (bord gauche, axe horizontal) */
+ function alignPass(){var cnt=0;lay();vis(r,[]).filter(function(n){return n.dx||n.dy}).forEach(function(n){lay();var sub={};vis(n,[]).forEach(function(m){sub[m.id]=1});
+  var others=vis(r,[]).filter(function(m){return!sub[m.id]});
+  var bx=pick(others.map(function(m){return m.x}),n.x),by=pick(others.map(function(m){return m.y+m.h/2}),n.y+n.h/2);
+  if(bx!==null)n.dx=(n.dx||0)+bx;if(by!==null)n.dy=(n.dy||0)+by;if(bx!==null||by!==null)cnt++});return cnt}
+ /* chevauchements restants : on écarte le nœud déplacé à la main, jamais les autres */
+ function overlapPass(){var cnt=0;for(var it=0;it<60;it++){lay();var vs=vis(r,[]),par={};
   (function w(n,p){par[n.id]=p;if(!n.col)n.ch.forEach(function(c){w(c,n)})})(r,null);
   var pair=null;for(var i=0;i<vs.length&&!pair;i++)for(var j=i+1;j<vs.length;j++){var a=vs[i],b=vs[j];
    if(a.x<b.x+b.w&&b.x<a.x+a.w&&a.y<b.y+b.h&&b.y<a.y+a.h){pair=[a,b];break}}
   if(!pair)break;
   var mv=null;pair.forEach(function(x){for(var c=x;c&&!mv;c=par[c.id])if(c.dx||c.dy)mv=c});
-  if(!mv)break;unoverlap(mv);f.ov++}
- var done=f.snap+f.align+f.ov;save();draw();
- toast(done?"Réorganisé : "+f.snap+" nœud(s) remis en place, "+f.align+" aligné(s), "+f.ov+" chevauchement(s) corrigé(s).":"Rien à réorganiser : les nœuds sont déjà bien placés.")}
+  if(!mv)break;unoverlap(mv);cnt++}return cnt}
+ for(var round=0;round<4;round++){var a=alignPass(),o=overlapPass();f.align+=a;f.ov+=o;if(!a&&!o)break}
+ var done=f.align+f.ov;if(done){save();draw()}
+ toast(done?"Réorganisé : "+f.align+" alignement(s), "+f.ov+" chevauchement(s) corrigé(s). Les autres nœuds n’ont pas bougé.":"Rien à réorganiser : aucun chevauchement ni défaut d’alignement.")}
 var dragged=false,drag=null;
 function startDrag(e,n){e.stopPropagation();if(e.button)return;drag={n:n,x:e.clientX,y:e.clientY,on:false}}
 window.addEventListener("pointermove",function(e){if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
