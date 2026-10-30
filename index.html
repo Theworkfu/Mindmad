@@ -245,7 +245,7 @@ function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHu
   setSync("Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
 function sig(n){return n.t+"|"+(n.c||0)+"|"+(n.img||"")+"|"+(n.col?1:0)+"["+n.ch.map(sig).join(",")+"]"}
 function mergeRemote(list){var byId={};maps.forEach(function(m){byId[m.id]=m});
- list.forEach(function(r){var l=byId[r.id];if(!l)maps.push(r);else if(l.title!==r.title||sig(l.root)!==sig(r.root)){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
+ list.forEach(function(r){var l=byId[r.id];if(!l)maps.push(r);else if((l.title!==r.title||sig(l.root)!==sig(r.root))&&!maps.some(function(m){return m.title===r.title+" (autre appareil)"&&sig(m.root)===sig(r.root)})){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
  store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps()}
 function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".")}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
 function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
