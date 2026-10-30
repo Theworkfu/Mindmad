@@ -321,12 +321,20 @@ cv.addEventListener("pointerdown",function(e){pan={x:e.clientX-tr.x,y:e.clientY-
 cv.addEventListener("pointermove",function(e){if(pan){tr.x=e.clientX-pan.x;tr.y=e.clientY-pan.y;applyT()}});
 cv.addEventListener("pointerup",function(){pan=null;cv.classList.remove("drag")});
 cv.addEventListener("click",function(){if(dragged)return;sel=null;draw();syncPanel()});
+function vis(n,l){l.push(n);if(!n.col)n.ch.forEach(function(c){vis(c,l)});return l}
+function unoverlap(n){var r=cur().root,PAD=14;
+ for(var it=0;it<40;it++){size(r);place(r,0,0);var all=vis(r,[]),mine=vis(n,[]),inMine={};mine.forEach(function(m){inMine[m.id]=1});var hit=false;
+  for(var i=0;i<mine.length&&!hit;i++){var a=mine[i];
+   for(var j=0;j<all.length;j++){var b=all[j];if(inMine[b.id])continue;
+    var px=Math.min(a.x+a.w+PAD-b.x,b.x+b.w+PAD-a.x),py=Math.min(a.y+a.h+PAD-b.y,b.y+b.h+PAD-a.y);
+    if(px>0&&py>0){if(px<py)n.dx=(n.dx||0)+((a.x+a.w/2<b.x+b.w/2)?-px:px);else n.dy=(n.dy||0)+((a.y+a.h/2<b.y+b.h/2)?-py:py);hit=true;break}}}
+  if(!hit)break}}
 var dragged=false,drag=null;
 function startDrag(e,n){e.stopPropagation();if(e.button)return;drag={n:n,x:e.clientX,y:e.clientY,on:false}}
 window.addEventListener("pointermove",function(e){if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
  if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;if(sel!==drag.n.id){sel=drag.n.id;syncPanel()}}
  drag.n.dx=(drag.n.dx||0)+ddx/tr.k;drag.n.dy=(drag.n.dy||0)+ddy/tr.k;drag.x=e.clientX;drag.y=e.clientY;draw()});
-function endDrag(){if(drag&&drag.on){save();setTimeout(function(){dragged=false},0)}drag=null}
+function endDrag(){if(drag&&drag.on){unoverlap(drag.n);save();draw();setTimeout(function(){dragged=false},0)}drag=null}
 window.addEventListener("pointerup",endDrag);window.addEventListener("pointercancel",endDrag);
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,k2=Math.max(.2,Math.min(3,tr.k*(e.deltaY<0?1.1:.9)));
  tr.x=px-(px-tr.x)*k2/tr.k;tr.y=py-(py-tr.y)*k2/tr.k;tr.k=k2;applyT()},{passive:false});
