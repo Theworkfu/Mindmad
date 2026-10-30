@@ -25,7 +25,7 @@ svg#cv.drag{cursor:grabbing}
 .node rect.box{fill:var(--node);stroke-width:2}
 .node text{fill:var(--ink);font-size:14px;pointer-events:none}
 .node.sel rect.box{stroke-width:4}
-.node{cursor:pointer}
+.node{cursor:grab;user-select:none;-webkit-user-select:none}
 .edge{fill:none;stroke:var(--edge);stroke-width:2}
 .tog circle{fill:var(--panel);stroke:var(--edge)}
 .tog text{font-size:11px;fill:var(--muted);text-anchor:middle}
@@ -52,6 +52,7 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
   <button id="bRen">Renommer</button>
   <button id="bDel" class="danger">Supprimer</button>
   <button id="bFit">Recentrer</button>
+  <button id="bReset">Réorganiser</button>
   <button id="bExp">Exporter</button>
   <button id="bImp">Importer</button>
   <input id="file" type="file" accept="application/json" hidden>
@@ -61,7 +62,7 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
     <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="edges"></g><g id="nodes"></g></g></svg>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image ici</div>
-    <div id="help">Ctrl+V : coller une image sur le nœud sélectionné · glisser une image sur un nœud · Tab : enfant · Entrée : frère</div>
+    <div id="help">Glisser un nœud : le déplacer avec ses enfants · Ctrl+V : coller une image sur le nœud sélectionné · glisser une image sur un nœud · Tab : enfant · Entrée : frère</div>
   </div>
   <aside>
     <h2>Nœud sélectionné</h2>
@@ -116,9 +117,9 @@ function imgUrl(v){return v?(imgCache[v]||v):""}
 var GAP=18,HGAP=64,IMGH=90;
 function size(n){n.w=Math.max(70,Math.round(n.t.length*7.8+30));n.h=34;if(n.img){n.w=Math.max(n.w,150);n.h+=IMGH+8}n.ch.forEach(size)}
 function sh(n){if(n.col||!n.ch.length)return n.h;var s=0;n.ch.forEach(function(c){s+=sh(c)});s+=GAP*(n.ch.length-1);return Math.max(n.h,s)}
-function place(n,x,cy,color){n.x=x;n.y=cy-n.h/2;if(n.col||!n.ch.length)return;var tot=sh(n)-0,t=cy-tot/2;
- var sum=0;n.ch.forEach(function(c){sum+=sh(c)});sum+=GAP*(n.ch.length-1);t=cy-sum/2;
- n.ch.forEach(function(c,i){var s=sh(c);place(c,x+n.w+HGAP,t+s/2);t+=s+GAP})}
+function place(n,x,cy,ox,oy){ox=(ox||0)+(n.dx||0);oy=(oy||0)+(n.dy||0);n.x=x+ox;n.y=cy-n.h/2+oy;if(n.col||!n.ch.length)return;
+ var sum=0;n.ch.forEach(function(c){sum+=sh(c)});sum+=GAP*(n.ch.length-1);var t=cy-sum/2;
+ n.ch.forEach(function(c){var s=sh(c);place(c,x+n.w+HGAP,t+s/2,ox,oy);t+=s+GAP})}
 
 /* ---------- rendu ---------- */
 function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
@@ -128,8 +129,8 @@ function draw(){
  (function walk(n,col,depth){
   var color=COLORS[(n.c||0)%COLORS.length];
   var g=el("g",{"data-id":n.id,"class":"node"+(n.id===sel?" sel":""),transform:"translate("+n.x+","+n.y+")"},ng);
-  g.addEventListener("pointerdown",function(e){e.stopPropagation()});
-  g.addEventListener("click",function(e){e.stopPropagation();sel=n.id;draw();syncPanel()});
+  g.addEventListener("pointerdown",function(e){startDrag(e,n)});
+  g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;sel=n.id;draw();syncPanel()});
   g.addEventListener("dblclick",function(e){e.stopPropagation();sel=n.id;draw();syncPanel();$("fText").focus();$("fText").select()});
   el("rect",{"class":"box",width:n.w,height:n.h,rx:10,stroke:color},g);
   var ty=n.img?22:n.h/2+5;
@@ -309,6 +310,7 @@ $("bNew").onclick=function(){var t=prompt("Titre de la carte :","Nouvelle carte"
 $("bRen").onclick=function(){var t=prompt("Nouveau titre :",cur().title);if(t){cur().title=t;save();refreshMaps()}};
 $("bDel").onclick=function(){if(!confirm("Supprimer la carte « "+cur().title+" » ?"))return;maps=maps.filter(function(m){return m.id!==curId});if(!maps.length)maps=[newMap()];curId=maps[0].id;sel=null;save();refreshMaps();draw();syncPanel();fit()};
 $("bFit").onclick=fit;
+$("bReset").onclick=function(){if(!confirm("Remettre tous les nœuds à leur place automatique ?"))return;(function w(n){delete n.dx;delete n.dy;n.ch.forEach(w)})(cur().root);save();draw();fit()};
 $("bExp").onclick=function(){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(cur(),null,1)],{type:"application/json"}));a.download=cur().title.replace(/[^\w\-]+/g,"_")+".json";a.click()};
 $("bImp").onclick=function(){$("file").click()};
 $("file").onchange=function(){var file=this.files[0];this.value="";if(!file)return;var rd=new FileReader();rd.onload=function(){try{var m=JSON.parse(rd.result);if(!m.root)throw 0;m.id=uid();maps.push(m);curId=m.id;sel=null;save();refreshMaps();draw();syncPanel();fit()}catch(e){alert("Fichier invalide : choisissez une carte exportée depuis cet outil.")}};rd.readAsText(file)};
@@ -318,7 +320,14 @@ var cv=$("cv"),pan=null;
 cv.addEventListener("pointerdown",function(e){pan={x:e.clientX-tr.x,y:e.clientY-tr.y};cv.classList.add("drag");cv.setPointerCapture(e.pointerId)});
 cv.addEventListener("pointermove",function(e){if(pan){tr.x=e.clientX-pan.x;tr.y=e.clientY-pan.y;applyT()}});
 cv.addEventListener("pointerup",function(){pan=null;cv.classList.remove("drag")});
-cv.addEventListener("click",function(){sel=null;draw();syncPanel()});
+cv.addEventListener("click",function(){if(dragged)return;sel=null;draw();syncPanel()});
+var dragged=false,drag=null;
+function startDrag(e,n){e.stopPropagation();if(e.button)return;drag={n:n,x:e.clientX,y:e.clientY,on:false}}
+window.addEventListener("pointermove",function(e){if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
+ if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;if(sel!==drag.n.id){sel=drag.n.id;syncPanel()}}
+ drag.n.dx=(drag.n.dx||0)+ddx/tr.k;drag.n.dy=(drag.n.dy||0)+ddy/tr.k;drag.x=e.clientX;drag.y=e.clientY;draw()});
+function endDrag(){if(drag&&drag.on){save();setTimeout(function(){dragged=false},0)}drag=null}
+window.addEventListener("pointerup",endDrag);window.addEventListener("pointercancel",endDrag);
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,k2=Math.max(.2,Math.min(3,tr.k*(e.deltaY<0?1.1:.9)));
  tr.x=px-(px-tr.x)*k2/tr.k;tr.y=py-(py-tr.y)*k2/tr.k;tr.k=k2;applyT()},{passive:false});
 document.addEventListener("keydown",function(e){
