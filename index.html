@@ -61,7 +61,7 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
     <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="edges"></g><g id="nodes"></g></g></svg>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image ici</div>
-    <div id="help">Ctrl+V : coller une capture · glisser une image : nouveau nœud (ou sur un nœud pour la lui associer) · Tab : enfant · Entrée : frère</div>
+    <div id="help">Ctrl+V : coller une image sur le nœud sélectionné · glisser une image sur un nœud · Tab : enfant · Entrée : frère</div>
   </div>
   <aside>
     <h2>Nœud sélectionné</h2>
@@ -300,10 +300,10 @@ window.addEventListener("dragover",function(e){if(hasFiles(e))e.preventDefault()
 window.addEventListener("drop",function(e){if(!hasFiles(e))return;e.preventDefault();dcount=0;dz.classList.remove("on");
  var nd=e.target.closest&&e.target.closest(".node"),tid=nd?nd.getAttribute("data-id"):null;
  Array.prototype.filter.call(e.dataTransfer.files,function(f){return /^image\//.test(f.type)}).forEach(function(f,i){
-  addImage(f,i===0?tid:null,f.name.replace(/\.[^.]+$/,""))})});
+  addImage(f,i===0?(tid||sel):null,f.name.replace(/\.[^.]+$/,""))})});
 /* coller une capture d'écran (Ctrl+V / Cmd+V) */
 document.addEventListener("paste",function(e){var items=(e.clipboardData||{}).items||[];
- for(var i=0;i<items.length;i++){if(items[i].kind==="file"&&/^image\//.test(items[i].type)){e.preventDefault();addImage(items[i].getAsFile(),null,"Capture");return}}});
+ for(var i=0;i<items.length;i++){if(items[i].kind==="file"&&/^image\//.test(items[i].type)){e.preventDefault();addImage(items[i].getAsFile(),sel,"Capture");return}}});
 $("maps").onchange=function(){curId=this.value;sel=null;save();draw();syncPanel();fit()};
 $("bNew").onclick=function(){var t=prompt("Titre de la carte :","Nouvelle carte");if(!t)return;var m=newMap(t);m.root.t=t;maps.push(m);curId=m.id;sel=m.root.id;save();refreshMaps();draw();syncPanel();fit()};
 $("bRen").onclick=function(){var t=prompt("Nouveau titre :",cur().title);if(t){cur().title=t;save();refreshMaps()}};
