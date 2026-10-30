@@ -222,31 +222,37 @@ ghState();
 
 /* ---------- sauvegarde des cartes sur GitHub ---------- */
 var lsOk=true;try{localStorage.setItem("mm_t","1");localStorage.removeItem("mm_t")}catch(e){lsOk=false}
-var remoteSha=null,pushTimer=null;
+var remoteSha=null,pushTimer=null,dirty=false;
 function setSync(m){$("ghSyncState").textContent=m||""}
 function syncOn(){return !!(ghReady()&&gh.sync)}
-function api(path,opt){opt=opt||{};opt.headers=Object.assign({Authorization:"Bearer "+gh.token,Accept:"application/vnd.github+json"},opt.headers||{});return fetch("https://api.github.com/repos/"+gh.owner+"/"+gh.repo+path,opt)}
+function api(path,opt){opt=opt||{};opt.cache="no-store";opt.headers=Object.assign({Authorization:"Bearer "+gh.token,Accept:"application/vnd.github+json"},opt.headers||{});return fetch("https://api.github.com/repos/"+gh.owner+"/"+gh.repo+path,opt)}
 function mapsPath(){return "/contents/maps/maps.json?ref="+encodeURIComponent(gh.branch||"main")}
 function utf8b64(str){var b=new TextEncoder().encode(str),bin="";for(var i=0;i<b.length;i+=32768)bin+=String.fromCharCode.apply(null,b.subarray(i,i+32768));return btoa(bin)}
 function getMeta(){return api(mapsPath()).then(function(r){if(r.status===404){remoteSha=null;return null}if(!r.ok)throw new Error(r.status===401?"jeton refusé":"erreur "+r.status);return r.json().then(function(j){remoteSha=j.sha;return j})})}
 function pull(){return getMeta().then(function(meta){if(!meta)return null;return api(mapsPath(),{headers:{Accept:"application/vnd.github.raw+json"}}).then(function(r){if(!r.ok)throw new Error("lecture impossible");return r.json()})})}
-function push(){var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps});
- function put(){return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha})})}
- return put().catch(function(e){if(e.status===409||e.status===422)return getMeta().then(put);throw e})}
+function push(){
+ function put(){var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha})})}
+ return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps)mergeRemote(rem.maps);return put()})}throw e})}
 function hasContent(){return maps.some(function(m){return m.root.ch.length||m.root.img||m.root.t!=="Idée centrale"})}
 function useMaps(list,upd,msg){maps=list;curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_cur",curId);store.set("mm_upd",upd);refreshMaps();draw();syncPanel();fit();setSync(msg)}
 function stamp(){return "à "+new Date().toLocaleTimeString("fr-FR")}
-function startSync(){if(!syncOn())return;setSync("Vérification sur GitHub…");
+function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHub…");
  enqueue(function(){return pull().then(function(rem){var loc=+store.get("mm_upd",0)||0,ru=rem&&rem.updated||0;
   if(rem&&rem.maps&&rem.maps.length&&ru>loc){
    if(!loc&&hasContent()){var ids={};maps.forEach(function(m){ids[m.id]=1});var add=rem.maps.filter(function(m){return!ids[m.id]});useMaps(maps.concat(add),Date.now(),"Cartes de GitHub ajoutées à celles de cet appareil.");return push()}
    useMaps(rem.maps,ru,"Cartes chargées depuis GitHub.");return}
   if(!rem||loc>ru){if(!loc)store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
   setSync("Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
-function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
-function schedulePush(){if(!syncOn())return;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(doPush,6000)}
+function sig(n){return n.t+"|"+(n.c||0)+"|"+(n.img||"")+"|"+(n.col?1:0)+"["+n.ch.map(sig).join(",")+"]"}
+function mergeRemote(list){var byId={};maps.forEach(function(m){byId[m.id]=m});
+ list.forEach(function(r){var l=byId[r.id];if(!l)maps.push(r);else if(l.title!==r.title||sig(l.root)!==sig(r.root)){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
+ store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps()}
+function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".")}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
+function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
+function recheck(){if(!document.hidden&&syncOn()&&!dirty)startSync()}
+document.addEventListener("visibilitychange",recheck);window.addEventListener("focus",recheck);
 $("ghSync").onchange=function(){gh.sync=this.checked;store.set("mm_gh",gh);if(gh.sync){if(!ghReady())setSync("Renseignez d’abord le dépôt et le jeton.");else startSync()}else setSync("")};
-$("ghNow").onclick=function(){if(!syncOn()){setSync("Cochez la sauvegarde GitHub et renseignez le jeton.");return}clearTimeout(pushTimer);setSync("Envoi…");doPush()};
+$("ghNow").onclick=function(){if(!syncOn()){setSync("Cochez la sauvegarde GitHub et renseignez le jeton.");return}clearTimeout(pushTimer);pushTimer=null;setSync("Envoi…");doPush()};
 $("ghLoad").onclick=function(){if(!ghReady()){setSync("Renseignez d’abord le dépôt et le jeton.");return}if(!confirm("Remplacer les cartes de cet appareil par celles de GitHub ?"))return;
  setSync("Chargement…");enqueue(pull).then(function(rem){if(!rem||!rem.maps||!rem.maps.length){setSync("Aucune sauvegarde trouvée sur GitHub.");return}useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.")}).catch(function(e){setSync("Chargement impossible ("+e.message+").")})};
 if(!lsOk){toast("Ce navigateur n’enregistre pas les cartes (navigation privée ?). Activez la sauvegarde GitHub ou exportez vos cartes.");setSync("Attention : ce navigateur n’enregistre pas les cartes.")}
