@@ -322,13 +322,23 @@ cv.addEventListener("pointermove",function(e){if(pan){tr.x=e.clientX-pan.x;tr.y=
 cv.addEventListener("pointerup",function(){pan=null;cv.classList.remove("drag")});
 cv.addEventListener("click",function(){if(dragged)return;sel=null;draw();syncPanel()});
 function vis(n,l){l.push(n);if(!n.col)n.ch.forEach(function(c){vis(c,l)});return l}
-function unoverlap(n){var r=cur().root,PAD=14;
- for(var it=0;it<40;it++){size(r);place(r,0,0);var all=vis(r,[]),mine=vis(n,[]),inMine={};mine.forEach(function(m){inMine[m.id]=1});var hit=false;
-  for(var i=0;i<mine.length&&!hit;i++){var a=mine[i];
-   for(var j=0;j<all.length;j++){var b=all[j];if(inMine[b.id])continue;
-    var px=Math.min(a.x+a.w+PAD-b.x,b.x+b.w+PAD-a.x),py=Math.min(a.y+a.h+PAD-b.y,b.y+b.h+PAD-a.y);
-    if(px>0&&py>0){if(px<py)n.dx=(n.dx||0)+((a.x+a.w/2<b.x+b.w/2)?-px:px);else n.dy=(n.dy||0)+((a.y+a.h/2<b.y+b.h/2)?-py:py);hit=true;break}}}
-  if(!hit)break}}
+function unoverlap(n){var r=cur().root,PAD=14;size(r);place(r,0,0);
+ var all=vis(r,[]),mine=vis(n,[]),inMine={};mine.forEach(function(m){inMine[m.id]=1});
+ var others=all.filter(function(b){return!inMine[b.id]});
+ function ov(a,b,sx,sy){return a.x+sx<b.x+b.w+PAD&&b.x<a.x+sx+a.w+PAD&&a.y+sy<b.y+b.h+PAD&&b.y<a.y+sy+a.h+PAD}
+ function count(sx,sy){var c=0;mine.forEach(function(a){others.forEach(function(b){if(ov(a,b,sx,sy))c++})});return c}
+ var tx=0,ty=0;
+ for(var it=0;it<8;it++){
+  if(!count(tx,ty))break;
+  var cand=[];
+  mine.forEach(function(a){others.forEach(function(b){if(!ov(a,b,tx,ty))return;
+   cand.push([b.x-PAD-(a.x+a.w)-1,ty],[b.x+b.w+PAD-a.x+1,ty],[tx,b.y-PAD-(a.y+a.h)-1],[tx,b.y+b.h+PAD-a.y+1])})});
+  var best=null;
+  cand.forEach(function(c){var k=count(c[0],c[1]),d=Math.abs(c[0])+Math.abs(c[1]);
+   if(!best||k<best.k||(k===best.k&&d<best.d))best={x:c[0],y:c[1],k:k,d:d}});
+  if(!best||(best.x===tx&&best.y===ty))break;
+  tx=best.x;ty=best.y}
+ n.dx=(n.dx||0)+tx;n.dy=(n.dy||0)+ty}
 var dragged=false,drag=null;
 function startDrag(e,n){e.stopPropagation();if(e.button)return;drag={n:n,x:e.clientX,y:e.clientY,on:false}}
 window.addEventListener("pointermove",function(e){if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
