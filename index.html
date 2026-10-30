@@ -88,6 +88,11 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
     <label class="chk"><input type="checkbox" id="ghSync"> Sauvegarder aussi mes cartes sur GitHub (publiques)</label>
     <div class="row"><button id="ghNow">Enregistrer maintenant</button><button id="ghLoad">Charger depuis GitHub</button></div>
     <div class="hint" id="ghSyncState"></div>
+    <h2>Nettoyage des images</h2>
+    <div class="hint">Supprime de GitHub les images qui ne sont plus dans aucune de vos cartes. Un dossier vide disparaît tout seul de GitHub.</div>
+    <div class="row"><button id="ghClean" class="danger">Supprimer les images inutilisées</button></div>
+    <label class="chk"><input type="checkbox" id="ghAuto"> Le faire automatiquement après chaque sauvegarde</label>
+    <div class="hint" id="ghCleanState"></div>
   </aside>
 </main>
 <script>
@@ -205,7 +210,7 @@ function toUrl(file){if(!gh.on)return embed(file);
 function addImage(file,targetId,label){var pid=sel;toUrl(file).then(function(url){var m=cur(),f=targetId&&find(m.root,targetId);
  if(f){f.n.img=url;sel=f.n.id}else{var p=find(m.root,pid)||{n:m.root,p:null};var n={id:uid(),t:label||"Image",c:p.p?p.n.c:p.n.ch.length,img:url,col:false,ch:[]};p.n.col=false;p.n.ch.push(n);sel=n.id}
  save();draw();syncPanel()})}
-function ghState(msg){$("ghOn").checked=!!gh.on;$("ghSync").checked=!!gh.sync;$("ghOwner").value=gh.owner||"";$("ghRepo").value=gh.repo||"";$("ghTok").value=gh.token||"";
+function ghState(msg){$("ghOn").checked=!!gh.on;$("ghSync").checked=!!gh.sync;$("ghAuto").checked=!!gh.auto;$("ghOwner").value=gh.owner||"";$("ghRepo").value=gh.repo||"";$("ghTok").value=gh.token||"";
  $("ghState").textContent=msg||(ghReady()?"Prêt : les images iront dans le dossier images de "+gh.owner+"/"+gh.repo+".":"Non configuré : les images restent dans la carte.")}
 function ghSave(){store.set("mm_gh",gh);ghState()}
 $("ghOn").onchange=function(){gh.on=this.checked;ghSave()};
@@ -247,7 +252,7 @@ function sig(n){return n.t+"|"+(n.c||0)+"|"+(n.img||"")+"|"+(n.col?1:0)+"["+n.ch
 function mergeRemote(list){var byId={};maps.forEach(function(m){byId[m.id]=m});
  list.forEach(function(r){var l=byId[r.id];if(!l)maps.push(r);else if((l.title!==r.title||sig(l.root)!==sig(r.root))&&!maps.some(function(m){return m.title===r.title+" (autre appareil)"&&sig(m.root)===sig(r.root)})){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
  store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps()}
-function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".")}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
+function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".");if(gh.auto&&gh.sync)cleanImages(true)}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
 function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
 function recheck(){if(!document.hidden&&syncOn()&&!dirty)startSync()}
 document.addEventListener("visibilitychange",recheck);window.addEventListener("focus",recheck);
@@ -255,6 +260,34 @@ $("ghSync").onchange=function(){gh.sync=this.checked;store.set("mm_gh",gh);if(gh
 $("ghNow").onclick=function(){if(!syncOn()){setSync("Cochez la sauvegarde GitHub et renseignez le jeton.");return}clearTimeout(pushTimer);pushTimer=null;setSync("Envoi…");doPush()};
 $("ghLoad").onclick=function(){if(!ghReady()){setSync("Renseignez d’abord le dépôt et le jeton.");return}if(!confirm("Remplacer les cartes de cet appareil par celles de GitHub ?"))return;
  setSync("Chargement…");enqueue(pull).then(function(rem){if(!rem||!rem.maps||!rem.maps.length){setSync("Aucune sauvegarde trouvée sur GitHub.");return}useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.")}).catch(function(e){setSync("Chargement impossible ("+e.message+").")})};
+
+/* ---------- nettoyage des images inutilisées ---------- */
+var IMGRE=/^images\/\d{4}-\d{2}\/[^\/]+\.(png|jpg|gif|webp)$/;
+function setClean(m){$("ghCleanState").textContent=m||""}
+function collect(list,set){var pre="/"+gh.owner+"/"+gh.repo+"/";
+ (function w(n){if(n.img&&n.img.indexOf(pre)>-1){var m=n.img.match(/(images\/\d{4}-\d{2}\/[^\/?#]+)$/);if(m)set[m[1]]=1}n.ch.forEach(w)});
+ list.forEach(function(m){(function w(n){if(n.img&&n.img.indexOf(pre)>-1){var x=n.img.match(/(images\/\d{4}-\d{2}\/[^\/?#]+)$/);if(x)set[x[1]]=1}n.ch.forEach(w)})(m.root)})}
+function recent(path){var m=path.match(/images\/(\d{4})-(\d{2})\/(\d{2})-(\d{2})(\d{2})(\d{2})-/);if(!m)return true;
+ var t=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime();return Date.now()-t<15*60000}
+function cleanImages(auto){if(!ghReady())return Promise.resolve();
+ return enqueue(function(){setClean("Analyse des images…");var used={};collect(maps,used);
+  return pull().then(function(rem){if(rem&&rem.maps)collect(rem.maps,used);return api("/git/trees/"+encodeURIComponent(gh.branch||"main")+"?recursive=1")})
+  .then(function(r){if(!r.ok)throw new Error(r.status===404?"dépôt ou branche introuvable":"erreur "+r.status);return r.json()})
+  .then(function(t){if(t.truncated)throw new Error("dépôt trop volumineux pour l’analyse");
+   var none=!Object.keys(used).length;if(auto&&none){setClean("");return}
+   var del=t.tree.filter(function(f){return f.type==="blob"&&IMGRE.test(f.path)&&!used[f.path]&&!(auto&&recent(f.path))});
+   if(!del.length){setClean("Aucune image inutilisée.");return}
+   if(!auto||del.length>10){var msg="Supprimer définitivement "+del.length+" image(s) inutilisée(s) de GitHub ?\n\nElles resteront visibles dans l’historique du dépôt.";
+    if(none)msg="ATTENTION : aucune image n’est utilisée dans vos cartes, donc TOUTES les images ("+del.length+") seraient supprimées.\n\n"+msg;
+    if(!gh.sync)msg+="\n\nVos cartes ne sont pas synchronisées : une image utilisée seulement par un autre appareil serait supprimée aussi.";
+    if(!confirm(msg)){setClean("Suppression annulée.");return}}
+   var ok=0;return del.reduce(function(p,f){return p.then(function(){setClean("Suppression "+(ok+1)+"/"+del.length+"…");
+    return api("/contents/"+f.path,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Suppression d'une image inutilisée",sha:f.sha,branch:gh.branch||"main"})})
+    .then(function(r){if(!r.ok)return r.json().catch(function(){return{}}).then(function(j){throw new Error(j.message||"erreur "+r.status)});ok++})})},Promise.resolve())
+    .then(function(){setClean(ok+" image(s) supprimée(s) de GitHub "+stamp()+".")})})
+  .catch(function(e){setClean("Nettoyage impossible ("+e.message+").")})})}
+$("ghClean").onclick=function(){if(!ghReady()){setClean("Renseignez d’abord le dépôt et le jeton.");return}cleanImages(false)};
+$("ghAuto").onchange=function(){if(this.checked&&!gh.sync){this.checked=false;setClean("Activez d’abord la sauvegarde des cartes sur GitHub.");return}gh.auto=this.checked;store.set("mm_gh",gh)};
 if(!lsOk){toast("Ce navigateur n’enregistre pas les cartes (navigation privée ?). Activez la sauvegarde GitHub ou exportez vos cartes.");setSync("Attention : ce navigateur n’enregistre pas les cartes.")}
 startSync();
 $("upl").onchange=function(){var file=this.files[0];this.value="";if(file)addImage(file,sel)};
