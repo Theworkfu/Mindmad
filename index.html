@@ -85,6 +85,9 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
     <label>Jeton d’accès<input type="password" id="ghTok" autocomplete="off"></label>
     <div class="row"><button id="ghTest">Tester la connexion</button></div>
     <div class="hint" id="ghState"></div>
+    <label class="chk"><input type="checkbox" id="ghSync"> Sauvegarder aussi mes cartes sur GitHub (publiques)</label>
+    <div class="row"><button id="ghNow">Enregistrer maintenant</button><button id="ghLoad">Charger depuis GitHub</button></div>
+    <div class="hint" id="ghSyncState"></div>
   </aside>
 </main>
 <script>
@@ -92,7 +95,7 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
 var NS="http://www.w3.org/2000/svg",COLORS=["#0f7b8a","#3f6fd1","#8a56c9","#d0643e","#c99a1b","#4c9a5b"];
 var $=function(i){return document.getElementById(i)};
 var store={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
- set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){alert("Stockage plein : exportez votre carte ou utilisez des URL d’images plutôt que des fichiers importés.")}}};
+ set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(!store.w){store.w=1;alert("Ce navigateur n’enregistre pas les cartes (stockage plein ou navigation privée). Exportez votre carte, ou activez la sauvegarde sur GitHub dans le panneau de droite.")}}}};
 var uid=function(){return Math.random().toString(36).slice(2,9)};
 var newMap=function(t){return{id:uid(),title:t||"Ma carte",root:{id:uid(),t:"Idée centrale",c:0,img:"",col:false,ch:[]}}};
 var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];
@@ -100,7 +103,7 @@ var curId=store.get("mm_cur",maps[0].id);
 var imgCache={};
 var sel=null,tr={x:60,y:0,k:1};
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
-function save(){store.set("mm_maps",maps);store.set("mm_cur",cur().id)}
+function save(){store.set("mm_maps",maps);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
 function find(n,id,p){if(n.id===id)return{n:n,p:p};for(var i=0;i<n.ch.length;i++){var r=find(n.ch[i],id,n);if(r)return r}return null}
 function imgUrl(v){return v?(imgCache[v]||v):""}
 
@@ -202,7 +205,7 @@ function toUrl(file){if(!gh.on)return embed(file);
 function addImage(file,targetId,label){var pid=sel;toUrl(file).then(function(url){var m=cur(),f=targetId&&find(m.root,targetId);
  if(f){f.n.img=url;sel=f.n.id}else{var p=find(m.root,pid)||{n:m.root,p:null};var n={id:uid(),t:label||"Image",c:p.p?p.n.c:p.n.ch.length,img:url,col:false,ch:[]};p.n.col=false;p.n.ch.push(n);sel=n.id}
  save();draw();syncPanel()})}
-function ghState(msg){$("ghOn").checked=!!gh.on;$("ghOwner").value=gh.owner||"";$("ghRepo").value=gh.repo||"";$("ghTok").value=gh.token||"";
+function ghState(msg){$("ghOn").checked=!!gh.on;$("ghSync").checked=!!gh.sync;$("ghOwner").value=gh.owner||"";$("ghRepo").value=gh.repo||"";$("ghTok").value=gh.token||"";
  $("ghState").textContent=msg||(ghReady()?"Prêt : les images iront dans le dossier images de "+gh.owner+"/"+gh.repo+".":"Non configuré : les images restent dans la carte.")}
 function ghSave(){store.set("mm_gh",gh);ghState()}
 $("ghOn").onchange=function(){gh.on=this.checked;ghSave()};
@@ -216,6 +219,38 @@ $("ghTest").onclick=function(){if(!ghReady()){ghState("Renseignez le pseudo, le 
   gh.branch=j.default_branch||"main";store.set("mm_gh",gh);
   ghState(j.private?"Connexion OK, mais le dépôt est privé : les images ne s’afficheront pas. Passez-le en public.":"Connexion OK. Les images seront publiques.")})}).catch(function(){ghState("Connexion impossible (réseau ?).")})};
 ghState();
+
+/* ---------- sauvegarde des cartes sur GitHub ---------- */
+var lsOk=true;try{localStorage.setItem("mm_t","1");localStorage.removeItem("mm_t")}catch(e){lsOk=false}
+var remoteSha=null,pushTimer=null;
+function setSync(m){$("ghSyncState").textContent=m||""}
+function syncOn(){return !!(ghReady()&&gh.sync)}
+function api(path,opt){opt=opt||{};opt.headers=Object.assign({Authorization:"Bearer "+gh.token,Accept:"application/vnd.github+json"},opt.headers||{});return fetch("https://api.github.com/repos/"+gh.owner+"/"+gh.repo+path,opt)}
+function mapsPath(){return "/contents/maps/maps.json?ref="+encodeURIComponent(gh.branch||"main")}
+function utf8b64(str){var b=new TextEncoder().encode(str),bin="";for(var i=0;i<b.length;i+=32768)bin+=String.fromCharCode.apply(null,b.subarray(i,i+32768));return btoa(bin)}
+function getMeta(){return api(mapsPath()).then(function(r){if(r.status===404){remoteSha=null;return null}if(!r.ok)throw new Error(r.status===401?"jeton refusé":"erreur "+r.status);return r.json().then(function(j){remoteSha=j.sha;return j})})}
+function pull(){return getMeta().then(function(meta){if(!meta)return null;return api(mapsPath(),{headers:{Accept:"application/vnd.github.raw+json"}}).then(function(r){if(!r.ok)throw new Error("lecture impossible");return r.json()})})}
+function push(){var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps});
+ function put(){return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha})})}
+ return put().catch(function(e){if(e.status===409||e.status===422)return getMeta().then(put);throw e})}
+function hasContent(){return maps.some(function(m){return m.root.ch.length||m.root.img||m.root.t!=="Idée centrale"})}
+function useMaps(list,upd,msg){maps=list;curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_cur",curId);store.set("mm_upd",upd);refreshMaps();draw();syncPanel();fit();setSync(msg)}
+function stamp(){return "à "+new Date().toLocaleTimeString("fr-FR")}
+function startSync(){if(!syncOn())return;setSync("Vérification sur GitHub…");
+ enqueue(function(){return pull().then(function(rem){var loc=+store.get("mm_upd",0)||0,ru=rem&&rem.updated||0;
+  if(rem&&rem.maps&&rem.maps.length&&ru>loc){
+   if(!loc&&hasContent()){var ids={};maps.forEach(function(m){ids[m.id]=1});var add=rem.maps.filter(function(m){return!ids[m.id]});useMaps(maps.concat(add),Date.now(),"Cartes de GitHub ajoutées à celles de cet appareil.");return push()}
+   useMaps(rem.maps,ru,"Cartes chargées depuis GitHub.");return}
+  if(!rem||loc>ru){if(!loc)store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
+  setSync("Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
+function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
+function schedulePush(){if(!syncOn())return;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(doPush,6000)}
+$("ghSync").onchange=function(){gh.sync=this.checked;store.set("mm_gh",gh);if(gh.sync){if(!ghReady())setSync("Renseignez d’abord le dépôt et le jeton.");else startSync()}else setSync("")};
+$("ghNow").onclick=function(){if(!syncOn()){setSync("Cochez la sauvegarde GitHub et renseignez le jeton.");return}clearTimeout(pushTimer);setSync("Envoi…");doPush()};
+$("ghLoad").onclick=function(){if(!ghReady()){setSync("Renseignez d’abord le dépôt et le jeton.");return}if(!confirm("Remplacer les cartes de cet appareil par celles de GitHub ?"))return;
+ setSync("Chargement…");enqueue(pull).then(function(rem){if(!rem||!rem.maps||!rem.maps.length){setSync("Aucune sauvegarde trouvée sur GitHub.");return}useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.")}).catch(function(e){setSync("Chargement impossible ("+e.message+").")})};
+if(!lsOk){toast("Ce navigateur n’enregistre pas les cartes (navigation privée ?). Activez la sauvegarde GitHub ou exportez vos cartes.");setSync("Attention : ce navigateur n’enregistre pas les cartes.")}
+startSync();
 $("upl").onchange=function(){var file=this.files[0];this.value="";if(file)addImage(file,sel)};
 /* glisser-déposer */
 var dz=$("drop"),dcount=0;
