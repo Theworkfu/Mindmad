@@ -41,6 +41,11 @@ input[type=text],input[type=url],input[type=password]{width:100%;padding:6px 8px
 #help{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);background:var(--panel);padding:4px 8px;border-radius:6px;border:1px solid var(--line)}
 #drop{position:absolute;inset:10px;border:3px dashed var(--accent);border-radius:14px;background:color-mix(in srgb,var(--accent) 12%,transparent);display:none;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:var(--accent);pointer-events:none}#drop.on{display:flex}
 label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:13px}label.chk input{width:auto}#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;display:none;max-width:80%}#toast.on{display:block}
+#lb{position:fixed;inset:0;z-index:50;background:rgba(8,12,16,.78);display:none;align-items:center;justify-content:center;padding:24px}
+#lb.on{display:flex}
+#lbi{max-width:92vw;max-height:88vh;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.5);background:var(--panel);cursor:default}
+#lbx{position:absolute;top:14px;right:16px;width:36px;height:36px;border-radius:50%;padding:0;font-size:20px;line-height:1;background:var(--panel)}
+.thumb{cursor:zoom-in}
 @media(max-width:760px){main{flex-direction:column}aside{width:100%;max-height:45%;border-left:0;border-top:1px solid var(--line)}#help{display:none}}
 </style>
 </head>
@@ -96,6 +101,7 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
     <div class="hint" id="ghCleanState"></div>
   </aside>
 </main>
+<div id="lb" role="dialog" aria-modal="true" aria-label="Aperçu de l’image"><button id="lbx" aria-label="Fermer">×</button><img id="lbi" alt="Image introuvable"></div>
 <script>
 (function(){
 var NS="http://www.w3.org/2000/svg",COLORS=["#0f7b8a","#3f6fd1","#8a56c9","#d0643e","#c99a1b","#4c9a5b"];
@@ -140,6 +146,8 @@ function draw(){
    var im=el("image",{x:8,y:34,width:n.w-16,height:IMGH,preserveAspectRatio:"xMidYMid slice","clip-path":"url(#"+cid+")"},g);
    im.setAttribute("href",imgUrl(n.img));
    im.addEventListener("error",function(){im.setAttribute("opacity","0.15")});
+   im.style.cursor="zoom-in";
+   im.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;sel=n.id;draw();syncPanel();openLb(imgUrl(n.img))});
   }
   if(n.ch.length){
    var tg=el("g",{"class":"tog",transform:"translate("+(n.w+10)+","+(n.h/2)+")"},g);
@@ -405,6 +413,10 @@ function reorganize(){var r=cur().root,ALIGN=24,f={align:0,ov:0,ln:0};
  f.ov+=overlapPass();f.ln+=linePass();
  var done=f.align+f.ov+f.ln;if(done){save();draw()}
  toast(done?"Réorganisé : "+f.align+" alignement(s), "+f.ov+" chevauchement(s) de nœuds, "+f.ln+" lien(s) dégagé(s). Les autres nœuds n’ont pas bougé.":"Rien à réorganiser : aucun chevauchement, aucun lien sur un nœud, aucun défaut d’alignement.")}
+function openLb(url){$("lbi").src=url;$("lb").classList.add("on")}
+function closeLb(){$("lb").classList.remove("on");$("lbi").removeAttribute("src")}
+$("lb").addEventListener("click",function(e){if(e.target!==$("lbi"))closeLb()});
+$("thumb").addEventListener("click",function(){if(this.getAttribute("src"))openLb(this.getAttribute("src"))});
 var dragged=false,drag=null;
 function startDrag(e,n){e.stopPropagation();if(e.button)return;drag={n:n,x:e.clientX,y:e.clientY,on:false}}
 window.addEventListener("pointermove",function(e){if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
@@ -415,6 +427,7 @@ window.addEventListener("pointerup",endDrag);window.addEventListener("pointercan
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,k2=Math.max(.2,Math.min(3,tr.k*(e.deltaY<0?1.1:.9)));
  tr.x=px-(px-tr.x)*k2/tr.k;tr.y=py-(py-tr.y)*k2/tr.k;tr.k=k2;applyT()},{passive:false});
 document.addEventListener("keydown",function(e){
+ if($("lb").classList.contains("on")){if(e.key==="Escape")closeLb();return}
  var inField=/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
  if(e.key==="Tab"&&sel&&!(inField&&document.activeElement.id!=="fText")){e.preventDefault();addChild()}
  else if(e.key==="Enter"&&sel&&document.activeElement.id!=="fImg"&&!/SELECT|BUTTON/.test(document.activeElement.tagName)){e.preventDefault();addSib()}
