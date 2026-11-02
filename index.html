@@ -147,7 +147,8 @@ function draw(){
    im.setAttribute("href",imgUrl(n.img));
    im.addEventListener("error",function(){im.setAttribute("opacity","0.15")});
    im.style.cursor="zoom-in";
-   im.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;sel=n.id;draw();syncPanel();openLb(imgUrl(n.img))});
+   im.addEventListener("dblclick",function(e){e.stopPropagation()});
+   im.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;var t=Date.now(),second=lastImg.id===n.id&&t-lastImg.t<450;lastImg=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openLb(imgUrl(n.img))});
   }
   if(n.ch.length){
    var tg=el("g",{"class":"tog",transform:"translate("+(n.w+10)+","+(n.h/2)+")"},g);
@@ -413,10 +414,11 @@ function reorganize(){var r=cur().root,ALIGN=24,f={align:0,ov:0,ln:0};
  f.ov+=overlapPass();f.ln+=linePass();
  var done=f.align+f.ov+f.ln;if(done){save();draw()}
  toast(done?"Réorganisé : "+f.align+" alignement(s), "+f.ov+" chevauchement(s) de nœuds, "+f.ln+" lien(s) dégagé(s). Les autres nœuds n’ont pas bougé.":"Rien à réorganiser : aucun chevauchement, aucun lien sur un nœud, aucun défaut d’alignement.")}
+var lastImg={id:null,t:0};
 function openLb(url){$("lbi").src=url;$("lb").classList.add("on")}
 function closeLb(){$("lb").classList.remove("on");$("lbi").removeAttribute("src")}
 $("lb").addEventListener("click",function(e){if(e.target!==$("lbi"))closeLb()});
-$("thumb").addEventListener("click",function(){if(this.getAttribute("src"))openLb(this.getAttribute("src"))});
+$("thumb").addEventListener("dblclick",function(){if(this.getAttribute("src"))openLb(this.getAttribute("src"))});
 var dragged=false,drag=null;
 function startDrag(e,n){e.stopPropagation();if(e.button)return;drag={n:n,x:e.clientX,y:e.clientY,on:false}}
 window.addEventListener("pointermove",function(e){if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
