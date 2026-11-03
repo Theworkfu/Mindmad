@@ -66,6 +66,7 @@ textarea#fText{resize:vertical;font:inherit}
   <button id="bExp">Exporter</button>
   <button id="bImp">Importer</button>
   <input id="file" type="file" accept="application/json" hidden>
+  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v15</span>
 </header>
 <main>
   <div id="stage">
@@ -143,7 +144,7 @@ function draw(){
   var color=COLORS[(n.c||0)%COLORS.length];
   var g=el("g",{"data-id":n.id,"class":"node"+(n.id===sel?" sel":""),transform:"translate("+n.x+","+n.y+")"},ng);
   g.addEventListener("pointerdown",function(e){startDrag(e,n)});
-  g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;sel=n.id;draw();syncPanel()});
+  g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;var t=Date.now(),second=lastNode.id===n.id&&t-lastNode.t<500;lastNode=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openEd(n.id)});
   g.addEventListener("dblclick",function(e){e.stopPropagation();sel=n.id;draw();syncPanel();openEd(n.id)});
   el("rect",{"class":"box",width:n.w,height:n.h,rx:10,stroke:color},g);
   var t=el("text",{x:n.w/2,y:22,"text-anchor":"middle"},g);
@@ -427,7 +428,7 @@ function closeEd(){$("ed").classList.remove("on");edId=null}
 $("edt").addEventListener("input",function(){var f=find(cur().root,edId);if(!f)return;f.n.t=this.value;if(!f.p){cur().title=this.value;refreshMaps()}$("fText").value=this.value;save();draw()});
 $("ed").addEventListener("pointerdown",function(e){edDown=e.target===this});
 $("ed").addEventListener("click",function(e){if(e.target===this&&edDown)closeEd()});
-var lastImg={id:null,t:0};
+var lastImg={id:null,t:0},lastNode={id:null,t:0};
 function openLb(url){$("lbi").src=url;$("lb").classList.add("on")}
 function closeLb(){$("lb").classList.remove("on");$("lbi").removeAttribute("src")}
 $("lb").addEventListener("click",function(e){if(e.target!==$("lbi"))closeLb()});
