@@ -109,8 +109,9 @@ var $=function(i){return document.getElementById(i)};
 var store={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(!store.w){store.w=1;alert("Ce navigateur n’enregistre pas les cartes (stockage plein ou navigation privée). Exportez votre carte, ou activez la sauvegarde sur GitHub dans le panneau de droite.")}}}};
 var uid=function(){return Math.random().toString(36).slice(2,9)};
-var newMap=function(t){return{id:uid(),title:t||"Ma carte",root:{id:uid(),t:"Idée centrale",c:0,img:"",col:false,ch:[]}}};
-var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];
+var newMap=function(t){return{id:uid(),title:t||"Ma carte",root:{id:uid(),t:t||"Ma carte",c:0,img:"",col:false,ch:[]}}};
+function normNames(list){list.forEach(function(m){var t=m.root.t,ti=m.title;if(t===ti)return;var name=(t&&t!=="Idée centrale")?t:(ti||t||"Ma carte");m.title=name;m.root.t=name})}
+var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps);
 var curId=store.get("mm_cur",maps[0].id);
 var imgCache={};
 var sel=null,tr={x:60,y:0,k:1};
@@ -181,7 +182,7 @@ function syncPanel(){
 }
 function buildSw(){COLORS.forEach(function(c,i){var b=document.createElement("button");b.className="sw";b.style.background=c;b.title="Couleur "+(i+1);b.setAttribute("aria-label","Couleur "+(i+1));
  b.onclick=function(){var f=find(cur().root,sel);if(f){f.n.c=i;save();draw();syncPanel()}};$("sws").appendChild(b)})}
-function refreshMaps(){var s=$("maps");s.innerHTML="";maps.forEach(function(m){var o=document.createElement("option");o.value=m.id;o.textContent=m.title;if(m.id===curId)o.selected=true;s.appendChild(o)})}
+function refreshMaps(){var s=$("maps");s.innerHTML="";maps.forEach(function(m){var o=document.createElement("option");o.value=m.id;o.textContent=m.title||"Sans titre";if(m.id===curId)o.selected=true;s.appendChild(o)})}
 
 /* ---------- actions ---------- */
 function addChild(){var f=find(cur().root,sel);if(!f)return;var n={id:uid(),t:"Nouvelle idée",c:f.p?f.n.c:f.n.ch.length,img:"",col:false,ch:[]};f.n.col=false;f.n.ch.push(n);sel=n.id;save();draw();syncPanel();$("fText").focus();$("fText").select()}
@@ -189,7 +190,7 @@ function addSib(){var f=find(cur().root,sel);if(!f||!f.p)return;var n={id:uid(),
 function rm(){var f=find(cur().root,sel);if(!f||!f.p)return;f.p.ch.splice(f.p.ch.indexOf(f.n),1);sel=f.p.id;save();draw();syncPanel()}
 $("bChild").onclick=addChild;$("bSib").onclick=addSib;$("bRm").onclick=rm;
 $("bCol").onclick=function(){var f=find(cur().root,sel);if(f){f.n.col=!f.n.col;save();draw();syncPanel()}};
-$("fText").oninput=function(){var f=find(cur().root,sel);if(f){f.n.t=this.value;save();draw()}};
+$("fText").oninput=function(){var f=find(cur().root,sel);if(f){f.n.t=this.value;if(!f.p){cur().title=this.value;refreshMaps()}save();draw()}};
 $("fImg").onchange=function(){var f=find(cur().root,sel);if(f){f.n.img=this.value.trim();save();draw();syncPanel()}};
 $("bNoImg").onclick=function(){var f=find(cur().root,sel);if(f){f.n.img="";save();draw();syncPanel()}};
 $("bUp").onclick=function(){$("upl").click()};
@@ -249,7 +250,7 @@ function push(){
  function put(){var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha})})}
  return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps)mergeRemote(rem.maps);return put()})}throw e})}
 function hasContent(){return maps.some(function(m){return m.root.ch.length||m.root.img||m.root.t!=="Idée centrale"})}
-function useMaps(list,upd,msg){maps=list;curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_cur",curId);store.set("mm_upd",upd);refreshMaps();draw();syncPanel();fit();setSync(msg)}
+function useMaps(list,upd,msg){normNames(list);maps=list;curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_cur",curId);store.set("mm_upd",upd);refreshMaps();draw();syncPanel();fit();setSync(msg)}
 function stamp(){return "à "+new Date().toLocaleTimeString("fr-FR")}
 function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHub…");
  enqueue(function(){return pull().then(function(rem){var loc=+store.get("mm_upd",0)||0,ru=rem&&rem.updated||0;
@@ -261,7 +262,7 @@ function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHu
 function sig(n){return n.t+"|"+(n.c||0)+"|"+(n.img||"")+"|"+(n.col?1:0)+"["+n.ch.map(sig).join(",")+"]"}
 function mergeRemote(list){var byId={};maps.forEach(function(m){byId[m.id]=m});
  list.forEach(function(r){var l=byId[r.id];if(!l)maps.push(r);else if((l.title!==r.title||sig(l.root)!==sig(r.root))&&!maps.some(function(m){return m.title===r.title+" (autre appareil)"&&sig(m.root)===sig(r.root)})){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
- store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps()}
+ normNames(maps);store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps()}
 function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".");if(gh.auto&&gh.sync)cleanImages(true)}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
 function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
 function recheck(){if(!document.hidden&&syncOn()&&!dirty)startSync()}
@@ -316,13 +317,13 @@ document.addEventListener("paste",function(e){var items=(e.clipboardData||{}).it
  for(var i=0;i<items.length;i++){if(items[i].kind==="file"&&/^image\//.test(items[i].type)){e.preventDefault();addImage(items[i].getAsFile(),sel,"Capture");return}}});
 $("maps").onchange=function(){curId=this.value;sel=null;save();draw();syncPanel();fit()};
 $("bNew").onclick=function(){var t=prompt("Titre de la carte :","Nouvelle carte");if(!t)return;var m=newMap(t);m.root.t=t;maps.push(m);curId=m.id;sel=m.root.id;save();refreshMaps();draw();syncPanel();fit()};
-$("bRen").onclick=function(){var t=prompt("Nouveau titre :",cur().title);if(t){cur().title=t;save();refreshMaps()}};
+$("bRen").onclick=function(){var t=prompt("Nouveau titre :",cur().title);if(t){cur().title=t;cur().root.t=t;save();refreshMaps();draw();syncPanel()}};
 $("bDel").onclick=function(){if(!confirm("Supprimer la carte « "+cur().title+" » ?"))return;maps=maps.filter(function(m){return m.id!==curId});if(!maps.length)maps=[newMap()];curId=maps[0].id;sel=null;save();refreshMaps();draw();syncPanel();fit()};
 $("bFit").onclick=fit;
 $("bReset").onclick=reorganize;
 $("bExp").onclick=function(){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(cur(),null,1)],{type:"application/json"}));a.download=cur().title.replace(/[^\w\-]+/g,"_")+".json";a.click()};
 $("bImp").onclick=function(){$("file").click()};
-$("file").onchange=function(){var file=this.files[0];this.value="";if(!file)return;var rd=new FileReader();rd.onload=function(){try{var m=JSON.parse(rd.result);if(!m.root)throw 0;m.id=uid();maps.push(m);curId=m.id;sel=null;save();refreshMaps();draw();syncPanel();fit()}catch(e){alert("Fichier invalide : choisissez une carte exportée depuis cet outil.")}};rd.readAsText(file)};
+$("file").onchange=function(){var file=this.files[0];this.value="";if(!file)return;var rd=new FileReader();rd.onload=function(){try{var m=JSON.parse(rd.result);if(!m.root)throw 0;m.id=uid();normNames([m]);maps.push(m);curId=m.id;sel=null;save();refreshMaps();draw();syncPanel();fit()}catch(e){alert("Fichier invalide : choisissez une carte exportée depuis cet outil.")}};rd.readAsText(file)};
 
 /* ---------- pan / zoom / clavier ---------- */
 var cv=$("cv"),pan=null;
