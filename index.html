@@ -67,6 +67,12 @@ button:disabled{opacity:.4;cursor:default}
 .lkh.m{fill:var(--link)}
 .node.dropt{filter:drop-shadow(0 0 9px var(--accent))}
 .node.dropt rect.box{stroke:var(--accent);stroke-width:5;fill:color-mix(in srgb,var(--accent) 20%,var(--node))}
+#trashbox{position:fixed;inset:0;z-index:40;background:rgba(8,12,16,.55);display:none;align-items:center;justify-content:center;padding:24px}
+#trashbox.on{display:flex}
+#trashc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;width:min(540px,94vw);max-height:80vh;overflow:auto;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+#trashlist{display:flex;flex-direction:column;gap:8px}
+.trrow{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.trn{flex:1;min-width:0}.trn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:760px){main{flex-direction:column}aside{width:100%;max-height:45%;border-left:0;border-top:1px solid var(--line)}#help{display:none}}
 </style>
 </head>
@@ -77,13 +83,14 @@ button:disabled{opacity:.4;cursor:default}
   <select id="maps" aria-label="Carte"></select>
   <button id="bNew">Nouvelle carte</button>
   <button id="bRen">Renommer</button>
-  <button id="bDel" class="danger">Supprimer</button>
+  <button id="bDel" class="danger" title="Met la carte à la corbeille (récupérable 30 jours)">Supprimer</button>
+  <button id="bTrash" title="Cartes supprimées, récupérables pendant 30 jours">Corbeille</button>
   <button id="bFit">Recentrer</button>
   <button id="bReset" title="Corrige les chevauchements et aligne les nœuds presque alignés, sans toucher aux autres">Réorganiser</button>
   <button id="bExp">Exporter</button>
   <button id="bImp">Importer</button>
   <input id="file" type="file" accept="application/json" hidden>
-  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v18</span>
+  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v19</span>
 </header>
 <main>
   <div id="stage">
@@ -129,6 +136,7 @@ button:disabled{opacity:.4;cursor:default}
   </aside>
 </main>
 <div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><div class="hint">Entrée : nouvelle ligne · cliquez à l’extérieur pour valider</div></div></div>
+<div id="trashbox" role="dialog" aria-modal="true" aria-label="Corbeille"><div id="trashc"><h2 style="margin:0;font-size:16px;color:var(--ink)">Corbeille</h2><div class="hint">Les cartes supprimées sont conservées 30 jours, puis effacées définitivement.</div><div id="trashlist"></div><div class="row"><button id="trashclear" class="danger">Vider la corbeille</button><button id="trashclose">Fermer</button></div></div></div>
 <div id="lb" role="dialog" aria-modal="true" aria-label="Aperçu de l’image"><button id="lbx" aria-label="Fermer">×</button><img id="lbi" alt="Image introuvable"></div>
 <script>
 (function(){
@@ -141,12 +149,37 @@ var newMap=function(t){return{id:uid(),title:t||"Ma carte",root:{id:uid(),t:t||"
 function pruneLinks(m){m.links=(m.links||[]).filter(function(l){return find(m.root,l.from)&&find(m.root,l.to)})}
 function normNames(list){list.forEach(function(m){pruneLinks(m);var t=m.root.t,ti=m.title;if(t===ti)return;var name=(t&&t!=="Idée centrale")?t:(ti||t||"Ma carte");m.title=name;m.root.t=name})}
 var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps);
+var trash=store.get("mm_trash",[]);
 var curId=store.get("mm_cur",maps[0].id);
 var imgCache={};
 var sel=null,tr={x:60,y:0,k:1};
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
-function persist(){store.set("mm_maps",maps);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
+function persist(){store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
 function save(key){record(key);persist()}
+/* ---------- corbeille : 30 jours ---------- */
+var DAY=86400000,KEEP=30*DAY,trDown=false;
+function flat(t){return(t||"").replace(/\s*\n+\s*/g," ")||"Sans titre"}
+function purgeTrash(){var n=trash.length;trash=trash.filter(function(t){return Date.now()-(t.deletedAt||0)<KEEP});if(trash.length!==n)store.set("mm_trash",trash)}
+function inTrash(id){return trash.some(function(t){return t.id===id})}
+function mergeTrash(list){var ids={};trash.forEach(function(t){ids[t.id]=1});maps.forEach(function(m){ids[m.id]=1});(list||[]).forEach(function(t){if(!ids[t.id]){trash.push(t);ids[t.id]=1}});purgeTrash()}
+function updTrash(){$("bTrash").textContent="Corbeille"+(trash.length?" ("+trash.length+")":"")}
+function closeTrash(){$("trashbox").classList.remove("on")}
+function btn(txt,cls,fn){var b=document.createElement("button");b.textContent=txt;if(cls)b.className=cls;b.onclick=fn;return b}
+function restoreMap(id){var t=trash.filter(function(x){return x.id===id})[0];if(!t)return;trash=trash.filter(function(x){return x.id!==id});
+ var m=JSON.parse(JSON.stringify(t));delete m.deletedAt;if(maps.some(function(x){return x.id===m.id}))m.id=uid();maps.push(m);normNames([m]);
+ curId=m.id;sel=null;selLink=null;ensureHist(m);persist();refreshMaps();draw();syncPanel();fit();closeTrash();toast("Carte « "+flat(m.title)+" » restaurée.")}
+function renderTrash(){var box=$("trashlist");box.innerHTML="";purgeTrash();updTrash();
+ if(!trash.length){var e=document.createElement("div");e.className="hint";e.textContent="La corbeille est vide.";box.appendChild(e);$("trashclear").style.display="none";return}
+ $("trashclear").style.display="";
+ trash.slice().sort(function(a,b){return b.deletedAt-a.deletedAt}).forEach(function(t){var row=document.createElement("div");row.className="trrow";
+  var left=document.createElement("div");left.className="trn";var nm=document.createElement("b");nm.textContent=flat(t.title);nm.title=nm.textContent;
+  var d=Math.max(1,Math.ceil((t.deletedAt+KEEP-Date.now())/DAY)),meta=document.createElement("span");meta.className="hint";
+  meta.textContent="Supprimée le "+new Date(t.deletedAt).toLocaleDateString("fr-FR",{day:"numeric",month:"long",year:"numeric"})+" · "+d+" jour"+(d>1?"s":"")+" restant"+(d>1?"s":"");
+  left.appendChild(nm);left.appendChild(meta);row.appendChild(left);
+  row.appendChild(btn("Restaurer","",function(){restoreMap(t.id)}));
+  row.appendChild(btn("Supprimer","danger",function(){if(!confirm("Supprimer définitivement « "+flat(t.title)+" » ? Cette action est irréversible."))return;trash=trash.filter(function(x){return x.id!==t.id});persist();renderTrash()}));
+  box.appendChild(row)})}
+function openTrash(){renderTrash();$("trashbox").classList.add("on")}
 /* historique annuler / rétablir : un instantané de la carte à chaque modification (les images intégrées ne sont stockées qu'une fois) */
 var H={},pool={},poolR=[],poolN=0;
 function snap(m){return JSON.stringify(m,function(k,v){if(k==="x"||k==="y"||k==="w"||k==="h"||k==="th")return undefined;
@@ -211,7 +244,7 @@ function draw(){
    walk(c);
   });
  })(r);
- drawLinks();updHist();applyT();
+ drawLinks();updHist();updTrash();applyT();
 }
 var selLink=null,linkFrom=null;
 function edgePt(n,tx,ty){var cx=n.x+n.w/2,cy=n.y+n.h/2,dx=tx-cx,dy=ty-cy,sx=dx?(n.w/2)/Math.abs(dx):1e9,sy=dy?(n.h/2)/Math.abs(dy):1e9,t=Math.min(sx,sy);return[cx+dx*t,cy+dy*t]}
@@ -347,21 +380,21 @@ function utf8b64(str){var b=new TextEncoder().encode(str),bin="";for(var i=0;i<b
 function getMeta(){return api(mapsPath()).then(function(r){if(r.status===404){remoteSha=null;return null}if(!r.ok)throw new Error(r.status===401?"jeton refusé":"erreur "+r.status);return r.json().then(function(j){remoteSha=j.sha;return j})})}
 function pull(){return getMeta().then(function(meta){if(!meta)return null;return api(mapsPath(),{headers:{Accept:"application/vnd.github.raw+json"}}).then(function(r){if(!r.ok)throw new Error("lecture impossible");return r.json()})})}
 function push(){
- function put(){var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha})})}
- return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps)mergeRemote(rem.maps);return put()})}throw e})}
+ function put(){var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps,trash:trash});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha})})}
+ return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps){mergeRemote(rem.maps);mergeTrash(rem.trash)}return put()})}throw e})}
 function hasContent(){return maps.some(function(m){return m.root.ch.length||m.root.img||m.root.t!=="Idée centrale"})}
-function useMaps(list,upd,msg){normNames(list);maps=list;resetHist();curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_cur",curId);store.set("mm_upd",upd);refreshMaps();draw();syncPanel();fit();setSync(msg)}
+function useMaps(list,upd,msg,tr){normNames(list);maps=list;if(tr!==undefined){trash=tr||[];purgeTrash()}resetHist();curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",upd);refreshMaps();draw();syncPanel();fit();setSync(msg)}
 function stamp(){return "à "+new Date().toLocaleTimeString("fr-FR")}
 function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHub…");
  enqueue(function(){return pull().then(function(rem){var loc=+store.get("mm_upd",0)||0,ru=rem&&rem.updated||0;
   if(rem&&rem.maps&&rem.maps.length&&ru>loc){
-   if(!loc&&hasContent()){var ids={};maps.forEach(function(m){ids[m.id]=1});var add=rem.maps.filter(function(m){return!ids[m.id]});useMaps(maps.concat(add),Date.now(),"Cartes de GitHub ajoutées à celles de cet appareil.");return push()}
-   useMaps(rem.maps,ru,"Cartes chargées depuis GitHub.");return}
+   if(!loc&&hasContent()){var ids={};maps.forEach(function(m){ids[m.id]=1});var add=rem.maps.filter(function(m){return!ids[m.id]&&!inTrash(m.id)});mergeTrash(rem.trash);useMaps(maps.concat(add),Date.now(),"Cartes de GitHub ajoutées à celles de cet appareil.");return push()}
+   useMaps(rem.maps,ru,"Cartes chargées depuis GitHub.",rem.trash);return}
   if(!rem||loc>ru){if(!loc)store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
   setSync("Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
 function sig(n){return n.t+"|"+(n.c||0)+"|"+(n.img||"")+"|"+(n.col?1:0)+"["+n.ch.map(sig).join(",")+"]"}
 function mergeRemote(list){var byId={};maps.forEach(function(m){byId[m.id]=m});
- list.forEach(function(r){var l=byId[r.id];if(!l)maps.push(r);else if((l.title!==r.title||sig(l.root)!==sig(r.root)||JSON.stringify(l.links||[])!==JSON.stringify(r.links||[]))&&!maps.some(function(m){return m.title===r.title+" (autre appareil)"&&sig(m.root)===sig(r.root)})){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
+ list.forEach(function(r){var l=byId[r.id];if(!l){if(!inTrash(r.id))maps.push(r)}else if((l.title!==r.title||sig(l.root)!==sig(r.root)||JSON.stringify(l.links||[])!==JSON.stringify(r.links||[]))&&!maps.some(function(m){return m.title===r.title+" (autre appareil)"&&sig(m.root)===sig(r.root)})){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
  normNames(maps);store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps();resetHist()}
 function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".");if(gh.auto&&gh.sync)cleanImages(true)}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
 function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
@@ -370,7 +403,7 @@ document.addEventListener("visibilitychange",recheck);window.addEventListener("f
 $("ghSync").onchange=function(){gh.sync=this.checked;store.set("mm_gh",gh);if(gh.sync){if(!ghReady())setSync("Renseignez d’abord le dépôt et le jeton.");else startSync()}else setSync("")};
 $("ghNow").onclick=function(){if(!syncOn()){setSync("Cochez la sauvegarde GitHub et renseignez le jeton.");return}clearTimeout(pushTimer);pushTimer=null;setSync("Envoi…");doPush()};
 $("ghLoad").onclick=function(){if(!ghReady()){setSync("Renseignez d’abord le dépôt et le jeton.");return}if(!confirm("Remplacer les cartes de cet appareil par celles de GitHub ?"))return;
- setSync("Chargement…");enqueue(pull).then(function(rem){if(!rem||!rem.maps||!rem.maps.length){setSync("Aucune sauvegarde trouvée sur GitHub.");return}useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.")}).catch(function(e){setSync("Chargement impossible ("+e.message+").")})};
+ setSync("Chargement…");enqueue(pull).then(function(rem){if(!rem||!rem.maps||!rem.maps.length){setSync("Aucune sauvegarde trouvée sur GitHub.");return}useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.",rem.trash)}).catch(function(e){setSync("Chargement impossible ("+e.message+").")})};
 
 /* ---------- nettoyage des images inutilisées ---------- */
 var IMGRE=/^images\/\d{4}-\d{2}\/[^\/]+\.(png|jpg|gif|webp)$/;
@@ -381,8 +414,8 @@ function collect(list,set){var pre="/"+gh.owner+"/"+gh.repo+"/";
 function recent(path){var m=path.match(/images\/(\d{4})-(\d{2})\/(\d{2})-(\d{2})(\d{2})(\d{2})-/);if(!m)return true;
  var t=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime();return Date.now()-t<15*60000}
 function cleanImages(auto){if(!ghReady())return Promise.resolve();
- return enqueue(function(){setClean("Analyse des images…");var used={};collect(maps,used);
-  return pull().then(function(rem){if(rem&&rem.maps)collect(rem.maps,used);return api("/git/trees/"+encodeURIComponent(gh.branch||"main")+"?recursive=1")})
+ return enqueue(function(){setClean("Analyse des images…");var used={};collect(maps,used);collect(trash,used);
+  return pull().then(function(rem){if(rem&&rem.maps)collect(rem.maps,used);if(rem&&rem.trash)collect(rem.trash,used);return api("/git/trees/"+encodeURIComponent(gh.branch||"main")+"?recursive=1")})
   .then(function(r){if(!r.ok)throw new Error(r.status===404?"dépôt ou branche introuvable":"erreur "+r.status);return r.json()})
   .then(function(t){if(t.truncated)throw new Error("dépôt trop volumineux pour l’analyse");
    var none=!Object.keys(used).length;if(auto&&none){setClean("");return}
@@ -425,7 +458,13 @@ document.addEventListener("paste",function(e){var items=(e.clipboardData||{}).it
 $("maps").onchange=function(){curId=this.value;sel=null;selLink=null;ensureHist(cur());save();draw();syncPanel();fit()};
 $("bNew").onclick=function(){var t=prompt("Titre de la carte :","Nouvelle carte");if(!t)return;var m=newMap(t);m.root.t=t;maps.push(m);curId=m.id;sel=m.root.id;save();refreshMaps();draw();syncPanel();fit()};
 $("bRen").onclick=function(){var t=prompt("Nouveau titre :",cur().title);if(t){cur().title=t;cur().root.t=t;save();refreshMaps();draw();syncPanel()}};
-$("bDel").onclick=function(){if(!confirm("Supprimer la carte « "+cur().title+" » ?"))return;maps=maps.filter(function(m){return m.id!==curId});if(!maps.length)maps=[newMap()];curId=maps[0].id;sel=null;save();refreshMaps();draw();syncPanel();fit()};
+$("bDel").onclick=function(){var m=cur();if(!confirm("Mettre la carte « "+flat(m.title)+" » à la corbeille ?\n\nVous pourrez la récupérer pendant 30 jours."))return;
+ var gone=JSON.parse(JSON.stringify(m));gone.deletedAt=Date.now();trash.push(gone);
+ maps=maps.filter(function(x){return x.id!==m.id});if(!maps.length)maps=[newMap()];curId=maps[0].id;sel=null;selLink=null;ensureHist(cur());save();refreshMaps();draw();syncPanel();fit();toast("Carte mise à la corbeille : récupérable pendant 30 jours.")};
+$("bTrash").onclick=openTrash;$("trashclose").onclick=closeTrash;
+$("trashclear").onclick=function(){if(!trash.length||!confirm("Vider la corbeille ? Les "+trash.length+" carte(s) seront supprimées définitivement."))return;trash=[];persist();renderTrash()};
+$("trashbox").addEventListener("pointerdown",function(e){trDown=e.target===this});
+$("trashbox").addEventListener("click",function(e){if(e.target===this&&trDown)closeTrash()});
 $("bFit").onclick=fit;
 $("bUndo").onclick=undo;$("bRedo").onclick=redo;
 $("bReset").onclick=reorganize;
@@ -544,6 +583,7 @@ window.addEventListener("pointerup",endDrag);window.addEventListener("pointercan
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,k2=Math.max(.2,Math.min(3,tr.k*(e.deltaY<0?1.1:.9)));
  tr.x=px-(px-tr.x)*k2/tr.k;tr.y=py-(py-tr.y)*k2/tr.k;tr.k=k2;applyT()},{passive:false});
 document.addEventListener("keydown",function(e){
+ if($("trashbox").classList.contains("on")){if(e.key==="Escape")closeTrash();return}
  if($("ed").classList.contains("on")){if(e.key==="Escape")closeEd();return}
  if(e.key==="Escape"&&linkFrom){endLink();return}
  if($("lb").classList.contains("on")){if(e.key==="Escape")closeLb();return}
@@ -555,7 +595,7 @@ document.addEventListener("keydown",function(e){
  else if((e.key==="Delete")&&!inField){if(selLink)removeLink(selLink);else rm()}
 });
 
-resetHist();buildSw();refreshMaps();sel=cur().root.id;draw();syncPanel();fit();
+purgeTrash();resetHist();buildSw();refreshMaps();sel=cur().root.id;draw();syncPanel();fit();
 window.addEventListener("resize",fit);
 })();
 </script>
