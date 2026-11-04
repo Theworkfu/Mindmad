@@ -47,10 +47,10 @@ label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-si
 #lbx{position:absolute;top:14px;right:16px;width:36px;height:36px;border-radius:50%;padding:0;font-size:20px;line-height:1;background:var(--panel)}
 .thumb{cursor:zoom-in}
 textarea#fText{resize:vertical;font:inherit}
-#ed{position:fixed;inset:0;z-index:40;background:rgba(8,12,16,.55);display:none;align-items:center;justify-content:center;padding:24px}
-#ed.on{display:flex}
-#edc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(480px,92vw);box-shadow:0 12px 40px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px}
-#edt{width:100%;min-height:120px;resize:vertical;font:inherit;font-size:15px;line-height:1.4;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+#ed,#nt{position:fixed;inset:0;z-index:40;background:rgba(8,12,16,.55);display:none;align-items:center;justify-content:center;padding:24px}
+#ed.on,#nt.on{display:flex}
+#edc,#ntc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;width:min(480px,92vw);box-shadow:0 12px 40px rgba(0,0,0,.4);display:flex;flex-direction:column;gap:8px}
+#edt,#ntt{width:100%;min-height:120px;resize:vertical;font:inherit;font-size:15px;line-height:1.4;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
 .lkline{fill:none;stroke:var(--link);stroke-width:2;stroke-dasharray:7 5;pointer-events:none}
 .lkhit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer;pointer-events:stroke}
 .lk.sel .lkline{stroke-width:3.5}
@@ -84,6 +84,11 @@ button:disabled{opacity:.4;cursor:default}
 .cimg input{position:absolute;top:6px;left:6px;width:18px;height:18px;margin:0;cursor:pointer}
 .cimg button{position:absolute;top:4px;right:4px;padding:0 7px;line-height:20px;font-size:14px}
 .cname{font-size:11px;color:var(--muted);padding:4px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nbtn{cursor:pointer}
+.nbtn circle{fill:var(--panel);stroke:var(--accent);stroke-width:1.5}
+.nbtn path{fill:none;stroke:var(--accent);stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.nbtn:hover circle{fill:var(--accent)}.nbtn:hover path{stroke:var(--accent-ink)}
+#tip{position:fixed;z-index:35;display:none;max-width:300px;max-height:60vh;overflow:hidden;padding:8px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--accent);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.3);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.4;pointer-events:none}
 @media(max-width:760px){main{flex-direction:column}aside{width:100%;max-height:45%;border-left:0;border-top:1px solid var(--line)}#help{display:none}}
 </style>
 </head>
@@ -101,7 +106,7 @@ button:disabled{opacity:.4;cursor:default}
   <button id="bExp">Exporter</button>
   <button id="bImp">Importer</button>
   <input id="file" type="file" accept="application/json" hidden>
-  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v20</span>
+  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v21</span>
 </header>
 <main>
   <div id="stage">
@@ -124,6 +129,9 @@ button:disabled{opacity:.4;cursor:default}
     <button id="bLink">Relier à une autre bulle</button>
     <div class="hint" id="linkHint"></div>
     <div id="linkList"></div>
+    <h2>Note</h2>
+    <div class="hint">Texte caché : il s’affiche quand on survole l’icône de note sur la bulle. Un clic sur l’icône permet de le modifier.</div>
+    <div class="row"><button id="bNote">Ajouter une note</button><button id="bNoNote" class="danger">Retirer</button></div>
     <h2>Image</h2>
     <label>Adresse de l’image (URL)<input type="text" id="fImg" placeholder="https://…"></label>
     <div class="row"><button id="bUp">Importer depuis cet appareil</button><button id="bNoImg">Retirer</button></div>
@@ -147,6 +155,8 @@ button:disabled{opacity:.4;cursor:default}
   </aside>
 </main>
 <div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><div class="hint">Entrée : nouvelle ligne · cliquez à l’extérieur pour valider</div></div></div>
+<div id="nt" role="dialog" aria-modal="true" aria-label="Modifier la note"><div id="ntc"><div class="hint" id="ntTitle"></div><textarea id="ntt" rows="6" placeholder="Votre note…"></textarea><div class="row" style="align-items:center"><span class="hint" style="flex:1">Cliquez à l’extérieur pour valider</span><button id="ntDel" class="danger">Supprimer la note</button></div></div></div>
+<div id="tip" role="tooltip"></div>
 <div id="cleanbox" role="dialog" aria-modal="true" aria-label="Confirmer la suppression des images"><div id="cleanc"><h2 style="margin:0;font-size:16px;color:var(--ink)">Supprimer ces images de GitHub ?</h2><div class="hint" id="cleanwarn"></div><div class="hint">Décochez celles que vous voulez garder. Elles resteront visibles dans l’historique du dépôt.</div><div id="cleangrid"></div><div class="row" style="align-items:center"><button id="cleanall">Tout décocher</button><span style="flex:1"></span><button id="cleancancel">Annuler</button><button id="cleango" class="danger">Supprimer</button></div></div></div>
 <div id="trashbox" role="dialog" aria-modal="true" aria-label="Corbeille"><div id="trashc"><h2 style="margin:0;font-size:16px;color:var(--ink)">Corbeille</h2><div class="hint">Les cartes supprimées sont conservées 30 jours, puis effacées définitivement.</div><div id="trashlist"></div><div class="row"><button id="trashclear" class="danger">Vider la corbeille</button><button id="trashclose">Fermer</button></div></div></div>
 <div id="lb" role="dialog" aria-modal="true" aria-label="Aperçu de l’image"><button id="lbx" aria-label="Fermer">×</button><img id="lbi" alt="Image introuvable"></div>
@@ -224,7 +234,7 @@ function place(n,x,cy,ox,oy){ox=(ox||0)+(n.dx||0);oy=(oy||0)+(n.dy||0);n.x=x+ox;
 /* ---------- rendu ---------- */
 function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
 function draw(){
- var m=cur(),r=m.root;size(r);place(r,0,0);
+ hideTip();var m=cur(),r=m.root;size(r);place(r,0,0);
  var eg=$("edges"),ng=$("nodes");eg.innerHTML="";ng.innerHTML="";
  (function walk(n,col,depth){
   var color=COLORS[(n.c||0)%COLORS.length];
@@ -250,6 +260,11 @@ function draw(){
    tg.addEventListener("click",function(e){e.stopPropagation();n.col=!n.col;save();draw()});
    tg.style.cursor="pointer";
   }
+  if(n.note){var nb=el("g",{"class":"nbtn",transform:"translate("+(n.w-2)+",2)"},g);el("circle",{r:10},nb);el("path",{d:"M-4,-5 H2.5 L5,-2.5 V5 H-4 Z M2.5,-5 V-2.5 H5 M-2,0 H3 M-2,2.5 H3"},nb);
+   nb.addEventListener("pointerdown",function(e){e.stopPropagation();hideTip()});
+   nb.addEventListener("pointerenter",function(){showTip(nb,n.note)});nb.addEventListener("pointerleave",hideTip);
+   nb.addEventListener("dblclick",function(e){e.stopPropagation()});
+   nb.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;sel=n.id;selLink=null;draw();syncPanel();openNote(n.id)})}
   if(!n.col)n.ch.forEach(function(c){
    var x1=n.x+n.w,y1=n.y+n.h/2,x2=c.x,y2=c.y+c.h/2,mx=(x1+x2)/2;
    el("path",{"class":"edge",d:"M"+x1+","+y1+" C"+mx+","+y1+" "+mx+","+y2+" "+x2+","+y2,style:"stroke:"+COLORS[(c.c||0)%COLORS.length]+"99"},eg);
@@ -300,10 +315,10 @@ function fit(){var cv=$("cv"),W=cv.clientWidth,H=cv.clientHeight,minx=1e9,maxx=-
 /* ---------- panneau ---------- */
 function syncPanel(){
  renderLinks();var f=find(cur().root,sel);var dis=!f;
- ["fText","fImg","bChild","bSib","bCol","bRm","bUp","bNoImg","bLink"].forEach(function(i){$(i).disabled=dis});
+ ["fText","fImg","bChild","bSib","bCol","bRm","bUp","bNoImg","bLink","bNote","bNoNote"].forEach(function(i){$(i).disabled=dis});
  if(!f){$("fText").value="";$("fImg").value="";$("thumb").style.display="none";return}
  $("fText").value=f.n.t;$("fImg").value=f.n.img&&f.n.img.indexOf("data:")===0?"(image importée)":f.n.img||"";
- $("bCol").textContent=f.n.col?"Déplier":"Replier";$("bRm").disabled=!f.p;$("bSib").disabled=!f.p;
+ $("bCol").textContent=f.n.col?"Déplier":"Replier";$("bRm").disabled=!f.p;$("bSib").disabled=!f.p;$("bNote").textContent=f.n.note?"Modifier la note":"Ajouter une note";$("bNoNote").disabled=!f.n.note;
  var th=$("thumb");if(f.n.img){th.src=imgUrl(f.n.img);th.style.display="block"}else th.style.display="none";
  document.querySelectorAll(".sw").forEach(function(s,i){s.classList.toggle("on",i===(f.n.c||0))});
 }
@@ -404,7 +419,7 @@ function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHu
    useMaps(rem.maps,ru,"Cartes chargées depuis GitHub.",rem.trash);return}
   if(!rem||loc>ru){if(!loc)store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
   setSync("Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
-function sig(n){return n.t+"|"+(n.c||0)+"|"+(n.img||"")+"|"+(n.col?1:0)+"["+n.ch.map(sig).join(",")+"]"}
+function sig(n){return n.t+"|"+(n.note||"")+"|"+(n.c||0)+"|"+(n.img||"")+"|"+(n.col?1:0)+"["+n.ch.map(sig).join(",")+"]"}
 function mergeRemote(list){var byId={};maps.forEach(function(m){byId[m.id]=m});
  list.forEach(function(r){var l=byId[r.id];if(!l){if(!inTrash(r.id))maps.push(r)}else if((l.title!==r.title||sig(l.root)!==sig(r.root)||JSON.stringify(l.links||[])!==JSON.stringify(r.links||[]))&&!maps.some(function(m){return m.title===r.title+" (autre appareil)"&&sig(m.root)===sig(r.root)})){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
  normNames(maps);store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps();resetHist()}
@@ -601,6 +616,17 @@ function reorganize(){var r=cur().root,ALIGN=24,f={align:0,ov:0,ln:0};
  f.ov+=overlapPass();f.ln+=linePass();
  var done=f.align+f.ov+f.ln;if(done){save();draw()}
  toast(done?"Réorganisé : "+f.align+" alignement(s), "+f.ov+" chevauchement(s) de nœuds, "+f.ln+" lien(s) dégagé(s). Les autres nœuds n’ont pas bougé.":"Rien à réorganiser : aucun chevauchement, aucun lien sur un nœud, aucun défaut d’alignement.")}
+var ntId=null,ntDown=false;
+function showTip(elm,txt){var tip=$("tip");tip.textContent=txt;tip.style.display="block";var r=elm.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight,x=r.left+r.width/2-w/2,y=r.top-h-8;if(y<8)y=r.bottom+8;x=Math.max(8,Math.min(x,window.innerWidth-w-8));tip.style.left=x+"px";tip.style.top=y+"px"}
+function hideTip(){$("tip").style.display="none"}
+function openNote(id){var f=find(cur().root,id);if(!f)return;ntId=id;hideTip();$("ntTitle").textContent="Note de « "+nodeName(id)+" »";var t=$("ntt");t.value=f.n.note||"";$("nt").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
+function closeNote(){var f=ntId&&find(cur().root,ntId);if(f&&!(f.n.note||"").trim()){delete f.n.note;save();draw()}$("nt").classList.remove("on");ntId=null;syncPanel()}
+$("ntt").addEventListener("input",function(){var f=find(cur().root,ntId);if(!f)return;f.n.note=this.value;save("n"+f.n.id);draw()});
+$("ntDel").onclick=function(){var f=find(cur().root,ntId);if(f){delete f.n.note;save();draw()}$("nt").classList.remove("on");ntId=null;syncPanel()};
+$("nt").addEventListener("pointerdown",function(e){ntDown=e.target===this});
+$("nt").addEventListener("click",function(e){if(e.target===this&&ntDown)closeNote()});
+$("bNote").onclick=function(){if(sel)openNote(sel)};
+$("bNoNote").onclick=function(){var f=find(cur().root,sel);if(f&&f.n.note){delete f.n.note;save();draw();syncPanel()}};
 var edId=null,edDown=false;
 function openEd(id){var f=find(cur().root,id);if(!f)return;edId=id;var t=$("edt");t.value=f.n.t;$("ed").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
 function closeEd(){$("ed").classList.remove("on");edId=null}
@@ -625,6 +651,7 @@ document.addEventListener("keydown",function(e){
  if($("lb").classList.contains("on")){if(e.key==="Escape")closeLb();return}
  if($("cleanbox").classList.contains("on")){if(e.key==="Escape"&&$("cleanbox")._done)$("cleanbox")._done(null);return}
  if($("trashbox").classList.contains("on")){if(e.key==="Escape")closeTrash();return}
+ if($("nt").classList.contains("on")){if(e.key==="Escape")closeNote();return}
  if($("ed").classList.contains("on")){if(e.key==="Escape")closeEd();return}
  if(e.key==="Escape"&&linkFrom){endLink();return}
  var inField=/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
