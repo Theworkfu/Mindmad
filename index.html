@@ -73,6 +73,17 @@ button:disabled{opacity:.4;cursor:default}
 #trashlist{display:flex;flex-direction:column;gap:8px}
 .trrow{display:flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
 .trn{flex:1;min-width:0}.trn b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#cleanbox{position:fixed;inset:0;z-index:40;background:rgba(8,12,16,.6);display:none;align-items:center;justify-content:center;padding:24px}
+#cleanbox.on{display:flex}
+#cleanc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;width:min(720px,96vw);max-height:86vh;overflow:auto;display:flex;flex-direction:column;gap:10px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+#cleanwarn{color:#d0443e;font-weight:600}
+#cleangrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.cimg{position:relative;border:2px solid #d0443e;border-radius:8px;overflow:hidden;cursor:pointer;background:var(--bg)}
+.cimg.off{border-color:var(--line)}.cimg.off img{opacity:.35}
+.cimg img{display:block;width:100%;height:96px;object-fit:cover}
+.cimg input{position:absolute;top:6px;left:6px;width:18px;height:18px;margin:0;cursor:pointer}
+.cimg button{position:absolute;top:4px;right:4px;padding:0 7px;line-height:20px;font-size:14px}
+.cname{font-size:11px;color:var(--muted);padding:4px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:760px){main{flex-direction:column}aside{width:100%;max-height:45%;border-left:0;border-top:1px solid var(--line)}#help{display:none}}
 </style>
 </head>
@@ -90,7 +101,7 @@ button:disabled{opacity:.4;cursor:default}
   <button id="bExp">Exporter</button>
   <button id="bImp">Importer</button>
   <input id="file" type="file" accept="application/json" hidden>
-  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v19</span>
+  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v20</span>
 </header>
 <main>
   <div id="stage">
@@ -136,6 +147,7 @@ button:disabled{opacity:.4;cursor:default}
   </aside>
 </main>
 <div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><div class="hint">Entrée : nouvelle ligne · cliquez à l’extérieur pour valider</div></div></div>
+<div id="cleanbox" role="dialog" aria-modal="true" aria-label="Confirmer la suppression des images"><div id="cleanc"><h2 style="margin:0;font-size:16px;color:var(--ink)">Supprimer ces images de GitHub ?</h2><div class="hint" id="cleanwarn"></div><div class="hint">Décochez celles que vous voulez garder. Elles resteront visibles dans l’historique du dépôt.</div><div id="cleangrid"></div><div class="row" style="align-items:center"><button id="cleanall">Tout décocher</button><span style="flex:1"></span><button id="cleancancel">Annuler</button><button id="cleango" class="danger">Supprimer</button></div></div></div>
 <div id="trashbox" role="dialog" aria-modal="true" aria-label="Corbeille"><div id="trashc"><h2 style="margin:0;font-size:16px;color:var(--ink)">Corbeille</h2><div class="hint">Les cartes supprimées sont conservées 30 jours, puis effacées définitivement.</div><div id="trashlist"></div><div class="row"><button id="trashclear" class="danger">Vider la corbeille</button><button id="trashclose">Fermer</button></div></div></div>
 <div id="lb" role="dialog" aria-modal="true" aria-label="Aperçu de l’image"><button id="lbx" aria-label="Fermer">×</button><img id="lbi" alt="Image introuvable"></div>
 <script>
@@ -413,23 +425,50 @@ function collect(list,set){var pre="/"+gh.owner+"/"+gh.repo+"/";
  list.forEach(function(m){(function w(n){if(n.img&&n.img.indexOf(pre)>-1){var x=n.img.match(/(images\/\d{4}-\d{2}\/[^\/?#]+)$/);if(x)set[x[1]]=1}n.ch.forEach(w)})(m.root)})}
 function recent(path){var m=path.match(/images\/(\d{4})-(\d{2})\/(\d{2})-(\d{2})(\d{2})(\d{2})-/);if(!m)return true;
  var t=new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5],+m[6]).getTime();return Date.now()-t<15*60000}
+function confirmImages(files,o){return new Promise(function(resolve){
+ var box=$("cleanbox"),grid=$("cleangrid"),warn=$("cleanwarn"),chk=files.map(function(){return true}),cards=[],base="https://raw.githubusercontent.com/"+gh.owner+"/"+gh.repo+"/"+(gh.branch||"main")+"/",w=[];
+ if(o.none)w.push("ATTENTION : aucune image n’est utilisée dans vos cartes, donc TOUTES les images du dossier seraient supprimées.");
+ if(o.nosync)w.push("Vos cartes ne sont pas synchronisées sur GitHub : une image utilisée seulement par un autre appareil serait supprimée aussi.");
+ warn.textContent=w.join(" ");warn.style.display=w.length?"":"none";grid.innerHTML="";
+ function upd(){var n=chk.filter(Boolean).length;$("cleango").textContent=n?"Supprimer "+n+" image"+(n>1?"s":""):"Supprimer";$("cleango").disabled=!n;$("cleanall").textContent=n?"Tout décocher":"Tout cocher";
+  cards.forEach(function(c,i){c.classList.toggle("off",!chk[i]);c.querySelector("input").checked=chk[i]})}
+ files.forEach(function(f,i){var c=document.createElement("div");c.className="cimg";
+  var im=document.createElement("img");im.loading="lazy";im.alt=f.path;im.src=base+f.path;
+  var cb=document.createElement("input");cb.type="checkbox";cb.checked=true;cb.setAttribute("aria-label","Supprimer "+f.path);
+  var zm=document.createElement("button");zm.textContent="⤢";zm.title="Agrandir";zm.onclick=function(e){e.stopPropagation();openLb(im.src)};
+  var nm=document.createElement("div");nm.className="cname";nm.textContent=f.path.replace(/^images\//,"");nm.title=f.path;
+  c.appendChild(im);c.appendChild(cb);c.appendChild(zm);c.appendChild(nm);
+  c.onclick=function(){chk[i]=!chk[i];upd()};cb.onclick=function(e){e.stopPropagation();chk[i]=cb.checked;upd()};
+  grid.appendChild(c);cards.push(c)});
+ function done(v){box.classList.remove("on");box._done=null;resolve(v)}
+ box._done=done;
+ $("cleango").onclick=function(){done(files.filter(function(f,i){return chk[i]}))};
+ $("cleancancel").onclick=function(){done(null)};
+ $("cleanall").onclick=function(){var on=chk.some(Boolean);chk=chk.map(function(){return!on});upd()};
+ upd();box.classList.add("on")})}
+$("cleanbox").addEventListener("pointerdown",function(e){this._down=e.target===this});
+$("cleanbox").addEventListener("click",function(e){if(e.target===this&&this._down&&this._done)this._done(null)});
 function cleanImages(auto){if(!ghReady())return Promise.resolve();
+ /* 1. analyse (dans la file d'attente GitHub, sans la bloquer pendant que vous décidez) */
  return enqueue(function(){setClean("Analyse des images…");var used={};collect(maps,used);collect(trash,used);
   return pull().then(function(rem){if(rem&&rem.maps)collect(rem.maps,used);if(rem&&rem.trash)collect(rem.trash,used);return api("/git/trees/"+encodeURIComponent(gh.branch||"main")+"?recursive=1")})
   .then(function(r){if(!r.ok)throw new Error(r.status===404?"dépôt ou branche introuvable":"erreur "+r.status);return r.json()})
   .then(function(t){if(t.truncated)throw new Error("dépôt trop volumineux pour l’analyse");
-   var none=!Object.keys(used).length;if(auto&&none){setClean("");return}
+   var none=!Object.keys(used).length;if(auto&&none){setClean("");return null}
    var del=t.tree.filter(function(f){return f.type==="blob"&&IMGRE.test(f.path)&&!used[f.path]&&!(auto&&recent(f.path))});
-   if(!del.length){setClean("Aucune image inutilisée.");return}
-   if(!auto||del.length>10){var msg="Supprimer définitivement "+del.length+" image(s) inutilisée(s) de GitHub ?\n\nElles resteront visibles dans l’historique du dépôt.";
-    if(none)msg="ATTENTION : aucune image n’est utilisée dans vos cartes, donc TOUTES les images ("+del.length+") seraient supprimées.\n\n"+msg;
-    if(!gh.sync)msg+="\n\nVos cartes ne sont pas synchronisées : une image utilisée seulement par un autre appareil serait supprimée aussi.";
-    if(!confirm(msg)){setClean("Suppression annulée.");return}}
-   var ok=0;return del.reduce(function(p,f){return p.then(function(){setClean("Suppression "+(ok+1)+"/"+del.length+"…");
-    return api("/contents/"+f.path,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Suppression d'une image inutilisée",sha:f.sha,branch:gh.branch||"main"})})
-    .then(function(r){if(!r.ok)return r.json().catch(function(){return{}}).then(function(j){throw new Error(j.message||"erreur "+r.status)});ok++})})},Promise.resolve())
-    .then(function(){setClean(ok+" image(s) supprimée(s) de GitHub "+stamp()+".")})})
-  .catch(function(e){setClean("Nettoyage impossible ("+e.message+").")})})}
+   if(!del.length){setClean("Aucune image inutilisée.");return null}
+   return{del:del,none:none}})})
+ /* 2. confirmation : on montre les images qui vont être supprimées */
+ .then(function(res){if(!res)return;
+  var ask=(!auto||res.del.length>10)?confirmImages(res.del,{none:res.none,nosync:!gh.sync}):Promise.resolve(res.del);
+  return ask.then(function(chosen){if(!chosen||!chosen.length){setClean("Suppression annulée.");return}
+   /* 3. suppression (en vérifiant une dernière fois qu'aucune carte n'utilise ces images) */
+   return enqueue(function(){var used2={};collect(maps,used2);collect(trash,used2);chosen=chosen.filter(function(f){return!used2[f.path]});var ok=0;
+    return chosen.reduce(function(p,f){return p.then(function(){setClean("Suppression "+(ok+1)+"/"+chosen.length+"…");
+     return api("/contents/"+f.path,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Suppression d'une image inutilisée",sha:f.sha,branch:gh.branch||"main"})})
+     .then(function(r){if(!r.ok)return r.json().catch(function(){return{}}).then(function(j){throw new Error(j.message||"erreur "+r.status)});ok++})})},Promise.resolve())
+     .then(function(){setClean(ok+" image(s) supprimée(s) de GitHub "+stamp()+".")})})})})
+ .catch(function(e){setClean("Nettoyage impossible ("+e.message+").")})}
 $("ghClean").onclick=function(){if(!ghReady()){setClean("Renseignez d’abord le dépôt et le jeton.");return}cleanImages(false)};
 $("ghAuto").onchange=function(){if(this.checked&&!gh.sync){this.checked=false;setClean("Activez d’abord la sauvegarde des cartes sur GitHub.");return}gh.auto=this.checked;store.set("mm_gh",gh)};
 if(!lsOk){toast("Ce navigateur n’enregistre pas les cartes (navigation privée ?). Activez la sauvegarde GitHub ou exportez vos cartes.");setSync("Attention : ce navigateur n’enregistre pas les cartes.")}
@@ -583,10 +622,11 @@ window.addEventListener("pointerup",endDrag);window.addEventListener("pointercan
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,k2=Math.max(.2,Math.min(3,tr.k*(e.deltaY<0?1.1:.9)));
  tr.x=px-(px-tr.x)*k2/tr.k;tr.y=py-(py-tr.y)*k2/tr.k;tr.k=k2;applyT()},{passive:false});
 document.addEventListener("keydown",function(e){
+ if($("lb").classList.contains("on")){if(e.key==="Escape")closeLb();return}
+ if($("cleanbox").classList.contains("on")){if(e.key==="Escape"&&$("cleanbox")._done)$("cleanbox")._done(null);return}
  if($("trashbox").classList.contains("on")){if(e.key==="Escape")closeTrash();return}
  if($("ed").classList.contains("on")){if(e.key==="Escape")closeEd();return}
  if(e.key==="Escape"&&linkFrom){endLink();return}
- if($("lb").classList.contains("on")){if(e.key==="Escape")closeLb();return}
  var inField=/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
  var ae=document.activeElement,inText=ae&&(ae.tagName==="TEXTAREA"||(ae.tagName==="INPUT"&&!/checkbox|button|file|radio/.test(ae.type)));
  if((e.ctrlKey||e.metaKey)&&!inText){var kk=(e.key||"").toLowerCase();if(kk==="z"&&!e.shiftKey){e.preventDefault();undo();return}if(kk==="y"||(kk==="z"&&e.shiftKey)){e.preventDefault();redo();return}}
