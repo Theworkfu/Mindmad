@@ -21,3 +21,7 @@ Ajuster les flèches pour ne pas qu'elles chevauchent des cellules. Ne pas dépl
 Lors du déplier d'une bulle, fait en sorte que les bulles ne se chevauchent pas
 
 Raccourcir les liens dans les bulles, et les laisser normal lorsque la pop up s'ouvre, pour eviter que les bulles s'étire de trop
+
+Possibilité de selectionner plusieurs bulles pour pouvoir les déplacer ensemble
+
+Quand on crée une nouvelle ligne en déplacant l'icone de flèche, au lieu de faire un tracé tout droit, il faudrait que la ligne prenne la forme du chemin qu'à pris le curseur de la souris
