@@ -26,4 +26,4 @@ Possibilité de selectionner plusieurs bulles pour pouvoir les déplacer ensembl
 
 Quand on crée une nouvelle ligne en déplacant l'icone de flèche, au lieu de faire un tracé tout droit, il faudrait que la ligne prenne la forme du chemin qu'à pris le curseur de la souris
 
-Si on l'on fait bouger la carte avec le clic gauche en faisant glisser la souris, il ne faut pas déselectionner la bulle
+Si on l'on fait bouger la carte avec le clic gauche en faisant glisser la souris, il ne faut pas déselectionner la bulle. mais si on clic ds le fond oui
