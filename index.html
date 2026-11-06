@@ -297,15 +297,18 @@ function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2
    qui l'alimentent (jusqu'aux bulles de départ) ; sur les flèches qui en partent, un seul cran.
    Les simples traits sont ignorés ; une double flèche est parcourue dans un sens puis dans l'autre. */
 var zapItems=[],zapRAF=0,zapLast=0,zapRM=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
-function zapPlan(){var m=cur(),S=sel&&getNIn(m,sel);if(!S)return[];var L=m.links||[],res={};
+function zapPlan(){var m=cur(),S=sel&&getNIn(m,sel);if(!S)return[];var L=m.links||[],res={},A=[];
  function mark(l,fw){var r=res[l.id]||(res[l.id]={l:l,f:0,b:0});if(fw)r.f=1;else r.b=1}
- var seen={},q=[S.id];seen[S.id]=1;
- while(q.length){var x=q.shift();
-  L.forEach(function(l){if(l.from===l.to)return;var a=l.a===undefined?1:l.a;if(!a)return;
-   var intoTo=l.to===x,intoFrom=l.from===x&&a===2;
-   if(intoTo||intoFrom){var o=intoTo?l.from:l.to;mark(l,intoTo);if(a===2)mark(l,!intoTo);if(!seen[o]){seen[o]=1;q.push(o)}}})}
- L.forEach(function(l){if(l.from===l.to)return;var a=l.a===undefined?1:l.a;if(!a)return;
-  if(l.from===S.id||(l.to===S.id&&a===2)){mark(l,true);if(a===2)mark(l,false)}});
+ /* un « arc » = une flèche dans un sens ; une double flèche donne deux arcs */
+ L.forEach(function(l){if(l.from===l.to)return;var a=l.a===undefined?1:l.a;if(!a)return;A.push({l:l,u:l.from,v:l.to});if(a===2)A.push({l:l,u:l.to,v:l.from})});
+ function markArc(r){mark(r.l,r.u===r.l.from);if(r.l.a===2)mark(r.l,r.u!==r.l.from)}
+ /* l'arc u→v ferme une boucle si v peut revenir à u par d'autres flèches */
+ function loops(r){var seen={},q=[r.v];seen[r.v]=1;while(q.length){var x=q.pop();if(x===r.u)return true;A.forEach(function(k){if(k.l!==r.l&&k.u===x&&!seen[k.v]){seen[k.v]=1;q.push(k.v)}})}return false}
+ /* niveau 0 : flèches qui arrivent sur la bulle, et celles qui en partent (un seul cran) */
+ var seen={},q=[];seen[S.id]=1;
+ A.forEach(function(r){if(r.v===S.id){markArc(r);if(!seen[r.u]){seen[r.u]=1;q.push(r.u)}}else if(r.u===S.id)markArc(r)});
+ /* remontée : on suit les flèches qui alimentent les bulles déjà atteintes, sans jamais passer par une boucle */
+ while(q.length){var x=q.shift();A.forEach(function(r){if(r.v!==x||loops(r))return;markArc(r);if(!seen[r.u]){seen[r.u]=1;q.push(r.u)}})}
  return Object.keys(res).map(function(k){return res[k]})}
 function zapPts(G){var p1=G.p1,c=G.c,p2=G.p2,len=Math.hypot(c[0]-p1[0],c[1]-p1[1])+Math.hypot(p2[0]-c[0],p2[1]-c[1]),N=Math.max(6,Math.round(len/12)),pts=[];
  for(var i=0;i<=N;i++){var t=i/N,u=1-t,x=u*u*p1[0]+2*u*t*c[0]+t*t*p2[0],y=u*u*p1[1]+2*u*t*c[1]+t*t*p2[1],
