@@ -25,3 +25,5 @@ Raccourcir les liens dans les bulles, et les laisser normal lorsque la pop up s'
 Possibilité de selectionner plusieurs bulles pour pouvoir les déplacer ensemble
 
 Quand on crée une nouvelle ligne en déplacant l'icone de flèche, au lieu de faire un tracé tout droit, il faudrait que la ligne prenne la forme du chemin qu'à pris le curseur de la souris
+
+Si on l'on fait bouger la carte avec le clic gauche en faisant glisser la souris, il ne faut pas déselectionner la bulle
