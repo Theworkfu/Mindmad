@@ -4,7 +4,7 @@ Déplacer une cellule sur une autre
 
 Suppr espace en fin de ligne
 
-Edition avec double clic sur texte de flèche ne fonctionne toujours pas. Même fonctionnement que les textes dans les cellules, Si on clic sur entrée ca doit aller à la ligne. 
+Edition avec double clic sur texte de flèche ne fonctionne toujours pas. Même fonctionnement que les textes dans les cellules ou que les notes. Si on clic sur entrée ca doit aller à la ligne. 
 
 Double flèche ne clignote pas sinon c'est bien
 
