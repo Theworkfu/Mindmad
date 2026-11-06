@@ -16,4 +16,4 @@ Lorsqu'on étire une poignée de flèche pour régler le rayon, l'extrémité de
 
 Cellule avec image, l'image soit s'adapter à la taille de la cellule. on peut redimensionner la cellule. on peut mettre plusieurs images dans une cellule
 
-Ajuster les flèches pour ne pas qu'elles chevauchent des cellules
+Ajuster les flèches pour ne pas qu'elles chevauchent des cellules. Ne pas déplacer les extrémités des flèches si on déplace une cellule
