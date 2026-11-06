@@ -12,7 +12,7 @@ Couleur blanche, ou noir en fonction du theme sombre ou pas
 
 Lorsqu'on ajoute une nouvelle cellule elle doit avoir la couleur de la derniere cellule ajoutée
 
-Lorsqu'on étire une poignée de flèche pour régler le rayon, l'extrémité de la flèche ne doit pas bouger
+Lorsqu'on étire une poignée de flèche pour régler le rayon, l'extrémité de la flèche ne doit pas bouger, j'ai l'impression que l'extrémité des flèches par dédaut se met au centre de la bulle. il faut la considérer comme rattéché au contour de la bulle. Et la centrer en largeur ou hauteur en fonction de sa position
 
 Cellule avec image, l'image soit s'adapter à la taille de la cellule. on peut redimensionner la cellule. on peut mettre plusieurs images dans une cellule
 
