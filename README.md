@@ -42,4 +42,4 @@ on peut redimensionner la cellule.
 
 Quand on crée une nouvelle ligne en déplacant l'icone de flèche, au lieu de faire un tracé tout droit, il faudrait que la ligne prenne la forme du chemin qu'à pris le curseur de la souris
 
-
+Une fois que l'on est ressorti de la carte il ne faut pas que l'on puisse faire de retour arrière ni avant
