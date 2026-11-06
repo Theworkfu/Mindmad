@@ -1,6 +1,19 @@
-Il y a une erreur j'ai l'impression au niveau de l'effet d'électricité : sur la capture, si A est selectionné, la flèche B vers E ne doit pas être animée, ni E vers C, ni C vers F
+Tout replier ou tout déplier
 
-Change l'animation sur les double flèches, 
+Déplacer une cellule sur une autre
 
+Suppr espace en fin de ligne
 
-Rajoute la possibilité de replier des bulles si des flèches partent de celle ci
+Edition avec double clic sur texte de flèche ne fonctionne toujours pas. Même fonctionnement que les textes dans les cellules, Si on clic sur entrée ca doit aller à la ligne. 
+
+Double flèche ne clignote pas sinon c'est bien
+
+Couleur rouge dispo pour les bulles
+
+Couleur blanche, ou noir en fonction du theme sombre ou pas
+
+Lorsqu'on ajoute une nouvelle cellule elle doit avoir la couleur de la derniere cellule ajoutée
+
+Lorsqu'on étire une poignée de flèche pour régler le rayon, l'extrémité de la flèche ne doit pas bouger
+
+Cellule avec image, l'image soit s'adapter à la taille de la cellule. on peut redimensionner la cellule
