@@ -226,7 +226,7 @@ var trash=store.get("mm_trash",[]);normNames(trash);
 if(migrated){store.set("mm_maps",maps);store.set("mm_trash",trash)}
 var curId=store.get("mm_cur",maps[0].id);
 var imgCache={};
-var sel=null,ms={},TRL=null,SIDE={},tr={x:60,y:0,k:1};
+var sel=null,ms={},TRL=null,SIDE={},SLOT={},tr={x:60,y:0,k:1};
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
 function persist(){store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
 function save(key){record(key);persist()}
@@ -338,22 +338,36 @@ function sideOf(fr){var e=1e-4;return fr[0]<=e?[-1,0]:fr[0]>=1-e?[1,0]:fr[1]<=e?
 function centerFr(fr){var s=sideOf(fr);return s[0]?[fr[0]<.5?0:1,.5]:[.5,fr[1]<.5?0:1]}
 function snapFr(fr,n){var s=sideOf(fr),f=fr.slice();if(s[0]){if(Math.abs(f[1]-.5)*n.h<14)f[1]=.5}else if(Math.abs(f[0]-.5)*n.w<14)f[0]=.5;return f}
 /* extrémité automatique : milieu du côté qui fait face à (tx,ty), départ perpendiculaire au bord */
-function endInfo(n,fr,tx,ty,fh){if(fr)return{p:[n.x+fr[0]*n.w,n.y+fr[1]*n.h],n:sideOf(fr)};
- var dx=tx-(n.x+n.w/2),dy=ty-(n.y+n.h/2),horiz=fh===undefined?Math.abs(dx)/n.w>=Math.abs(dy)/n.h:fh;
- if(horiz)return{p:[n.x+(dx<0?0:n.w),n.y+n.h/2],n:[dx<0?-1:1,0]};
- return{p:[n.x+n.w/2,n.y+(dy<0?0:n.h)],n:[0,dy<0?-1:1]}}
+/* slot : position (0..1) le long du côté, quand plusieurs extrémités arrivent sur le même côté (voir computeSlots) ; sans slot, milieu du côté */
+function endInfo(n,fr,tx,ty,fh,slot){
+ if(fr){var sd=sideOf(fr),p=[n.x+fr[0]*n.w,n.y+fr[1]*n.h];
+  if(slot!=null&&(sd[0]?Math.abs(fr[1]-.5)<1e-3:Math.abs(fr[0]-.5)<1e-3)){if(sd[0])p[1]=n.y+slot*n.h;else p[0]=n.x+slot*n.w}
+  return{p:p,n:sd}}
+ var dx=tx-(n.x+n.w/2),dy=ty-(n.y+n.h/2),horiz=fh===undefined?Math.abs(dx)/n.w>=Math.abs(dy)/n.h:fh,sl=slot==null?.5:slot;
+ if(horiz)return{p:[n.x+(dx<0?0:n.w),n.y+n.h*sl],n:[dx<0?-1:1,0]};
+ return{p:[n.x+n.w*sl,n.y+(dy<0?0:n.h)],n:[0,dy<0?-1:1]}}
+/* plusieurs extrémités sur le même côté d'une bulle : elles sont réparties régulièrement, dans l'ordre de position des bulles liées (pour limiter les croisements) */
+function computeSlots(){SLOT={};var m=cur(),grp={};
+ (m.links||[]).forEach(function(l){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b||CI.hid[a.id]||CI.hid[b.id])return;
+  var H=(l.fa&&l.ta)?undefined:pairAxis(l,a,b);
+  [[a,b,l.fa,"1"],[b,a,l.ta,"2"]].forEach(function(e){var n=e[0],o=e[1],fr=e[2];
+   if(fr&&!(sideOf(fr)[0]?Math.abs(fr[1]-.5)<1e-3:Math.abs(fr[0]-.5)<1e-3))return;
+   var ei=endInfo(n,fr,o.x+o.w/2,o.y+o.h/2,H),k=n.id+":"+ei.n[0]+","+ei.n[1];
+   (grp[k]=grp[k]||[]).push({id:l.id+e[3],v:ei.n[0]?o.y+o.h/2:o.x+o.w/2})})});
+ Object.keys(grp).forEach(function(k){var g=grp[k];if(g.length<2)return;
+  g.sort(function(u,v){return u.v-v.v||(u.id<v.id?-1:1)});g.forEach(function(e,i){SLOT[e.id]=(i+1)/(g.length+1)})})}
 /* choix du côté (gauche/droite = h, haut/bas = v) pour les deux extrémités d'une flèche, commun au départ et à l'arrivée :
-   - sur un côté (h) : on passe en haut/bas quand les bulles se chevauchent horizontalement alors qu'elles sont séparées verticalement
+   - bulles entièrement séparées horizontalement (même en diagonale) : côtés gauche/droite ;
+   - sinon, bulles qui se chevauchent horizontalement mais séparées verticalement : haut/bas
      (ex. la gauche de la bulle basse dépasse la droite de la bulle haute) ;
-   - en haut/bas (v) : on repasse sur un côté quand elles se chevauchent verticalement alors qu'elles sont séparées horizontalement ;
-   - en diagonale (séparées dans les deux sens) ou superposées : on garde le côté actuel. */
+   - bulles superposées : on garde le choix précédent. */
 function pairAxis(l,a,b){var hSep=b.x>=a.x+a.w||b.x+b.w<=a.x,vSep=b.y>=a.y+a.h||b.y+b.h<=a.y,pv=SIDE[l.id],h;
- if(hSep&&!vSep)h=true;else if(vSep&&!hSep)h=false;
+ if(hSep)h=true;else if(vSep)h=false;
  else if(pv)h=(pv==="h");
  else h=Math.abs(a.x+a.w/2-(b.x+b.w/2))/b.w>=Math.abs(a.y+a.h/2-(b.y+b.h/2))/b.h;
  SIDE[l.id]=h?"h":"v";return h}
 function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2;
- var H=(l.fa&&l.ta)?undefined:pairAxis(l,a,b),e1=endInfo(a,l.fa,bx,by,H),e2=endInfo(b,l.ta,ax,ay,H),q1=e1.p,q2=e2.p,c1,c2,k=Math.max(24,Math.hypot(q2[0]-q1[0],q2[1]-q1[1])/3);
+ var H=(l.fa&&l.ta)?undefined:pairAxis(l,a,b),e1=endInfo(a,l.fa,bx,by,H,SLOT[l.id+"1"]),e2=endInfo(b,l.ta,ax,ay,H,SLOT[l.id+"2"]),q1=e1.p,q2=e2.p,c1,c2,k=Math.max(24,Math.hypot(q2[0]-q1[0],q2[1]-q1[1])/3);
  if(l.c1||l.c2||!l.cv){
   c1=l.c1?[q1[0]+l.c1[0],q1[1]+l.c1[1]]:[q1[0]+e1.n[0]*k,q1[1]+e1.n[1]*k];
   c2=l.c2?[q2[0]+l.c2[0],q2[1]+l.c2[1]]:[q2[0]+e2.n[0]*k,q2[1]+e2.n[1]*k]}
@@ -403,6 +417,15 @@ function routeAround(l,a,b,q1,q2,c1,c2,O,build,G){
  return null}
 function bezAt(G,t){var u=1-t,A=u*u*u,B=3*u*u*t,C=3*u*t*t,D=t*t*t;return[A*G.p1[0]+B*G.c1[0]+C*G.c2[0]+D*G.p2[0],A*G.p1[1]+B*G.c1[1]+C*G.c2[1]+D*G.p2[1]]}
 function bezTan(G,t){var u=1-t;return[3*u*u*(G.c1[0]-G.p1[0])+6*u*t*(G.c2[0]-G.c1[0])+3*t*t*(G.p2[0]-G.c2[0]),3*u*u*(G.c1[1]-G.p1[1])+6*u*t*(G.c2[1]-G.c1[1])+3*t*t*(G.p2[1]-G.c2[1])]}
+/* tracé de la ligne : la courbe s'arrête 15 px avant la pointe (en translatant le point final et sa poignée), puis un segment droit, dans l'axe de la courbe
+   (donc perpendiculaire au bord quand l'extrémité est automatique), rejoint la pointe : le triangle est exactement dans le prolongement de la ligne */
+function shaft(G,l){var p1=G.p1,p2=G.p2,c1=G.c1,c2=G.c2,H=15;
+ function unit(a,b){var x=a[0]-b[0],y=a[1]-b[1],n=Math.hypot(x,y);return n<1e-3?null:[x/n,y/n]}
+ var d2=l.a!==0?unit(p2,c2):null,d1=l.a===2?unit(p1,c1):null;
+ if(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])<(l.a===2?2*H+30:H+30)){d1=null;d2=null}
+ var P1=d1?[p1[0]-d1[0]*H,p1[1]-d1[1]*H]:p1,C1=d1?[c1[0]-d1[0]*H,c1[1]-d1[1]*H]:c1,
+     P2=d2?[p2[0]-d2[0]*H,p2[1]-d2[1]*H]:p2,C2=d2?[c2[0]-d2[0]*H,c2[1]-d2[1]*H]:c2;
+ return{d:"M"+p1[0]+","+p1[1]+(d1?" L"+P1[0]+","+P1[1]:"")+" C"+C1[0]+","+C1[1]+" "+C2[0]+","+C2[1]+" "+P2[0]+","+P2[1]+(d2?" L"+p2[0]+","+p2[1]:""),d1:d1,d2:d2}}
 function endTan(G,t){var d=bezTan(G,t);if(Math.hypot(d[0],d[1])<1e-3)d=bezTan(G,t?.97:.03);return d}
 /* ---------- effet d'électricité ----------
    Bulle sélectionnée : l'électricité remonte, dans le sens des flèches, depuis toutes les bulles
@@ -461,14 +484,14 @@ function handle(g,pt,kind,l){var ctl=kind==="c1"||kind==="c2";var c=el("circle",
   hd={id:l.id,kind:kind,on:false}});
  c.addEventListener("click",function(e){e.stopPropagation()});c.addEventListener("dblclick",function(e){e.stopPropagation()})}
 var lastLk={id:null,t:0};
-function drawLinks(){zapBuild();var lg=$("links"),hg=$("lkh");lg.innerHTML="";hg.innerHTML="";var m=cur(),L=m.links||[];if(!L.length)return;var pos={};m.nodes.forEach(function(n){pos[n.id]=n});
+function drawLinks(){computeSlots();zapBuild();var lg=$("links"),hg=$("lkh");lg.innerHTML="";hg.innerHTML="";var m=cur(),L=m.links||[];if(!L.length)return;var pos={};m.nodes.forEach(function(n){pos[n.id]=n});
  L.forEach(function(l){var a=pos[l.from],b=pos[l.to];if(!a||!b||CI.hid[l.from]||CI.hid[l.to])return;
-  var G=linkGeom(l,a,b),p1=G.p1,p2=G.p2,d="M"+p1[0]+","+p1[1]+" C"+G.c1[0]+","+G.c1[1]+" "+G.c2[0]+","+G.c2[1]+" "+p2[0]+","+p2[1];
+  var G=linkGeom(l,a,b),p1=G.p1,p2=G.p2,SH=shaft(G,l),d=SH.d;
   var g=el("g",{"class":"lk"+(l.id===selLink?" sel":""),"data-id":l.id},lg);if(l.k!==undefined)g.style.setProperty("--lc",COLORS[l.k%COLORS.length]+"cc");
   function pick(e){e.stopPropagation();var t0=Date.now(),second=lastLk.id===l.id&&t0-lastLk.t<500;lastLk=second?{id:null,t:0}:{id:l.id,t:t0};selLink=l.id;sel=null;draw();syncPanel();if(second)editLabel(l)}
   var hit=el("path",{"class":"lkhit",d:d},g);el("path",{"class":"lkline",d:d},g);
-  if(l.a!==0){var t2=endTan(G,1);arrowHead(p2,[p2[0]-t2[0],p2[1]-t2[1]],g)}
-  if(l.a===2){var t1=endTan(G,0);arrowHead(p1,[p1[0]+t1[0],p1[1]+t1[1]],g)}
+  if(l.a!==0){var v2=SH.d2;if(v2)arrowHead(p2,[p2[0]-v2[0],p2[1]-v2[1]],g);else{var t2=endTan(G,1);arrowHead(p2,[p2[0]-t2[0],p2[1]-t2[1]],g)}}
+  if(l.a===2){var v1=SH.d1;if(v1)arrowHead(p1,[p1[0]-v1[0],p1[1]-v1[1]],g);else{var t1=endTan(G,0);arrowHead(p1,[p1[0]+t1[0],p1[1]+t1[1]],g)}}
   if(l.label){var LN=String(l.label).split("\n"),t=el("text",{"class":"lktext",x:G.mid[0],y:G.mid[1]+5-(LN.length-1)*8.5},g);
    LN.forEach(function(ln,i){var ts=el("tspan",{x:G.mid[0],dy:i?17:0},t);ts.textContent=ln||"\u00a0"});
    t.addEventListener("pointerdown",function(e){e.stopPropagation()});t.addEventListener("click",pick);t.addEventListener("dblclick",function(e){e.stopPropagation();editLabel(l)})}
