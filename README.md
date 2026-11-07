@@ -5,6 +5,7 @@ FLèche nouvelle que sur la droite comment faire
 marger autour des textes dans les bulles trop grand
 Texte trop grand sur fleche
 Si plusieurs extrémité de flèche, les décaler entre elles sur le contour
+Tangence pas prioritaire
 
 
 
