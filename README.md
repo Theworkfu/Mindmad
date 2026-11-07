@@ -3,6 +3,7 @@ Si sauveagrde icone, ou si pas sauvegarde icone
 Carte autre ppareil
 FLèche nouvelle que sur la droite comment faire
 marger autour des textes dans les bulles trop grand
+Texte trop grand sur fleche
 
 
 
