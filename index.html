@@ -226,7 +226,7 @@ var trash=store.get("mm_trash",[]);normNames(trash);
 if(migrated){store.set("mm_maps",maps);store.set("mm_trash",trash)}
 var curId=store.get("mm_cur",maps[0].id);
 var imgCache={};
-var sel=null,ms={},TRL=null,tr={x:60,y:0,k:1};
+var sel=null,ms={},TRL=null,SIDE={},tr={x:60,y:0,k:1};
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
 function persist(){store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
 function save(key){record(key);persist()}
@@ -338,12 +338,14 @@ function sideOf(fr){var e=1e-4;return fr[0]<=e?[-1,0]:fr[0]>=1-e?[1,0]:fr[1]<=e?
 function centerFr(fr){var s=sideOf(fr);return s[0]?[fr[0]<.5?0:1,.5]:[.5,fr[1]<.5?0:1]}
 function snapFr(fr,n){var s=sideOf(fr),f=fr.slice();if(s[0]){if(Math.abs(f[1]-.5)*n.h<14)f[1]=.5}else if(Math.abs(f[0]-.5)*n.w<14)f[0]=.5;return f}
 /* extrémité automatique : milieu du côté qui fait face à (tx,ty), départ perpendiculaire au bord */
-function endInfo(n,fr,tx,ty){if(fr)return{p:[n.x+fr[0]*n.w,n.y+fr[1]*n.h],n:sideOf(fr)};
- var dx=tx-(n.x+n.w/2),dy=ty-(n.y+n.h/2);
- if(Math.abs(dx)/n.w>=Math.abs(dy)/n.h)return{p:[n.x+(dx<0?0:n.w),n.y+n.h/2],n:[dx<0?-1:1,0]};
+function endInfo(n,fr,tx,ty,key){if(fr)return{p:[n.x+fr[0]*n.w,n.y+fr[1]*n.h],n:sideOf(fr)};
+ var dx=tx-(n.x+n.w/2),dy=ty-(n.y+n.h/2),rx=Math.abs(dx)/n.w,ry=Math.abs(dy)/n.h,horiz=rx>=ry;
+ /* marge : l'extrémité garde son axe (côté gauche/droit ou haut/bas) tant que l'autre axe ne l'emporte pas nettement */
+ if(key){var pv=SIDE[key];if(pv==="h")horiz=!(ry>rx*1.4);else if(pv==="v")horiz=rx>ry*1.4;SIDE[key]=horiz?"h":"v"}
+ if(horiz)return{p:[n.x+(dx<0?0:n.w),n.y+n.h/2],n:[dx<0?-1:1,0]};
  return{p:[n.x+n.w/2,n.y+(dy<0?0:n.h)],n:[0,dy<0?-1:1]}}
 function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2;
- var e1=endInfo(a,l.fa,bx,by),e2=endInfo(b,l.ta,ax,ay),q1=e1.p,q2=e2.p,c1,c2,k=Math.max(24,Math.hypot(q2[0]-q1[0],q2[1]-q1[1])/3);
+ var e1=endInfo(a,l.fa,bx,by,l.id+"1"),e2=endInfo(b,l.ta,ax,ay,l.id+"2"),q1=e1.p,q2=e2.p,c1,c2,k=Math.max(24,Math.hypot(q2[0]-q1[0],q2[1]-q1[1])/3);
  if(l.c1||l.c2||!l.cv){
   c1=l.c1?[q1[0]+l.c1[0],q1[1]+l.c1[1]]:[q1[0]+e1.n[0]*k,q1[1]+e1.n[1]*k];
   c2=l.c2?[q2[0]+l.c2[0],q2[1]+l.c2[1]]:[q2[0]+e2.n[0]*k,q2[1]+e2.n[1]*k]}
