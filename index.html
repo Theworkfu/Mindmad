@@ -11,8 +11,11 @@
 html,body{height:100%;margin:0}
 body{font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
 header{display:flex;gap:8px;align-items:center;padding:6px 10px;min-height:44px;background:var(--panel);border-bottom:1px solid var(--line)}
-#mTitle{font-weight:700;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:60vw;cursor:text;padding:2px 6px;border-radius:6px;touch-action:manipulation;user-select:none;-webkit-user-select:none}
-#mTitle:hover{background:var(--bg)}#mTitle input{font:inherit;font-weight:700;padding:2px 6px;width:min(60vw,320px)}
+#mTitle{font-weight:700;font-size:16px;line-height:42px;height:44px;padding:0 16px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;border-radius:22px;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.25);touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#mTitle:hover{border-color:var(--accent)}#mTitle input{font:inherit;font-weight:700;line-height:normal;height:32px;padding:0 6px;width:min(60vw,320px);vertical-align:middle}
+#tl{position:absolute;left:12px;top:12px;z-index:22;display:flex;flex-wrap:wrap;gap:8px;align-items:center;max-width:calc(100% - 92px)}
+#fabC{position:absolute;right:12px;top:12px;z-index:22}
+.rd{width:44px;height:44px;border-radius:50%;padding:0;font-size:22px;line-height:1;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.25)}
 button,select,input{font:inherit;color:inherit}
 button,select{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:5px 10px;cursor:pointer}
 button:hover{border-color:var(--accent)}
@@ -40,11 +43,11 @@ input[type=text],input[type=url],input[type=password],textarea{width:100%;paddin
 .sw.on{border-color:var(--ink)}
 .hint{font-size:12px;color:var(--muted)}
 .thumb{max-width:100%;max-height:110px;border-radius:6px;border:1px solid var(--line);display:none}
-#help{position:absolute;right:70px;bottom:14px;z-index:21;display:none;max-width:min(430px,calc(100% - 90px));font-size:12px;line-height:1.6;color:var(--ink);background:var(--panel);padding:10px 12px;border-radius:10px;border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.25)}#help.on{display:block}
+#help{position:absolute;right:82px;bottom:14px;z-index:21;display:none;max-width:min(430px,calc(100% - 90px));font-size:12px;line-height:1.6;color:var(--ink);background:var(--panel);padding:10px 12px;border-radius:10px;border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.25)}#help.on{display:block}
 #fabs{position:absolute;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:22;display:flex;flex-direction:column;gap:10px}
-.fab{width:44px;height:44px;border-radius:50%;padding:0;font-size:20px;line-height:1;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.25)}.fab:hover{border-color:var(--accent);color:var(--accent)}
+.fab svg{display:block;margin:auto}.fab{width:56px;height:56px;border-radius:50%;padding:0;font-size:28px;font-weight:700;line-height:1;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.25)}.fab:hover{border-color:var(--accent);color:var(--accent)}
 #drop{position:absolute;inset:10px;border:3px dashed var(--accent);border-radius:14px;background:color-mix(in srgb,var(--accent) 12%,transparent);display:none;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:var(--accent);pointer-events:none}#drop.on{display:flex}
-label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:13px}label.chk input{width:auto}#toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;display:none;max-width:80%}#toast.on{display:block}
+label.chk{flex-direction:row;align-items:center;gap:8px;color:var(--ink);font-size:13px}label.chk input{width:auto}#toast{position:absolute;left:50%;bottom:22px;z-index:23;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:13px;display:none;max-width:calc(100% - 180px)}#toast.on{display:block}
 #lb{position:fixed;inset:0;z-index:50;background:rgba(8,12,16,.78);display:none;align-items:center;justify-content:center;padding:24px}
 #lb.on{display:flex}
 #lbi{max-width:92vw;max-height:88vh;border-radius:10px;box-shadow:0 12px 40px rgba(0,0,0,.5);background:var(--panel);cursor:default}
@@ -66,7 +69,7 @@ body.linking .node{cursor:crosshair}
 .lrow input{flex:1;min-width:0;padding:4px 6px}
 .lrow button{padding:2px 9px}
 button:disabled{opacity:.4;cursor:default}
-#bUndo,#bRedo{font-size:16px;line-height:1.2;padding:3px 10px}
+
 .lkh{fill:var(--panel);stroke:var(--link);cursor:grab}
 .lkh.m{fill:var(--link)}.lkh.ctl{fill:var(--link);stroke:var(--panel)}
 .lkctl{fill:none;stroke:var(--link);stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none}
@@ -123,23 +126,20 @@ button:disabled{opacity:.4;cursor:default}
 .ec{pointer-events:none}.ec.g{fill:#35c3ff;opacity:.3}.ec.t{fill:#35c3ff}.ec.c{fill:#fff;stroke:#35c3ff;stroke-width:1.4}
 .node.cw rect.box{filter:drop-shadow(0 0 1.2px rgba(0,0,0,.75))}
 @media (prefers-color-scheme:dark){.node.ck rect.box{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.85))}}
-@media(max-width:760px){#mTitle{max-width:50vw}}
+@media(max-width:760px){#mTitle{max-width:100%}}
 </style>
 </head>
 <body>
-<header>
-  <button id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button>
-  <span id="mTitle" title="Double-clic pour renommer la carte"></span><button id="bMaps" title="Changer de carte" aria-label="Changer de carte">▾</button>
-  <input id="file" type="file" accept="application/json" hidden>
-  <span class="hint" id="ver" style="margin-left:auto" title="Numéro de version de la page">v25</span>
-</header>
 <main>
   <div id="stage">
     <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="edges"></g><g id="links"></g><g id="zap"></g><g id="nodes"></g><g id="lkh"></g></g></svg>
+    <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button><span id="mTitle" title="Double-clic pour renommer la carte"></span></div>
+    <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁</button>
+    <input id="file" type="file" accept="application/json" hidden>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
     <div id="help">Double-clic sur le fond : nouvelle bulle<br>Double-clic sur une bulle : modifier le texte<br>Clic droit (appui long sur mobile) : menu de la bulle, de la flèche ou du fond<br>Glisser une bulle : la déplacer (les flèches s’ajustent) · Maj+clic : sélectionner plusieurs bulles<br>Pastille ➜ de la bulle sélectionnée : tirer vers une autre bulle pour les relier, ou vers le vide pour créer une bulle<br>Tab : bulle reliée à la bulle sélectionnée<br>Extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche<br>Double-clic sur le titre : renommer la carte · double-clic sur un libellé : l’éditer<br>Clic molette sur une bulle : replier/déplier · Ctrl+V : coller une image</div>
-    <div id="fabs"><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button><button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁</button><button class="fab" id="fabS" title="Réglages" aria-label="Réglages">⚙</button></div>
+    <div id="fabs"><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
   </div>
   <aside id="side">
     <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:15px;color:var(--ink)">Images et sauvegarde</h2><button id="asx" aria-label="Fermer">×</button></div>
@@ -159,6 +159,7 @@ button:disabled{opacity:.4;cursor:default}
     <div class="row"><button id="ghClean" class="danger">Supprimer les images inutilisées</button></div>
     <label class="chk"><input type="checkbox" id="ghAuto"> Le faire automatiquement après chaque sauvegarde</label>
     <div class="hint" id="ghCleanState"></div>
+  <div class="hint" id="ver" title="Numéro de version de la page">v26</div>
   </aside>
 </main>
 <div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><div id="edl" aria-label="Liens du texte"></div><div class="hint">Entrée : nouvelle ligne · Ctrl+clic sur un lien pour l’ouvrir · cliquez à l’extérieur pour valider</div></div></div>
@@ -332,13 +333,22 @@ function projBorder(n,x,y){var l=n.x,t=n.y,r=n.x+n.w,b=n.y+n.h,cx=Math.min(Math.
  if(x>l&&x<r&&y>t&&y<b){var dl=x-l,dr=r-x,dt=y-t,db=b-y,m=Math.min(dl,dr,dt,db);if(m===dl)cx=l;else if(m===dr)cx=r;else if(m===dt)cy=t;else cy=b}
  return[(cx-l)/n.w,(cy-t)/n.h]}
 /* courbe de Bézier : départ p1, poignée c1 (attachée au départ), poignée c2 (attachée à l'arrivée), arrivée p2 */
+/* côté d'une bulle auquel une extrémité est accrochée, et position sur ce côté (0..1) */
+function sideOf(fr){var e=1e-4;return fr[0]<=e?[-1,0]:fr[0]>=1-e?[1,0]:fr[1]<=e?[0,-1]:[0,1]}
+function centerFr(fr){var s=sideOf(fr);return s[0]?[fr[0]<.5?0:1,.5]:[.5,fr[1]<.5?0:1]}
+function snapFr(fr,n){var s=sideOf(fr),f=fr.slice();if(s[0]){if(Math.abs(f[1]-.5)*n.h<14)f[1]=.5}else if(Math.abs(f[0]-.5)*n.w<14)f[0]=.5;return f}
+/* extrémité automatique : milieu du côté qui fait face à (tx,ty), départ perpendiculaire au bord */
+function endInfo(n,fr,tx,ty){if(fr)return{p:[n.x+fr[0]*n.w,n.y+fr[1]*n.h],n:sideOf(fr)};
+ var dx=tx-(n.x+n.w/2),dy=ty-(n.y+n.h/2);
+ if(Math.abs(dx)/n.w>=Math.abs(dy)/n.h)return{p:[n.x+(dx<0?0:n.w),n.y+n.h/2],n:[dx<0?-1:1,0]};
+ return{p:[n.x+n.w/2,n.y+(dy<0?0:n.h)],n:[0,dy<0?-1:1]}}
 function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2;
- var q1=l.fa?[a.x+l.fa[0]*a.w,a.y+l.fa[1]*a.h]:edgePt(a,bx,by),q2=l.ta?[b.x+l.ta[0]*b.w,b.y+l.ta[1]*b.h]:edgePt(b,ax,ay),c1,c2;
+ var e1=endInfo(a,l.fa,bx,by),e2=endInfo(b,l.ta,ax,ay),q1=e1.p,q2=e2.p,c1,c2,k=Math.max(24,Math.hypot(q2[0]-q1[0],q2[1]-q1[1])/3);
  if(l.c1||l.c2||!l.cv){
-  c1=l.c1?[q1[0]+l.c1[0],q1[1]+l.c1[1]]:[q1[0]+(q2[0]-q1[0])/3,q1[1]+(q2[1]-q1[1])/3];
-  c2=l.c2?[q2[0]+l.c2[0],q2[1]+l.c2[1]]:[q2[0]+(q1[0]-q2[0])/3,q2[1]+(q1[1]-q2[1])/3]}
+  c1=l.c1?[q1[0]+l.c1[0],q1[1]+l.c1[1]]:[q1[0]+e1.n[0]*k,q1[1]+e1.n[1]*k];
+  c2=l.c2?[q2[0]+l.c2[0],q2[1]+l.c2[1]]:[q2[0]+e2.n[0]*k,q2[1]+e2.n[1]*k]}
  else{var qm=[(ax+bx)/2+l.cv[0],(ay+by)/2+l.cv[1]];c1=[q1[0]+2/3*(qm[0]-q1[0]),q1[1]+2/3*(qm[1]-q1[1])];c2=[q2[0]+2/3*(qm[0]-q2[0]),q2[1]+2/3*(qm[1]-q2[1])]}
- function build(c1,c2,p1,p2){p1=p1||(l.fa?q1:edgePt(a,c1[0],c1[1]));p2=p2||(l.ta?q2:edgePt(b,c2[0],c2[1]));
+ function build(c1,c2,p1,p2){p1=p1||q1;p2=p2||q2;
   return{q1:q1,q2:q2,p1:p1,p2:p2,c1:c1,c2:c2,mid:[(p1[0]+3*c1[0]+3*c2[0]+p2[0])/8,(p1[1]+3*c1[1]+3*c2[1]+p2[1])/8]}}
  var G=build(c1,c2),O=routeObst(a,b);
  /* si la flèche (même tracée à la main) traverse une autre bulle, on la contourne */
@@ -348,13 +358,16 @@ function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2
  return G}
 function routeObst(a,b){var o=[];cur().nodes.forEach(function(n){if(CI.hid[n.id])return;o.push({id:n.id,x:n.x,y:n.y,w:n.w,h:n.h,p:(n.id===a.id||n.id===b.id)?-3:7})});return o}
 function hitList(G,O){var out=[],seen={};for(var i=1;i<30;i++){var P=bezAt(G,i/30);for(var j=0;j<O.length;j++){var r=O[j],p=r.p;if(!seen[j]&&P[0]>r.x-p&&P[0]<r.x+r.w+p&&P[1]>r.y-p&&P[1]<r.y+r.h+p){seen[j]=1;out.push(r)}}}return out}
-/* courbe de Bézier qui passe près de points intermédiaires (aux 1/3 et 2/3 de la longueur) */
-function bezThrough(P0,pts,P3){var all=[P0].concat(pts,[P3]),cum=[0],i;for(i=1;i<all.length;i++)cum[i]=cum[i-1]+Math.hypot(all[i][0]-all[i-1][0],all[i][1]-all[i-1][1]);
+/* courbe de Bézier qui part de P0 dans la direction T1, arrive en P3 en venant de la direction T2 (normales aux bords) et passe près des points intermédiaires */
+function fitTan(P0,T1,pts,P3,T2){var all=[P0].concat(pts,[P3]),cum=[0],i;for(i=1;i<all.length;i++)cum[i]=cum[i-1]+Math.hypot(all[i][0]-all[i-1][0],all[i][1]-all[i-1][1]);
  var tot=cum[cum.length-1]||1;
  function at(f){var d=tot*f,k=1;while(k<all.length-1&&cum[k]<d)k++;var sg=(cum[k]-cum[k-1])||1,u=(d-cum[k-1])/sg;return[all[k-1][0]+(all[k][0]-all[k-1][0])*u,all[k-1][1]+(all[k][1]-all[k-1][1])*u]}
- var Q1=at(1/3),Q2=at(2/3),C1=[],C2=[];
- for(i=0;i<2;i++){var R1=27*Q1[i]-8*P0[i]-P3[i],R2=27*Q2[i]-P0[i]-8*P3[i];C1[i]=(2*R1-R2)/18;C2[i]=(2*R2-R1)/18}
- return[C1,C2]}
+ var ts=[1/3,2/3],Q=[at(1/3),at(2/3)],M11=0,M12=0,M22=0,b1=0,b2=0,t12=T1[0]*T2[0]+T1[1]*T2[1];
+ ts.forEach(function(t,j){var u=1-t,A0=u*u*u,A1=3*u*u*t,A2=3*u*t*t,A3=t*t*t,R=[Q[j][0]-(A0+A1)*P0[0]-(A2+A3)*P3[0],Q[j][1]-(A0+A1)*P0[1]-(A2+A3)*P3[1]];
+  M11+=A1*A1;M12+=A1*A2*t12;M22+=A2*A2;b1+=A1*(T1[0]*R[0]+T1[1]*R[1]);b2+=A2*(T2[0]*R[0]+T2[1]*R[1])});
+ var det=M11*M22-M12*M12,al1=tot/3,al2=tot/3;if(Math.abs(det)>1e-6){al1=(b1*M22-b2*M12)/det;al2=(M11*b2-M12*b1)/det}
+ var lo=24,hi=Math.max(60,tot);al1=Math.max(lo,Math.min(hi,al1));al2=Math.max(lo,Math.min(hi,al2));
+ return[[P0[0]+T1[0]*al1,P0[1]+T1[1]*al1],[P3[0]+T2[0]*al2,P3[1]+T2[1]*al2],tot]}
 /* parcours de la souris pendant le déplacement d'une bulle : TRL = {ids:{bulles déplacées}, ref:bulle saisie, pts:[centres]} */
 function trailPts(id){if(!TRL||!TRL.ids[id])return null;var m=cur(),r=getNIn(m,TRL.ref),n=getNIn(m,id);if(!r||!n)return null;
  var dx=(n.x+n.w/2)-(r.x+r.w/2),dy=(n.y+n.h/2)-(r.y+r.h/2);return TRL.pts.map(function(p){return[p[0]+dx,p[1]+dy]})}
@@ -365,11 +378,11 @@ function routeAround(l,a,b,q1,q2,c1,c2,O,build,G){
  var dx=q2[0]-q1[0],dy=q2[1]-q1[1],ln=Math.hypot(dx,dy),T=null,k;
  /* 1. flèche rattachée à la bulle qu'on déplace : on passe du même côté des autres bulles que la souris */
  if(TRL){var ma=!!TRL.ids[a.id],mb=!!TRL.ids[b.id];if(ma!==mb)T=trailPts(ma?a.id:b.id)}
- if(T&&T.length>1){var wp={},cl=24,cu=G,bl,added,pts,P0,P3,cc;
+ if(T&&T.length>1){var wp={},cl=24,cu=G,bl,added,pts,ea,eb,cc;
   for(k=0;k<6;k++){bl=hitList(cu,O);if(!bl.length)return cu;if(bl.some(function(o){return o.p<0}))break;
    added=false;bl.forEach(function(o){if(!wp[o.id]){wp[o.id]={o:o,s:sideFromTrail(o,T)};added=true}});if(!added)cl+=18;
    pts=Object.keys(wp).map(function(id){return wayPt(wp[id].o,wp[id].s,cl)}).sort(function(u,v){return(u[0]-q1[0])*dx+(u[1]-q1[1])*dy-((v[0]-q1[0])*dx+(v[1]-q1[1])*dy)});
-   P0=l.fa?q1:edgePt(a,pts[0][0],pts[0][1]);P3=l.ta?q2:edgePt(b,pts[pts.length-1][0],pts[pts.length-1][1]);cc=bezThrough(P0,pts,P3);cu=build(cc[0],cc[1],P0,P3)}
+   ea=endInfo(a,l.fa,pts[0][0],pts[0][1]);eb=endInfo(b,l.ta,pts[pts.length-1][0],pts[pts.length-1][1]);cc=fitTan(ea.p,ea.n,pts,eb.p,eb.n);cu=build(cc[0],cc[1],ea.p,eb.p)}
   if(!hitList(cu,O).length)return cu}
  /* 2. sinon : la plus petite courbure qui évite les bulles */
  if(ln<1)return null;
@@ -434,7 +447,7 @@ var hd=null;
 function sizeHandles(){var hs=document.querySelectorAll("#lkh circle");for(var i=0;i<hs.length;i++){hs[i].setAttribute("r",7/tr.k);hs[i].setAttribute("stroke-width",2/tr.k)}}
 function handle(g,pt,kind,l){var ctl=kind==="c1"||kind==="c2";var c=el("circle",{cx:pt[0],cy:pt[1],r:7/tr.k,"stroke-width":2/tr.k,"class":"lkh"+(ctl?" ctl":"")},g);
  c.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault();var m=cur(),pos={};m.nodes.forEach(function(n){pos[n.id]=n});var a=pos[l.from],b=pos[l.to];if(!a||!b)return;
-  if(ctl){var gm=linkGeom(l,a,b);if(!l.c1)l.c1=[Math.round(gm.c1[0]-gm.q1[0]),Math.round(gm.c1[1]-gm.q1[1])];if(!l.c2)l.c2=[Math.round(gm.c2[0]-gm.q2[0]),Math.round(gm.c2[1]-gm.q2[1])];delete l.cv}
+  if(ctl){var gm=linkGeom(l,a,b);if(gm.routed){if(!l.fa)l.fa=projBorder(a,gm.p1[0],gm.p1[1]);if(!l.ta)l.ta=projBorder(b,gm.p2[0],gm.p2[1])}if(!l.c1)l.c1=[Math.round(gm.c1[0]-gm.p1[0]),Math.round(gm.c1[1]-gm.p1[1])];if(!l.c2)l.c2=[Math.round(gm.c2[0]-gm.p2[0]),Math.round(gm.c2[1]-gm.p2[1])];delete l.cv}
   hd={id:l.id,kind:kind,on:false}});
  c.addEventListener("click",function(e){e.stopPropagation()});c.addEventListener("dblclick",function(e){e.stopPropagation()})}
 var lastLk={id:null,t:0};
@@ -461,7 +474,7 @@ window.addEventListener("pointermove",function(e){if(!hd)return;var m=cur(),l=(m
  if(hd.kind==="a"||hd.kind==="b"){var own=hd.kind==="a"?a:b,oth=hd.kind==="a"?b:a,T=hitNode(m,x,y);
   if(T&&T!==own&&T!==oth){hd.tgt=T.id;hd.x=x;hd.y=y;setHl(T.id);var G0=linkGeom(l,a,b),q=hd.kind==="a"?G0.p2:G0.p1,P=$("tmpl");if(!P)P=el("path",{id:"tmpl","class":"tmpl"},$("lkh"));P.setAttribute("d","M"+q[0]+","+q[1]+" L"+x+","+y);return}
   hd.tgt=null;clearHl();var tp0=$("tmpl");if(tp0)tp0.remove()}
- if(hd.kind==="a")l.fa=projBorder(a,x,y);else if(hd.kind==="b")l.ta=projBorder(b,x,y);
+ if(hd.kind==="a")l.fa=snapFr(projBorder(a,x,y),a);else if(hd.kind==="b")l.ta=snapFr(projBorder(b,x,y),b);
  else{var G=linkGeom(l,a,b),q=hd.kind==="c1"?G.q1:G.q2,o=[Math.round(x-q[0]),Math.round(y-q[1])];if(hd.kind==="c1")l.c1=o;else l.c2=o}
  draw()});
 function hitNode(m,x,y){for(var i=m.nodes.length-1;i>=0;i--){var n=m.nodes[i];if(!CI.hid[n.id]&&x>=n.x-6&&x<=n.x+n.w+6&&y>=n.y-6&&y<=n.y+n.h+6)return n}return null}
@@ -473,29 +486,20 @@ function fitPath(l,A,N,path){
  /* la flèche arrive perpendiculairement au milieu du côté d'où vient la souris */
  if(Math.abs(vx)/N.w>=Math.abs(vy)/N.h){if(vx>0){P3=[N.x,N.y+N.h/2];T2=[-1,0]}else{P3=[N.x+N.w,N.y+N.h/2];T2=[1,0]}}
  else{if(vy>0){P3=[N.x+N.w/2,N.y];T2=[0,-1]}else{P3=[N.x+N.w/2,N.y+N.h];T2=[0,1]}}
- var pts=[P0].concat(L,[P3]),cum=[0],i;
- for(i=1;i<pts.length;i++)cum[i]=cum[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);
- var tot=cum[cum.length-1];if(tot<30)return;
- function at(f){var d=tot*f,k=1;while(k<pts.length-1&&cum[k]<d)k++;var sg=(cum[k]-cum[k-1])||1,u=(d-cum[k-1])/sg;return[pts[k-1][0]+(pts[k][0]-pts[k-1][0])*u,pts[k-1][1]+(pts[k][1]-pts[k-1][1])*u]}
- var ts=[1/3,2/3],Q=[at(1/3),at(2/3)],M11=0,M12=0,M22=0,b1=0,b2=0,t12=T1[0]*T2[0]+T1[1]*T2[1];
- ts.forEach(function(t,j){var u=1-t,A0=u*u*u,A1=3*u*u*t,A2=3*u*t*t,A3=t*t*t,R=[Q[j][0]-(A0+A1)*P0[0]-(A2+A3)*P3[0],Q[j][1]-(A0+A1)*P0[1]-(A2+A3)*P3[1]];
-  M11+=A1*A1;M12+=A1*A2*t12;M22+=A2*A2;b1+=A1*(T1[0]*R[0]+T1[1]*R[1]);b2+=A2*(T2[0]*R[0]+T2[1]*R[1])});
- var det=M11*M22-M12*M12,al1=tot/3,al2=tot/3;
- if(Math.abs(det)>1e-6){al1=(b1*M22-b2*M12)/det;al2=(M11*b2-M12*b1)/det}
- var lo=24,hi=Math.max(60,tot);al1=Math.max(lo,Math.min(hi,al1));al2=Math.max(lo,Math.min(hi,al2));
+ var cc=fitTan(P0,T1,L,P3,T2);if(cc[2]<30)return;
  l.fa=[1,.5];l.ta=projBorder(N,P3[0],P3[1]);
- l.c1=[Math.round(T1[0]*al1),Math.round(T1[1]*al1)];l.c2=[Math.round(T2[0]*al2),Math.round(T2[1]*al2)]}
+ l.c1=[Math.round(cc[0][0]-P0[0]),Math.round(cc[0][1]-P0[1])];l.c2=[Math.round(cc[1][0]-P3[0]),Math.round(cc[1][1]-P3[1])]}
 function reattach(l,kind,id,px,py){var m=cur(),other=kind==="a"?l.to:l.from;
  if(id===other)return;
  if((m.links||[]).some(function(k){return k!==l&&((k.from===id&&k.to===other)||(k.from===other&&k.to===id))})){toast("Ces deux bulles sont déjà reliées.");return}
  if(kind==="a"){l.from=id;delete l.fa}else{l.to=id;delete l.ta}delete l.cv;delete l.c1;delete l.c2;delete l.rv;
- var nn=getN(id);if(nn&&px!==undefined){var pr=projBorder(nn,px,py);if(kind==="a")l.fa=pr;else l.ta=pr}}
+ var nn=getN(id);if(nn&&px!==undefined){var pr=centerFr(projBorder(nn,px,py));if(kind==="a")l.fa=pr;else l.ta=pr}}
 function applyT(){$("view").setAttribute("transform","translate("+tr.x+","+tr.y+") scale("+tr.k+")");sizeHandles()}
 function fit(){var cv=$("cv"),W=cv.clientWidth,H=cv.clientHeight,N=cur().nodes.filter(function(n){return !CI.hid[n.id]});
  if(!N.length){tr.k=1;tr.x=W/2;tr.y=H/2;applyT();return}
  N.forEach(measure);var minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
  N.forEach(function(n){minx=Math.min(minx,n.x);maxx=Math.max(maxx,n.x+n.w+20);miny=Math.min(miny,n.y);maxy=Math.max(maxy,n.y+n.h)});
- var k=Math.min(1.2,(W-80)/(maxx-minx),(H-80)/(maxy-miny));tr.k=k;tr.x=(W-(maxx-minx)*k)/2-minx*k;tr.y=(H-(maxy-miny)*k)/2-miny*k;applyT()}
+ var top=W<761?130:76,k=Math.min(1.2,(W-80)/(maxx-minx),(H-top-30)/(maxy-miny));tr.k=k;tr.x=(W-(maxx-minx)*k)/2-minx*k;tr.y=top+(H-top-(maxy-miny)*k)/2-miny*k;applyT()}
 
 /* ---------- panneau ---------- */
 function syncPanel(){}
@@ -516,7 +520,7 @@ function endLink(){linkFrom=null;document.body.classList.remove("linking");$("to
 function addLink(from,to,pt){var m=cur();m.links=m.links||[];if(from===to)return;
  if(m.links.some(function(l){return(l.from===from&&l.to===to)||(l.from===to&&l.to===from)})){toast("Ces deux bulles sont déjà reliées.");return}
  var nl={id:uid(),from:from,to:to,label:"",a:1},A=getN(from),B=getN(to);
- if(pt&&A&&B){var ac=edgePt(A,pt[0],pt[1]);nl.fa=projBorder(A,ac[0],ac[1]);nl.ta=projBorder(B,pt[0],pt[1])}
+ if(pt&&A&&B){var ac=edgePt(A,pt[0],pt[1]);nl.fa=centerFr(projBorder(A,ac[0],ac[1]));nl.ta=centerFr(projBorder(B,pt[0],pt[1]))}
  m.links.push(nl);selLink=null;sel=from;ms={};save();draw();syncPanel();toast("Bulles reliées. Clic droit sur le lien pour ajouter un libellé.")}
 function startLink(){if(!sel)return;linkFrom=sel;selLink=null;document.body.classList.add("linking");toast("Cliquez sur la bulle à relier à « "+nodeName(sel)+" ». Échap pour annuler.")}
 function rm(){var ids=selIds().filter(function(i){return getN(i)});if(!ids.length)return;var m=cur();m.nodes=m.nodes.filter(function(x){return ids.indexOf(x.id)<0});pruneLinks(m);sel=null;ms={};save();draw();syncPanel()}
@@ -682,15 +686,11 @@ function renameMap(){var m=cur(),t=$("mTitle");if(t.querySelector("input"))retur
  function fin(ok){if(done)return;done=true;var v=inp.value.trim();t.textContent="";if(ok&&v&&v!==m.title){m.title=v;save()}refreshMaps()}
  inp.onkeydown=function(e){e.stopPropagation();if(e.key==="Enter")fin(true);else if(e.key==="Escape")fin(false)};inp.onblur=function(){fin(true)}}
 var lastTT=0;$("mTitle").addEventListener("click",function(e){if(e.target.tagName==="INPUT")return;var t=Date.now();if(t-lastTT<450){lastTT=0;renameMap()}else lastTT=t});
-function mapsMenu(){return maps.map(function(m){return{icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)}}})}
-function settingsMenu(){return[
- {icon:"＋",label:"Nouvelle carte…",fn:newMapAct},
- {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},
- {icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
- "-",
- {icon:"✕",label:"Supprimer cette carte…",danger:true,fn:delMapAct}]}
-$("bMaps").onclick=function(){var r=this.getBoundingClientRect();showCtx(r.left,r.bottom+4,mapsMenu())};
-$("fabS").onclick=function(){var r=this.getBoundingClientRect();showCtx(r.left,r.top,settingsMenu(),r)};
+function dupMapAct(){var o=cur(),c=JSON.parse(JSON.stringify(o));c.id=uid();c.title=(o.title||"Ma carte")+" (copie)";leaveMap();maps.splice(maps.indexOf(o)+1,0,c);curId=c.id;sel=null;selLink=null;ensureHist(c);save();refreshMaps();draw();syncPanel();fit();toast("Carte dupliquée.")}
+function mainMenu(){var it=maps.map(function(m){return{icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)}}});
+ it.push("-",{icon:"＋",label:"Nouvelle carte…",fn:newMapAct},{icon:"⧉",label:"Dupliquer cette carte",fn:dupMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
+  {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{icon:"✕",label:"Supprimer cette carte…",danger:true,fn:delMapAct});return it}
+$("fabM").onclick=function(){var r=this.getBoundingClientRect();showCtx(r.left,r.bottom+8,mainMenu())};
 $("fabC").onclick=function(){$("side").classList.toggle("on");$("help").classList.remove("on")};
 $("asx").onclick=function(){$("side").classList.remove("on")};
 $("fabH").onclick=function(){$("help").classList.toggle("on");$("side").classList.remove("on")};
