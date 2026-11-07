@@ -1,5 +1,5 @@
 Sur smartphone, on peut zoomer avec 2 doigts
-Si sauveagrde icone, ou si pas sauvegarde icone 
+Si sauveagrde icone, ou si pas sauvegarde icone , nuage
 Carte autre ppareil
 FLèche nouvelle que sur la droite comment faire
 marger autour des textes dans les bulles trop grand
