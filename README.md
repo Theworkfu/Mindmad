@@ -9,6 +9,7 @@
 
 A faire :
 
+Dupliquer une carte
 
 Tout replier ou tout déplier
 
