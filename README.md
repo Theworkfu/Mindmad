@@ -1,5 +1,7 @@
-
-
+Sur smartphone, on peut zoomer avec 2 doigts
+Si sauveagrde icone, ou si pas sauvegarde icone 
+Carte autre ppareil
+FLèche nouvelle que sur la droite comment faire
 
 
 
