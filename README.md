@@ -1,11 +1,5 @@
 Fait mais non testé: 
 
-Lors de la création d'une nouvelle bulle avec l'icone de flèche l'extrémité de la flèche est positionné en bas alors que la bulle est à droite, ca ne réagit pas comme tab et ca ne me convient pas.
-
-Supprimer le clic droit sur une bulle et fais le apparaitre si on laisse la souris dessus pendant environ 2sec
-
-
-
 
 
 a faire : 
@@ -16,7 +10,7 @@ Trie les cartes ds le menu de gauche dans l'ordre de dernières modifications et
 
 
 
-
+Clic milieu sur une carte ds le menu de gauche = ouvre la carte ds un nouvel onglet, clic droit permet de supprimer la carte
 Carte autre ppareil
 Si sauveagrde icone, ou si pas sauvegarde icone , nuage
 on peut mettre plusieurs images dans une cellule
