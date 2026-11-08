@@ -28,7 +28,7 @@ svg#cv{width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 svg#cv.drag{cursor:grabbing}
 .node rect.box{fill:var(--node);stroke-width:2}
 .node text{fill:var(--ink);font-size:14px;pointer-events:none}
-.node.sel rect.box{stroke-width:4}
+.node.sel rect.box{stroke-width:5;fill:color-mix(in srgb,var(--sc,var(--accent)) 16%,var(--node));filter:drop-shadow(0 0 7px var(--sc,var(--accent))) drop-shadow(0 0 2px var(--sc,var(--accent)))}
 .node{cursor:grab;user-select:none;-webkit-user-select:none}
 .edge{fill:none;stroke:var(--edge);stroke-width:2}
 .tog circle{fill:var(--panel);stroke:var(--edge)}
@@ -63,7 +63,7 @@ textarea#fText{resize:vertical;font:inherit}
 .lkhit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer;pointer-events:stroke}
 .lk.sel .lkline{stroke:var(--link);stroke-width:3.5}
 .lkarrow{fill:var(--lc,var(--edge));pointer-events:none}.lk.sel .lkarrow{fill:var(--link)}
-.lktext{font-size:14px;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round;pointer-events:all;cursor:text}
+.lktext{font-size:12px;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round;pointer-events:all;cursor:text}
 body.linking .node{cursor:crosshair}
 .lrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .lname{width:100%;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -127,6 +127,8 @@ button:disabled{opacity:.4;cursor:default}
 .ec{pointer-events:none}.ec.g{fill:#35c3ff;opacity:.3}.ec.t{fill:#35c3ff}.ec.c{fill:#fff;stroke:#35c3ff;stroke-width:1.4}
 .node.cw rect.box{filter:drop-shadow(0 0 1.2px rgba(0,0,0,.75))}
 @media (prefers-color-scheme:dark){.node.ck rect.box{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.85))}}
+.node.sel.cw rect.box{filter:drop-shadow(0 0 6px rgba(0,0,0,.75))}
+@media (prefers-color-scheme:dark){.node.sel.cw rect.box{filter:drop-shadow(0 0 7px rgba(255,255,255,.9))}.node.sel.ck rect.box{filter:drop-shadow(0 0 7px rgba(255,255,255,.9))}}
 #mTitle{position:absolute;left:50%;top:18px;transform:translateX(-50%);z-index:22;max-width:calc(100% - 400px);text-align:center}#mTitle input{text-align:center}
 @media(max-width:700px){#mTitle{top:80px;max-width:calc(100% - 24px)}}
 </style>
@@ -141,8 +143,8 @@ button:disabled{opacity:.4;cursor:default}
     <input id="file" type="file" accept="application/json" hidden>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
-    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>✌ deux doigts : zoomer (mobile)</div></div>
-    <div id="fabs"><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
+    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
+    <div id="fabs"><button class="fab" id="fabT" title="Replier / déplier les bulles" aria-label="Replier ou déplier"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 6h9M8 12h9M12 18h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
   </div>
   <aside id="side">
     <div class="row" style="justify-content:space-between;align-items:center"><h2 style="font-size:15px;color:var(--ink)">Images et sauvegarde</h2><button id="asx" aria-label="Fermer">×</button></div>
@@ -185,10 +187,10 @@ function getNIn(m,id){var a=m.nodes;for(var i=0;i<a.length;i++)if(a[i].id===id)r
 function pruneLinks(m){m.links=(m.links||[]).filter(function(l){return getNIn(m,l.from)&&getNIn(m,l.to)})}
 /* liens raccourcis dans les bulles (le texte complet reste dans la fenêtre d'édition) */
 function shortUrl(u){var t=u.replace(/^https?:\/\//i,"").replace(/^www\./i,"").replace(/\/$/,"");return t.length>22?t.slice(0,21)+"\u2026":t}
-function dispText(t){t=t||"";var us=findUrls(t);if(!us.length)return t;var out="",p=0;us.forEach(function(o){out+=t.slice(p,o.s)+shortUrl(t.slice(o.s,o.e));p=o.e});return out+t.slice(p)}
+function dispText(t){t=t||"";var us=findUrls(t);if(us.length){var out="",p=0;us.forEach(function(o){out+=t.slice(p,o.s)+shortUrl(t.slice(o.s,o.e));p=o.e});t=out+t.slice(p)}return t.replace(/[ \t\u00a0]+$/gm,"")}
 /* dimensions réelles des images : l'image est affichée en entier, mise à l'échelle */
 function needDim(u){if(!u||imgDim[u]!==undefined)return;imgDim[u]=0;var i=new Image();i.onload=function(){imgDim[u]=(i.naturalWidth&&i.naturalHeight)?[i.naturalWidth,i.naturalHeight]:-1;draw()};i.onerror=function(){imgDim[u]=-1};i.src=u}
-function measure(n){var L=dispText(n.t).split("\n");n.w=Math.max(70,Math.round(Math.max.apply(null,L.map(function(l){return l.length}))*7.8+30));n.th=34+(L.length-1)*18;n.h=n.th;
+function measure(n){var L=dispText(n.t).split("\n");n.w=Math.max(60,Math.round(Math.max.apply(null,L.map(function(l){return l.length}))*7.8+22));n.th=30+(L.length-1)*18;n.h=n.th;
  if(n.img){n.w=Math.max(n.w,150);var u=imgUrl(n.img),d=imgDim[u],fw=n.w-16,iw=fw,ih=IMGH;needDim(u);
   if(d&&d!==-1){ih=fw*d[1]/d[0];if(ih>IMGMAX){ih=IMGMAX;iw=ih*d[0]/d[1]}}
   n.iw=Math.round(iw);n.ih=Math.round(ih);n.h+=n.ih+8}}
@@ -228,10 +230,12 @@ var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps)
 var trash=store.get("mm_trash",[]);normNames(trash);
 if(migrated){store.set("mm_maps",maps);store.set("mm_trash",trash)}
 var curId=store.get("mm_cur",maps[0].id);
+var USED=store.get("mm_used",{});
+function touchMap(){if(!USED)return;try{USED[curId]=Date.now();localStorage.setItem("mm_used",JSON.stringify(USED))}catch(e){}}
 var imgCache={};
 var sel=null,ms={},TRL=null,SIDE={},SLOT={},tr={x:60,y:0,k:1};
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
-function persist(){store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
+function persist(){touchMap();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
 function save(key){record(key);persist()}
 /* ---------- corbeille : 30 jours ---------- */
 var DAY=86400000,KEEP=30*DAY,trDown=false;
@@ -293,12 +297,12 @@ function draw(){
  m.nodes.forEach(function(n){if(CI.hid[n.id])return;
   var color=COLORS[(n.c||0)%COLORS.length];
   var isS=n.id===sel||!!ms[n.id],multi=Object.keys(ms).length>1;
-  var g=el("g",{"data-id":n.id,"class":"node"+(isS?" sel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+n.x+","+n.y+")"},ng);
+  var g=el("g",{"data-id":n.id,"class":"node"+(isS?" sel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+n.x+","+n.y+")"},ng);if(isS)g.style.setProperty("--sc",color);
   g.addEventListener("pointerdown",function(e){if(e.button===1){e.preventDefault();e.stopPropagation();toggleCol(n.id);return}startDrag(e,n)});
   g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;if(linkFrom){var from=linkFrom;endLink();if(from!==n.id)addLink(from,n.id,toWorld(e));return}selLink=null;if(e.shiftKey){toggleSel(n.id);return}ms={};var t=Date.now(),second=lastNode.id===n.id&&t-lastNode.t<500;lastNode=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openEd(n.id)});
   g.addEventListener("dblclick",function(e){e.stopPropagation();ms={};sel=n.id;draw();syncPanel();openEd(n.id)});
   el("rect",{"class":"box",width:n.w,height:n.h,rx:10,stroke:color},g);
-  var t=el("text",{x:n.w/2,y:22,"text-anchor":"middle"},g);
+  var t=el("text",{x:n.w/2,y:20,"text-anchor":"middle"},g);
   (dispText(n.t)||" ").split("\n").forEach(function(l,i){var ts=el("tspan",{x:n.w/2,dy:i?18:0},t);ts.textContent=l||"\u00a0"});
   if(n.img){
    var cid="c"+n.id,ix=(n.w-n.iw)/2;var cp=el("clipPath",{id:cid},g);el("rect",{x:ix,y:n.th,width:n.iw,height:n.ih,rx:6},cp);
@@ -729,9 +733,18 @@ function renameMap(){var m=cur(),t=$("mTitle");if(t.querySelector("input"))retur
  inp.onkeydown=function(e){e.stopPropagation();if(e.key==="Enter")fin(true);else if(e.key==="Escape")fin(false)};inp.onblur=function(){fin(true)}}
 var lastTT=0;$("mTitle").addEventListener("click",function(e){if(e.target.tagName==="INPUT")return;var t=Date.now();if(t-lastTT<450){lastTT=0;renameMap()}else lastTT=t});
 function dupMapAct(){var o=cur(),c=JSON.parse(JSON.stringify(o));c.id=uid();c.title=(o.title||"Votre carte")+" (copie)";leaveMap();maps.splice(maps.indexOf(o)+1,0,c);curId=c.id;sel=null;selLink=null;ensureHist(c);save();refreshMaps();draw();syncPanel();fit();toast("Carte dupliquée.")}
+/* replier / déplier toutes les bulles : "fold" tout replier, "one" déplier d'un niveau (les bulles repliées visibles), "all" tout déplier */
+function foldTree(mode){var m=cur(),ci=colInfo(m),c=0;
+ m.nodes.forEach(function(n){if(mode==="fold"){if(ci.out[n.id]&&!n.col){n.col=true;c++}}
+  else if(mode==="one"){if(n.col&&!ci.hid[n.id]){delete n.col;c++}}
+  else if(n.col){delete n.col;c++}});
+ if(!c){toast(mode==="fold"?"Tout est déjà replié.":"Rien à déplier.");return}
+ save();draw();fit()}
+function foldMenu(){return[{icon:"⊟",label:"Tout replier",fn:function(){foldTree("fold")}},{icon:"⤵",label:"Déplier d’un niveau",fn:function(){foldTree("one")}},{icon:"⊞",label:"Tout déplier",fn:function(){foldTree("all")}}]}
+$("fabT").onclick=function(){var r=this.getBoundingClientRect();showCtx(r.left,r.top,foldMenu(),r)};
 function mainMenu(){var it=[{icon:"＋",label:"Nouvelle carte…",fn:newMapAct},{icon:"⧉",label:"Dupliquer cette carte",fn:dupMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-"];
- maps.forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)}})});return it}
+ maps.map(function(m,i){return{m:m,i:i}}).sort(function(a,b){return((USED[b.m.id]||0)-(USED[a.m.id]||0))||(a.i-b.i)}).forEach(function(o){var m=o.m;it.push({icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)}})});return it}
 $("fabM").onclick=function(){var r=this.getBoundingClientRect();showCtx(r.left,r.bottom+8,mainMenu())};
 $("fabC").onclick=function(){$("side").classList.toggle("on");$("help").classList.remove("on")};
 $("asx").onclick=function(){$("side").classList.remove("on")};
@@ -795,7 +808,8 @@ function renderEdLinks(){var box=$("edl");box.innerHTML="";var seen={},us=findUr
 $("edt").addEventListener("click",function(e){if(!(e.ctrlKey||e.metaKey))return;var i=this.selectionStart,u=findUrls(this.value).filter(function(o){return i>=o.s&&i<=o.e})[0];if(u)window.open(u.url,"_blank","noopener,noreferrer")});
 function openEd(id,all){var n=getN(id);if(!n)return;edId=id;edLink=null;var t=$("edt");t.value=n.t;renderEdLinks();$("ed").classList.add("on");t.focus();if(all)t.select();else t.setSelectionRange(t.value.length,t.value.length)}
 function closeEd(){$("ed").classList.remove("on");
- if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(l&&!(l.label||"").trim()){delete l.label;save();draw()}}
+ if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(l&&!(l.label||"").trim()){delete l.label;save();draw()}else if(l&&/[ \t]+$/m.test(l.label)){l.label=l.label.replace(/[ \t]+$/gm,"");save();draw()}}
+ if(edId){var en=getN(edId);if(en&&/[ \t]+$/m.test(en.t||"")){en.t=en.t.replace(/[ \t]+$/gm,"");save();draw()}}
  edId=null;edLink=null}
 function editLabel(l){closeCtx();if(selLink!==l.id||sel){selLink=l.id;sel=null;draw()}edId=null;edLink=l.id;var t=$("edt");t.value=l.label||"";renderEdLinks();$("ed").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
 $("edt").addEventListener("input",function(){if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(!l)return;l.label=this.value;save("l"+l.id);draw();renderEdLinks();return}var n=getN(edId);if(!n)return;n.t=this.value;save("t"+n.id);draw();renderEdLinks()});
