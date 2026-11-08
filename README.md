@@ -11,7 +11,6 @@ Trie les cartes ds le menu de gauche dans l'ordre de dernières modifications et
 
 
 Clic milieu sur une carte ds le menu de gauche = ouvre la carte ds un nouvel onglet, clic droit permet de supprimer la carte
-Carte autre ppareil
 Si sauveagrde icone, ou si pas sauvegarde icone , nuage
 on peut mettre plusieurs images dans une cellule
 on peut redimensionner la cellule. 
