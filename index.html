@@ -764,7 +764,8 @@ function cycleSort(){SORT=SORT==="use"?"mod":SORT==="mod"?"az":"use";try{localSt
  if(menuPos)setTimeout(function(){showCtx(menuPos[0],menuPos[1],mainMenu())},0)}
 function sortedMaps(){return maps.map(function(m,i){return{m:m,i:i}}).sort(function(a,b){
  if(SORT==="az")return flat(a.m.title).localeCompare(flat(b.m.title),"fr",{sensitivity:"base",numeric:true})||(a.i-b.i);
- if(SORT==="mod")return((b.m.mod||0)-(a.m.mod||0))||((USED[b.m.id]||0)-(USED[a.m.id]||0))||(a.i-b.i);
+ /* seulement la date de modification : ouvrir une carte ne change pas sa place (les cartes jamais modifiées gardent leur ordre) */
+ if(SORT==="mod")return((b.m.mod||0)-(a.m.mod||0))||(a.i-b.i);
  return((USED[b.m.id]||0)-(USED[a.m.id]||0))||(a.i-b.i)}).map(function(o){return o.m})}
 function mainMenu(){var it=[{icon:"＋",label:"Nouvelle carte…",fn:newMapAct},{icon:"⧉",label:"Dupliquer cette carte",fn:dupMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{icon:"⇅",label:"Tri : "+SORTN[SORT],fn:cycleSort}];
