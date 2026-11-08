@@ -143,7 +143,7 @@ button:disabled{opacity:.4;cursor:default}
     <input id="file" type="file" accept="application/json" hidden>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
-    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
+    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> sur une flèche ou sur le fond : menu · souris immobile 2 s sur une bulle : menu de la bulle (couleurs, note, supprimer) · ☝ appui long sur mobile</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
     <div id="fabs"><button class="fab" id="fabT" title="Replier / déplier les bulles" aria-label="Replier ou déplier"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 6h9M8 12h9M12 18h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
   </div>
   <aside id="side">
@@ -187,7 +187,7 @@ function getNIn(m,id){var a=m.nodes;for(var i=0;i<a.length;i++)if(a[i].id===id)r
 function pruneLinks(m){m.links=(m.links||[]).filter(function(l){return getNIn(m,l.from)&&getNIn(m,l.to)})}
 /* liens raccourcis dans les bulles (le texte complet reste dans la fenêtre d'édition) */
 function shortUrl(u){var t=u.replace(/^https?:\/\//i,"").replace(/^www\./i,"").replace(/\/$/,"");return t.length>22?t.slice(0,21)+"\u2026":t}
-function dispText(t){t=t||"";var us=findUrls(t);if(us.length){var out="",p=0;us.forEach(function(o){out+=t.slice(p,o.s)+shortUrl(t.slice(o.s,o.e));p=o.e});t=out+t.slice(p)}return t.replace(/[ \t\u00a0]+$/gm,"")}
+function dispText(t){t=t||"";var us=findUrls(t);if(us.length){var out="",p=0;us.forEach(function(o){out+=t.slice(p,o.s)+shortUrl(t.slice(o.s,o.e));p=o.e});t=out+t.slice(p)}return t.replace(/[ \t\u00a0]+$/gm,"").replace(/\s+$/,"")}
 /* dimensions réelles des images : l'image est affichée en entier, mise à l'échelle */
 function needDim(u){if(!u||imgDim[u]!==undefined)return;imgDim[u]=0;var i=new Image();i.onload=function(){imgDim[u]=(i.naturalWidth&&i.naturalHeight)?[i.naturalWidth,i.naturalHeight]:-1;draw()};i.onerror=function(){imgDim[u]=-1};i.src=u}
 function measure(n){var L=dispText(n.t).split("\n");n.w=Math.max(60,Math.round(Math.max.apply(null,L.map(function(l){return l.length}))*7.8+22));n.th=30+(L.length-1)*18;n.h=n.th;
@@ -528,13 +528,10 @@ function hitNode(m,x,y){for(var i=m.nodes.length-1;i>=0;i--){var n=m.nodes[i];if
 function fitPath(l,A,N,path){
  function inR(R,p){return p[0]>R.x&&p[0]<R.x+R.w&&p[1]>R.y&&p[1]<R.y+R.h}
  var L=path.filter(function(p){return !inR(A,p)&&!inR(N,p)});if(L.length<2)return;
- var P0=[A.x+A.w,A.y+A.h/2],T1=[1,0],lx=L[L.length-1],vx=N.x+N.w/2-lx[0],vy=N.y+N.h/2-lx[1],P3,T2;
- /* la flèche arrive perpendiculairement au milieu du côté d'où vient la souris */
- if(Math.abs(vx)/N.w>=Math.abs(vy)/N.h){if(vx>0){P3=[N.x,N.y+N.h/2];T2=[-1,0]}else{P3=[N.x+N.w,N.y+N.h/2];T2=[1,0]}}
- else{if(vy>0){P3=[N.x+N.w/2,N.y];T2=[0,-1]}else{P3=[N.x+N.w/2,N.y+N.h];T2=[0,1]}}
- var cc=fitTan(P0,T1,L,P3,T2);if(cc[2]<30)return;
- l.fa=[1,.5];l.ta=projBorder(N,P3[0],P3[1]);
- l.c1=[Math.round(cc[0][0]-P0[0]),Math.round(cc[0][1]-P0[1])];l.c2=[Math.round(cc[1][0]-P3[0]),Math.round(cc[1][1]-P3[1])]}
+ /* extrémités automatiques, côtés choisis comme pour une bulle créée avec Tab (règle pairAxis) ; seule la forme de la courbe suit le tracé de la souris */
+ var H=pairAxis(l,A,N),e1=endInfo(A,null,N.x+N.w/2,N.y+N.h/2,H),e2=endInfo(N,null,A.x+A.w/2,A.y+A.h/2,H);
+ var cc=fitTan(e1.p,e1.n,L,e2.p,e2.n);if(cc[2]<30)return;
+ l.c1=[Math.round(cc[0][0]-e1.p[0]),Math.round(cc[0][1]-e1.p[1])];l.c2=[Math.round(cc[1][0]-e2.p[0]),Math.round(cc[1][1]-e2.p[1])]}
 function reattach(l,kind,id,px,py){var m=cur(),other=kind==="a"?l.to:l.from;
  if(id===other)return;
  if((m.links||[]).some(function(k){return k!==l&&((k.from===id&&k.to===other)||(k.from===other&&k.to===id))})){toast("Ces deux bulles sont déjà reliées.");return}
@@ -809,7 +806,7 @@ $("edt").addEventListener("click",function(e){if(!(e.ctrlKey||e.metaKey))return;
 function openEd(id,all){var n=getN(id);if(!n)return;edId=id;edLink=null;var t=$("edt");t.value=n.t;renderEdLinks();$("ed").classList.add("on");t.focus();if(all)t.select();else t.setSelectionRange(t.value.length,t.value.length)}
 function closeEd(){$("ed").classList.remove("on");
  if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(l&&!(l.label||"").trim()){delete l.label;save();draw()}else if(l&&/[ \t]+$/m.test(l.label)){l.label=l.label.replace(/[ \t]+$/gm,"");save();draw()}}
- if(edId){var en=getN(edId);if(en&&/[ \t]+$/m.test(en.t||"")){en.t=en.t.replace(/[ \t]+$/gm,"");save();draw()}}
+ if(edId){var en=getN(edId);if(en){var tt=(en.t||"").replace(/[ \t]+$/gm,"").replace(/\s+$/,"");if(tt!==en.t){en.t=tt;save();draw()}}}
  edId=null;edLink=null}
 function editLabel(l){closeCtx();if(selLink!==l.id||sel){selLink=l.id;sel=null;draw()}edId=null;edLink=l.id;var t=$("edt");t.value=l.label||"";renderEdLinks();$("ed").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
 $("edt").addEventListener("input",function(){if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(!l)return;l.label=this.value;save("l"+l.id);draw();renderEdLinks();return}var n=getN(edId);if(!n)return;n.t=this.value;save("t"+n.id);draw();renderEdLinks()});
@@ -840,7 +837,7 @@ function nodeMenu(n){return[
  {colors:true,cur:n.c||0,fn:function(i){var ids=selIds();if(ids.indexOf(n.id)<0)ids=[n.id];ids.forEach(function(id){var x=getN(id);if(x)x.c=i});save();draw();syncPanel()}},
  {icon:"📝",label:n.note?"Modifier la note":"Ajouter une note",fn:function(){openNote(n.id)}},
  "-",
- {icon:"🗑",label:"Supprimer la bulle",danger:true,fn:rm}]}
+ {icon:"🗑",label:"Supprimer la bulle",danger:true,fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}rm()}}]}
 function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
  function setA(v){return function(){l.a=v;delete l.rv;save();draw();syncPanel()}}
  if(a===1)it.push({icon:"⇄",label:"Inverser le sens",fn:function(){invLink(l)}});
@@ -874,10 +871,31 @@ function openCtxFor(t,cx,cy){if(linkFrom)endLink();
  else if(lk){var lid=lk.getAttribute("data-id"),l=(cur().links||[]).filter(function(x){return x.id===lid})[0];if(!l)return;if(selLink!==lid||sel){selLink=lid;sel=null;draw();syncPanel()}items=linkMenu(l)}
  else items=bgMenu(toWorld({clientX:cx,clientY:cy}));
  lastCtxT=Date.now();showCtx(cx,cy,items)}
-cv.addEventListener("contextmenu",function(e){e.preventDefault();openCtxFor(e.target,e.clientX,e.clientY)});
+var lastTouchT=0;
+cv.addEventListener("contextmenu",function(e){e.preventDefault();
+ /* clic droit sur une bulle : supprimé (le menu de la bulle apparaît après 2 s de survol) ; on garde l'appui long de l'écran tactile */
+ if(e.target.closest&&e.target.closest(".node")&&Date.now()-lastTouchT>1500)return;
+ openCtxFor(e.target,e.clientX,e.clientY)});
+/* survol : menu de la bulle après environ 2 s sans bouger la souris */
+var hv={id:null,x:0,y:0,t:null,open:false,ct:null};
+function hvStop(){if(hv.t){clearTimeout(hv.t);hv.t=null}}
+function hvKeep(){if(hv.ct){clearTimeout(hv.ct);hv.ct=null}}
+window.addEventListener("pointermove",function(e){if(e.pointerType!=="mouse")return;var t=e.target;if(!t||!t.closest)return;
+ if(hv.open){if(!ctxOpen()){hv.open=false;return}
+  var nd0=t.closest(".node"),ins=t.closest("#ctx")||(nd0&&nd0.getAttribute("data-id")===hv.id);
+  if(ins)hvKeep();else if(!hv.ct)hv.ct=setTimeout(function(){hv.ct=null;if(hv.open){closeCtx();hv.open=false}},350);
+  return}
+ var nd=t.closest(".node");
+ if(!nd||t.closest(".nbtn")||e.buttons||drag||mk||hd||pan||linkFrom||ctxOpen()||$("ed").classList.contains("on")){hvStop();hv.id=null;return}
+ var id=nd.getAttribute("data-id");
+ if(id!==hv.id||Math.abs(e.clientX-hv.x)+Math.abs(e.clientY-hv.y)>8){hv.id=id;hv.x=e.clientX;hv.y=e.clientY;hvStop();
+  hv.t=setTimeout(function(){hv.t=null;var n=getN(hv.id);if(!n||ctxOpen()||drag||mk||hd||pan)return;hv.open=true;lastCtxT=Date.now();showCtx(hv.x+10,hv.y+10,nodeMenu(n))},2000)}});
+window.addEventListener("pointerdown",function(){hvStop();hv.id=null;hv.open=false;hvKeep()},true);
+window.addEventListener("wheel",function(){hvStop()},{passive:true});
+cv.addEventListener("pointerleave",function(){hvStop();hv.id=null});
 /* appui long (écran tactile) = clic droit */
 var lp=null;
-window.addEventListener("pointerdown",function(e){if(lp){clearTimeout(lp.h);lp=null}dragged=false;
+window.addEventListener("pointerdown",function(e){if(lp){clearTimeout(lp.h);lp=null}dragged=false;if(e.pointerType==="touch")lastTouchT=Date.now();
  if(e.pointerType!=="touch"||!e.target.closest||!e.target.closest("#cv"))return;
  lp={x:e.clientX,y:e.clientY,t:e.target,h:setTimeout(function(){var q=lp;lp=null;
   if(!q||(drag&&drag.on)||(mk&&mk.on)||(hd&&hd.on)||(pan&&pan.moved)||Date.now()-lastCtxT<800)return;
