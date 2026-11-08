@@ -12,6 +12,7 @@ a faire :
 Texte encore trop grand sur fleche
 marges autour des textes dans les bulles trop grand
 Supprime les sauts de lignes en trop en fin de bulle
+Trie les cartes ds le menu de gauche dans l'ordre de dernières modifications et pas dans l'ordre de dernière ouverture
 
 
 
