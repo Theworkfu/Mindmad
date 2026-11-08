@@ -63,7 +63,7 @@ textarea#fText{resize:vertical;font:inherit}
 .lkhit{fill:none;stroke:transparent;stroke-width:14;cursor:pointer;pointer-events:stroke}
 .lk.sel .lkline{stroke:var(--link);stroke-width:3.5}
 .lkarrow{fill:var(--lc,var(--edge));pointer-events:none}.lk.sel .lkarrow{fill:var(--link)}
-.lktext{font-size:12px;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round;pointer-events:all;cursor:text}
+.lktext{font-size:11px;fill:var(--ink);text-anchor:middle;paint-order:stroke;stroke:var(--bg);stroke-width:4px;stroke-linejoin:round;pointer-events:all;cursor:text}
 body.linking .node{cursor:crosshair}
 .lrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .lname{width:100%;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -143,7 +143,7 @@ button:disabled{opacity:.4;cursor:default}
     <input id="file" type="file" accept="application/json" hidden>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
-    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> sur une flèche ou sur le fond : menu · souris immobile 2 s sur une bulle : menu de la bulle (couleurs, note, supprimer) · ☝ appui long sur mobile</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
+    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
     <div id="fabs"><button class="fab" id="fabT" title="Replier / déplier les bulles" aria-label="Replier ou déplier"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 6h9M8 12h9M12 18h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
   </div>
   <aside id="side">
@@ -190,7 +190,10 @@ function shortUrl(u){var t=u.replace(/^https?:\/\//i,"").replace(/^www\./i,"").r
 function dispText(t){t=t||"";var us=findUrls(t);if(us.length){var out="",p=0;us.forEach(function(o){out+=t.slice(p,o.s)+shortUrl(t.slice(o.s,o.e));p=o.e});t=out+t.slice(p)}return t.replace(/[ \t\u00a0]+$/gm,"").replace(/\s+$/,"")}
 /* dimensions réelles des images : l'image est affichée en entier, mise à l'échelle */
 function needDim(u){if(!u||imgDim[u]!==undefined)return;imgDim[u]=0;var i=new Image();i.onload=function(){imgDim[u]=(i.naturalWidth&&i.naturalHeight)?[i.naturalWidth,i.naturalHeight]:-1;draw()};i.onerror=function(){imgDim[u]=-1};i.src=u}
-function measure(n){var L=dispText(n.t).split("\n");n.w=Math.max(60,Math.round(Math.max.apply(null,L.map(function(l){return l.length}))*7.8+22));n.th=30+(L.length-1)*18;n.h=n.th;
+/* largeur réelle du texte (police des bulles, 14 px) : marge gauche/droite de 8 px seulement */
+var MC=null,MF="";
+function textW(t){try{if(!MC){MC=document.createElement("canvas").getContext("2d");MF=getComputedStyle(document.body).fontFamily||"sans-serif"}MC.font="14px "+MF;var w=MC.measureText(t).width;if(w>0)return w}catch(e){}return t.length*7.4}
+function measure(n){var L=dispText(n.t).split("\n");n.w=Math.max(60,Math.round(Math.max.apply(null,L.map(textW))+16));n.th=30+(L.length-1)*18;n.h=n.th;
  if(n.img){n.w=Math.max(n.w,150);var u=imgUrl(n.img),d=imgDim[u],fw=n.w-16,iw=fw,ih=IMGH;needDim(u);
   if(d&&d!==-1){ih=fw*d[1]/d[0];if(ih>IMGMAX){ih=IMGMAX;iw=ih*d[0]/d[1]}}
   n.iw=Math.round(iw);n.ih=Math.round(ih);n.h+=n.ih+8}}
@@ -235,7 +238,10 @@ function touchMap(){if(!USED)return;try{USED[curId]=Date.now();localStorage.setI
 var imgCache={};
 var sel=null,ms={},TRL=null,SIDE={},SLOT={},tr={x:60,y:0,k:1};
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
-function persist(){touchMap();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
+/* date de modification de chaque carte : mise à jour seulement quand son contenu change réellement (pas quand on l'ouvre) */
+function hashStr(t){var h=5381,i;for(i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return h}
+function touchMods(){maps.forEach(function(m){var h=hashStr(snap(m));if(m._h!==h){if(m._h!==undefined)m.mod=Date.now();m._h=h}})}
+function persist(){touchMap();touchMods();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
 function save(key){record(key);persist()}
 /* ---------- corbeille : 30 jours ---------- */
 var DAY=86400000,KEEP=30*DAY,trDown=false;
@@ -247,7 +253,7 @@ function updTrash(){}
 function closeTrash(){$("trashbox").classList.remove("on")}
 function btn(txt,cls,fn){var b=document.createElement("button");b.textContent=txt;if(cls)b.className=cls;b.onclick=fn;return b}
 function restoreMap(id){var t=trash.filter(function(x){return x.id===id})[0];if(!t)return;trash=trash.filter(function(x){return x.id!==id});
- var m=JSON.parse(JSON.stringify(t));delete m.deletedAt;if(maps.some(function(x){return x.id===m.id}))m.id=uid();leaveMap();delete H[m.id];maps.push(m);normNames([m]);
+ var m=JSON.parse(JSON.stringify(t));delete m.deletedAt;if(maps.some(function(x){return x.id===m.id}))m.id=uid();leaveMap();delete H[m.id];m.mod=Date.now();maps.push(m);normNames([m]);
  curId=m.id;sel=null;selLink=null;ensureHist(m);persist();refreshMaps();draw();syncPanel();fit();closeTrash();toast("Carte « "+flat(m.title)+" » restaurée.")}
 function renderTrash(){var box=$("trashlist");box.innerHTML="";purgeTrash();updTrash();
  if(!trash.length){var e=document.createElement("div");e.className="hint";e.textContent="La corbeille est vide.";box.appendChild(e);$("trashclear").style.display="none";return}
@@ -263,7 +269,7 @@ function renderTrash(){var box=$("trashlist");box.innerHTML="";purgeTrash();updT
 function openTrash(){renderTrash();$("trashbox").classList.add("on")}
 /* historique annuler / rétablir : un instantané de la carte à chaque modification (les images intégrées ne sont stockées qu'une fois) */
 var H={},pool={},poolR=[],poolN=0;
-function snap(m){return JSON.stringify(m,function(k,v){if(k==="w"||k==="h"||k==="th"||k==="iw"||k==="ih")return undefined;
+function snap(m){return JSON.stringify(m,function(k,v){if(k==="w"||k==="h"||k==="th"||k==="iw"||k==="ih"||k==="mod"||k==="_h")return undefined;
  if(k==="img"&&typeof v==="string"&&v.indexOf("data:")===0){var id=pool[v];if(id===undefined){id=poolN++;pool[v]=id;poolR[id]=v}return"\u0001"+id}return v})}
 function unsnap(t){return JSON.parse(t,function(k,v){return(k==="img"&&typeof v==="string"&&v.charCodeAt(0)===1)?poolR[+v.slice(1)]:v})}
 function ensureHist(m){if(!H[m.id])H[m.id]={s:[snap(m)],i:0,k:null,t:0}}
@@ -505,8 +511,8 @@ function drawLinks(){computeSlots();zapBuild();var lg=$("links"),hg=$("lkh");lg.
   var hit=el("path",{"class":"lkhit",d:d},g);el("path",{"class":"lkline",d:d},g);
   if(l.a!==0){var v2=SH.d2;if(v2)arrowHead(p2,[p2[0]-v2[0],p2[1]-v2[1]],g,SH.h2);else{var t2=endTan(G,1);arrowHead(p2,[p2[0]-t2[0],p2[1]-t2[1]],g)}}
   if(l.a===2){var v1=SH.d1;if(v1)arrowHead(p1,[p1[0]-v1[0],p1[1]-v1[1]],g,SH.h1);else{var t1=endTan(G,0);arrowHead(p1,[p1[0]+t1[0],p1[1]+t1[1]],g)}}
-  if(l.label){var LN=String(l.label).split("\n"),t=el("text",{"class":"lktext",x:G.mid[0],y:G.mid[1]+5-(LN.length-1)*8.5},g);
-   LN.forEach(function(ln,i){var ts=el("tspan",{x:G.mid[0],dy:i?17:0},t);ts.textContent=ln||"\u00a0"});
+  if(l.label){var LN=String(l.label).split("\n"),t=el("text",{"class":"lktext",x:G.mid[0],y:G.mid[1]+4-(LN.length-1)*7.5},g);
+   LN.forEach(function(ln,i){var ts=el("tspan",{x:G.mid[0],dy:i?15:0},t);ts.textContent=ln||"\u00a0"});
    t.addEventListener("pointerdown",function(e){e.stopPropagation()});t.addEventListener("click",pick);t.addEventListener("dblclick",function(e){e.stopPropagation();editLabel(l)})}
   hit.addEventListener("pointerdown",function(e){e.stopPropagation()});hit.addEventListener("dblclick",function(e){e.stopPropagation();editLabel(l)});
   hit.addEventListener("click",pick);
@@ -624,21 +630,33 @@ function getMeta(){return api(mapsPath()).then(function(r){if(r.status===404){re
 function pull(){return getMeta().then(function(meta){if(!meta)return null;return api(mapsPath(),{headers:{Accept:"application/vnd.github.raw+json"}}).then(function(r){if(!r.ok)throw new Error("lecture impossible");return r.json().then(function(j){if(j&&j.maps)normNames(j.maps);if(j&&j.trash)normNames(j.trash);return j})})})}
 function push(){
  function put(){var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps,trash:trash});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha})})}
- return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps){mergeRemote(rem.maps);mergeTrash(rem.trash)}return put()})}throw e})}
+ return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps)mergeSync(rem,rem.updated||0);return put()})}throw e})}
 function hasContent(){return maps.some(function(m){return m.nodes.length>1||m.links.length||m.nodes.some(function(n){return n.img||n.note||(n.t&&n.t!=="Ma carte"&&n.t!=="Votre carte"&&n.t!=="Idée centrale")})})}
 function useMaps(list,upd,msg,tr){normNames(list);maps=list;if(tr!==undefined){trash=tr||[];purgeTrash()}resetHist();curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",upd);refreshMaps();draw();syncPanel();fit();setSync(msg)}
 function stamp(){return "à "+new Date().toLocaleTimeString("fr-FR")}
 function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHub…");
- enqueue(function(){return pull().then(function(rem){var loc=+store.get("mm_upd",0)||0,ru=rem&&rem.updated||0;
-  if(rem&&rem.maps&&rem.maps.length&&ru>loc){
-   if(!loc&&hasContent()){var ids={};maps.forEach(function(m){ids[m.id]=1});var add=rem.maps.filter(function(m){return!ids[m.id]&&!inTrash(m.id)});mergeTrash(rem.trash);useMaps(maps.concat(add),Date.now(),"Cartes de GitHub ajoutées à celles de cet appareil.");return push()}
-   useMaps(rem.maps,ru,"Cartes chargées depuis GitHub.",rem.trash);return}
-  if(!rem||loc>ru){if(!loc)store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
-  setSync("Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
+ enqueue(function(){return pull().then(function(rem){
+  if(!rem||!rem.maps||!rem.maps.length){if(!+store.get("mm_upd",0))store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
+  if(!hasContent()){useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.",rem.trash);return}
+  var r=mergeSync(rem,rem.updated||0);
+  if(r.rc)return push().then(function(){setSync("Cartes synchronisées "+stamp()+".")});
+  setSync(r.lc?"Cartes mises à jour depuis GitHub "+stamp()+".":"Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
 function sig(m){return JSON.stringify((m.nodes||[]).map(function(n){return[n.id,n.t,n.c||0,n.img||"",n.note||"",Math.round(n.x||0),Math.round(n.y||0)]}))}
-function mergeRemote(list){var byId={};maps.forEach(function(m){byId[m.id]=m});
- list.forEach(function(r){var l=byId[r.id];if(!l){if(!inTrash(r.id))maps.push(r)}else if((l.title!==r.title||sig(l)!==sig(r)||JSON.stringify(l.links||[])!==JSON.stringify(r.links||[]))&&!maps.some(function(m){return m.title===r.title+" (autre appareil)"&&sig(m)===sig(r)})){var c=JSON.parse(JSON.stringify(r));c.id=uid();c.title=r.title+" (autre appareil)";maps.push(c)}});
- normNames(maps);store.set("mm_maps",maps);store.set("mm_upd",Date.now());refreshMaps();resetHist()}
+/* fusion avec la sauvegarde GitHub, carte par carte : pour une même carte, la version modifiée en dernier l'emporte ; les cartes qui n'existent que d'un côté sont conservées ; la corbeille est partagée */
+function mergeSync(rem,ru){var lc=false,rc=false,loc=+store.get("mm_upd",0)||0,byId={},rid={},rt=rem.trash||[];
+ rt.forEach(function(t){var l=maps.filter(function(m){return m.id===t.id})[0];
+  if(l&&(t.deletedAt||0)>(l.mod||0)){maps=maps.filter(function(m){return m!==l});if(!inTrash(t.id))trash.push(t);lc=true}});
+ mergeTrash(rt);
+ maps.forEach(function(m){byId[m.id]=m});
+ (rem.maps||[]).forEach(function(r){rid[r.id]=1;var l=byId[r.id];
+  if(!l){if(!inTrash(r.id)){maps.push(r);lc=true}
+   else{var tt=trash.filter(function(x){return x.id===r.id})[0];if(tt&&(r.mod||0)>(tt.deletedAt||0)){trash=trash.filter(function(x){return x!==tt});maps.push(r);lc=true}else rc=true}}
+  else if(snap(l)!==snap(r)){var a=l.mod||0,b=r.mod||0;if(a===b){a=0;b=ru>loc?1:0}
+   if(b>a){maps[maps.indexOf(l)]=r;lc=true}else rc=true}});
+ if(maps.some(function(m){return!rid[m.id]})||trash.some(function(t){return!rt.some(function(x){return x.id===t.id})}))rc=true;
+ if(!maps.length)maps.push(newMap());
+ if(lc){normNames(maps);if(!maps.some(function(m){return m.id===curId}))curId=maps[0].id;resetHist();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",Math.max(loc,ru||0));refreshMaps();draw();syncPanel()}
+ return{lc:lc,rc:rc}}
 function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".");if(gh.auto&&gh.sync)cleanImages(true)}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
 function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
 function recheck(){if(!document.hidden&&syncOn()&&!dirty)startSync()}
@@ -871,31 +889,10 @@ function openCtxFor(t,cx,cy){if(linkFrom)endLink();
  else if(lk){var lid=lk.getAttribute("data-id"),l=(cur().links||[]).filter(function(x){return x.id===lid})[0];if(!l)return;if(selLink!==lid||sel){selLink=lid;sel=null;draw();syncPanel()}items=linkMenu(l)}
  else items=bgMenu(toWorld({clientX:cx,clientY:cy}));
  lastCtxT=Date.now();showCtx(cx,cy,items)}
-var lastTouchT=0;
-cv.addEventListener("contextmenu",function(e){e.preventDefault();
- /* clic droit sur une bulle : supprimé (le menu de la bulle apparaît après 2 s de survol) ; on garde l'appui long de l'écran tactile */
- if(e.target.closest&&e.target.closest(".node")&&Date.now()-lastTouchT>1500)return;
- openCtxFor(e.target,e.clientX,e.clientY)});
-/* survol : menu de la bulle après environ 2 s sans bouger la souris */
-var hv={id:null,x:0,y:0,t:null,open:false,ct:null};
-function hvStop(){if(hv.t){clearTimeout(hv.t);hv.t=null}}
-function hvKeep(){if(hv.ct){clearTimeout(hv.ct);hv.ct=null}}
-window.addEventListener("pointermove",function(e){if(e.pointerType!=="mouse")return;var t=e.target;if(!t||!t.closest)return;
- if(hv.open){if(!ctxOpen()){hv.open=false;return}
-  var nd0=t.closest(".node"),ins=t.closest("#ctx")||(nd0&&nd0.getAttribute("data-id")===hv.id);
-  if(ins)hvKeep();else if(!hv.ct)hv.ct=setTimeout(function(){hv.ct=null;if(hv.open){closeCtx();hv.open=false}},350);
-  return}
- var nd=t.closest(".node");
- if(!nd||t.closest(".nbtn")||e.buttons||drag||mk||hd||pan||linkFrom||ctxOpen()||$("ed").classList.contains("on")){hvStop();hv.id=null;return}
- var id=nd.getAttribute("data-id");
- if(id!==hv.id||Math.abs(e.clientX-hv.x)+Math.abs(e.clientY-hv.y)>8){hv.id=id;hv.x=e.clientX;hv.y=e.clientY;hvStop();
-  hv.t=setTimeout(function(){hv.t=null;var n=getN(hv.id);if(!n||ctxOpen()||drag||mk||hd||pan)return;hv.open=true;lastCtxT=Date.now();showCtx(hv.x+10,hv.y+10,nodeMenu(n))},2000)}});
-window.addEventListener("pointerdown",function(){hvStop();hv.id=null;hv.open=false;hvKeep()},true);
-window.addEventListener("wheel",function(){hvStop()},{passive:true});
-cv.addEventListener("pointerleave",function(){hvStop();hv.id=null});
+cv.addEventListener("contextmenu",function(e){e.preventDefault();openCtxFor(e.target,e.clientX,e.clientY)});
 /* appui long (écran tactile) = clic droit */
 var lp=null;
-window.addEventListener("pointerdown",function(e){if(lp){clearTimeout(lp.h);lp=null}dragged=false;if(e.pointerType==="touch")lastTouchT=Date.now();
+window.addEventListener("pointerdown",function(e){if(lp){clearTimeout(lp.h);lp=null}dragged=false;
  if(e.pointerType!=="touch"||!e.target.closest||!e.target.closest("#cv"))return;
  lp={x:e.clientX,y:e.clientY,t:e.target,h:setTimeout(function(){var q=lp;lp=null;
   if(!q||(drag&&drag.on)||(mk&&mk.on)||(hd&&hd.on)||(pan&&pan.moved)||Date.now()-lastCtxT<800)return;
