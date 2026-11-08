@@ -1,4 +1,4 @@
-Fait : 
+Fait mais non testé: 
 
 Lors de la création d'une nouvelle bulle avec l'icone de flèche l'extrémité de la flèche est positionné en bas alors que la bulle est à droite, ca ne réagit pas comme tab et ca ne me convient pas.
 
@@ -8,7 +8,7 @@ Supprimer le clic droit sur une bulle et fais le apparaitre si on laisse la sour
 
 
 
-
+a faire : 
 Texte encore trop grand sur fleche
 marges autour des textes dans les bulles trop grand
 Supprime les sauts de lignes en trop en fin de bulle
