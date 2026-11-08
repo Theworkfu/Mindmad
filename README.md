@@ -1,5 +1,3 @@
-Dupliquer une carte
-
 Carte autre ppareil
 
 Sur smartphone, on peut zoomer avec 2 doigts
