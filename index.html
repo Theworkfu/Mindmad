@@ -33,7 +33,7 @@ svg#cv.drag{cursor:grabbing}
 .edge{fill:none;stroke:var(--edge);stroke-width:2}
 .tog circle{fill:var(--panel);stroke:var(--edge)}
 .tog text{font-size:11px;fill:var(--muted);text-anchor:middle}
-aside{position:fixed;top:80px;right:12px;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 100px);z-index:30;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;overflow:auto;display:flex;flex-direction:column;gap:12px;transform:translateY(-8px);opacity:0;transition:transform .15s,opacity .15s;box-shadow:0 8px 24px rgba(0,0,0,.25);visibility:hidden}
+aside{position:fixed;top:92px;right:12px;width:min(340px,calc(100vw - 24px));max-height:calc(100vh - 112px);z-index:30;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;overflow:auto;display:flex;flex-direction:column;gap:12px;transform:translateY(-8px);opacity:0;transition:transform .15s,opacity .15s;box-shadow:0 8px 24px rgba(0,0,0,.25);visibility:hidden}
 aside.on{transform:none;opacity:1;visibility:visible}
 aside h2{margin:0;font-size:13px;color:var(--muted);font-weight:600}
 label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
@@ -47,6 +47,13 @@ input[type=text],input[type=url],input[type=password],textarea{width:100%;paddin
 #help div{margin:3px 0}#help i.m{font-style:normal;display:inline-flex;align-items:center;gap:2px;white-space:nowrap;color:var(--ink);font-weight:700}.ms{width:13px;height:18px}
 #fabs{position:absolute;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:22;display:flex;flex-direction:column;gap:10px}
 .fab svg{display:block;margin:auto}
+#ver{position:absolute;right:12px;top:70px;width:56px;text-align:center;font-size:11px;color:var(--muted);z-index:22;pointer-events:none}
+.grp{fill:color-mix(in srgb,var(--accent) 7%,transparent);stroke:var(--muted);stroke-width:1.7;stroke-dasharray:7 6;pointer-events:none}
+svg#cv.selmode,svg#cv.selmode .node{cursor:crosshair}svg#cv.movemode,svg#cv.movemode .node{cursor:move}
+#selov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:18}
+#selov rect,#selov path{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 4}
+#selhint{position:absolute;left:14px;bottom:14px;z-index:23;display:none;align-items:center;gap:8px;max-width:calc(100% - 110px);padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);font-size:13px}
+#selhint.on{display:flex}#selhint svg{flex:none;color:var(--accent)}
 .badge{position:absolute;top:7px;right:8px;width:17px;height:17px;border-radius:50%;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:800;line-height:1;pointer-events:none}
 .badge.ok{display:flex;background:none;border:0;color:inherit}.badge.ok svg{width:16px;height:16px}
 .badge.warn{display:flex;background:#f5c518;color:#1a1a1a;border:1px solid rgba(0,0,0,.3)}.fab{width:56px;height:56px;border-radius:50%;padding:0;font-size:28px;font-weight:700;line-height:1;background:var(--panel);border:1px solid var(--line);box-shadow:0 4px 14px rgba(0,0,0,.25)}.fab:hover{border-color:var(--accent);color:var(--accent)}
@@ -143,14 +150,17 @@ button:disabled{opacity:.4;cursor:default}
 <body>
 <main>
   <div id="stage">
-    <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="edges"></g><g id="links"></g><g id="zap"></g><g id="nodes"></g><g id="lkh"></g></g></svg>
+    <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="grps"></g><g id="edges"></g><g id="links"></g><g id="zap"></g><g id="nodes"></g><g id="lkh"></g></g></svg>
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
+    <div id="ver" title="Numéro de version de la page">v29</div>
     <input id="file" type="file" accept="application/json" hidden>
+    <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
+    <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
-    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
+    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div>Menu du fond → Sélectionner plusieurs bulles : rectangle (glisser) ou forme libre (maintenir puis glisser), puis copier, couper, déplacer ou regrouper</div><div><i class="m" data-m="M"></i> sur une carte du menu ☰ : l’ouvrir dans un nouvel onglet</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
     <div id="fabs"><button class="fab" id="fabT" title="Replier / déplier les bulles" aria-label="Replier ou déplier"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 6h9M8 12h9M12 18h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
   </div>
   <aside id="side">
@@ -171,7 +181,6 @@ button:disabled{opacity:.4;cursor:default}
     <div class="row"><button id="ghClean" class="danger">Supprimer les images inutilisées</button></div>
     <label class="chk"><input type="checkbox" id="ghAuto"> Le faire automatiquement après chaque sauvegarde</label>
     <div class="hint" id="ghCleanState"></div>
-  <div class="hint" id="ver" title="Numéro de version de la page">v28</div>
   </aside>
 </main>
 <div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><div id="edl" aria-label="Liens du texte"></div><div class="hint">Entrée : nouvelle ligne · Ctrl+clic sur un lien pour l’ouvrir · cliquez à l’extérieur pour valider</div></div></div>
@@ -240,10 +249,18 @@ var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps)
 var trash=store.get("mm_trash",[]);normNames(trash);
 if(migrated){store.set("mm_maps",maps);store.set("mm_trash",trash)}
 var curId=store.get("mm_cur",maps[0].id);
+/* ouverture d'une carte dans un nouvel onglet : adresse#carte=identifiant */
+try{var hmm=/[#&]carte=([^&]+)/.exec(location.hash);if(hmm){var hid=decodeURIComponent(hmm[1]);if(maps.some(function(x){return x.id===hid}))curId=hid}}catch(e){}
+function openMapTab(id){try{window.open(location.href.split("#")[0]+"#carte="+encodeURIComponent(id),"_blank")}catch(e){}}
+/* plusieurs onglets : si une autre fenêtre enregistre une carte plus récente, on la reprend */
+window.addEventListener("storage",function(e){if(e.key!=="mm_maps"||!e.newValue)return;var list;try{list=JSON.parse(e.newValue)}catch(x){return}
+ var ch=false,curCh=false;list.forEach(function(r){var l=maps.filter(function(m){return m.id===r.id})[0];
+  if(!l){if(!inTrash(r.id)){maps.push(r);ch=true}}else if((r.mod||0)>(l.mod||0)){if(l.id===curId)curCh=true;maps[maps.indexOf(l)]=r;ch=true}});
+ if(ch){normNames(maps);if(!maps.some(function(m){return m.id===curId}))curId=maps[0].id;if(curCh)resetHist();refreshMaps();draw();syncPanel()}});
 var USED=store.get("mm_used",{});
 function touchMap(){if(!USED)return;try{USED[curId]=Date.now();localStorage.setItem("mm_used",JSON.stringify(USED))}catch(e){}}
 var imgCache={};
-var sel=null,ms={},TRL=null,SIDE={},SLOT={},tr={x:60,y:0,k:1};
+var sel=null,ms={},TRL=null,SIDE={},SLOT={},SLOTG=[],selMode=false,moveMode=false,sg=null,ctxSkip=null,ctxSkipT=0,tr={x:60,y:0,k:1};
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
 /* date de modification de chaque carte : mise à jour seulement quand son contenu change réellement (pas quand on l'ouvre) */
 function hashStr(t){var h=5381,i;for(i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return h}
@@ -306,7 +323,7 @@ function draw(){
  hideTip();var m=cur();m.nodes.forEach(measure);CI=colInfo(m);
  Object.keys(ms).forEach(function(k){if(!getNIn(m,k)||CI.hid[k])delete ms[k]});if(!sel||!ms[sel]||Object.keys(ms).length<2)ms={};
  if(sel&&CI.hid[sel])sel=null;if(selLink){var sl=(m.links||[]).filter(function(l){return l.id===selLink})[0];if(!sl||CI.hid[sl.from]||CI.hid[sl.to])selLink=null}
- var ng=$("nodes");ng.innerHTML="";$("edges").innerHTML="";
+ var ng=$("nodes");ng.innerHTML="";$("edges").innerHTML="";drawGroups(m);
  m.nodes.forEach(function(n){if(CI.hid[n.id])return;
   var color=COLORS[(n.c||0)%COLORS.length];
   var isS=n.id===sel||!!ms[n.id],multi=Object.keys(ms).length>1;
@@ -367,15 +384,35 @@ function endInfo(n,fr,tx,ty,fh,slot){
  if(horiz)return{p:[n.x+(dx<0?0:n.w),n.y+n.h*sl],n:[dx<0?-1:1,0]};
  return{p:[n.x+n.w*sl,n.y+(dy<0?0:n.h)],n:[0,dy<0?-1:1]}}
 /* plusieurs extrémités sur le même côté d'une bulle : elles sont réparties régulièrement, dans l'ordre de position des bulles liées (pour limiter les croisements) */
-function computeSlots(){SLOT={};var m=cur(),grp={};
+function computeSlots(){SLOT={};SLOTG=[];var m=cur(),grp={};
  (m.links||[]).forEach(function(l){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b||CI.hid[a.id]||CI.hid[b.id])return;
   var H=(l.fa&&l.ta)?undefined:pairAxis(l,a,b);
   [[a,b,l.fa,"1"],[b,a,l.ta,"2"]].forEach(function(e){var n=e[0],o=e[1],fr=e[2];
    if(fr&&!(sideOf(fr)[0]?Math.abs(fr[1]-.5)<1e-3:Math.abs(fr[0]-.5)<1e-3))return;
    var ei=endInfo(n,fr,o.x+o.w/2,o.y+o.h/2,H),k=n.id+":"+ei.n[0]+","+ei.n[1];
-   (grp[k]=grp[k]||[]).push({id:l.id+e[3],v:ei.n[0]?o.y+o.h/2:o.x+o.w/2})})});
+   (grp[k]=grp[k]||[]).push({id:l.id+e[3],v:ei.n[0]?o.y+o.h/2:o.x+o.w/2,l:l,n:n,o:o,H:H,end:e[3]})})});
  Object.keys(grp).forEach(function(k){var g=grp[k];if(g.length<2)return;
-  g.sort(function(u,v){return u.v-v.v||(u.id<v.id?-1:1)});g.forEach(function(e,i){SLOT[e.id]=(i+1)/(g.length+1)})})}
+  g.sort(function(u,v){return u.v-v.v||(u.id<v.id?-1:1)});g.forEach(function(e,i){SLOT[e.id]=(i+1)/(g.length+1)});SLOTG.push(g)})}
+/* courbes échantillonnées et croisements entre deux flèches */
+function polyOf(l,m){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b||CI.hid[a.id]||CI.hid[b.id])return null;var G=linkGeom(l,a,b),p=[],i;for(i=0;i<=20;i++)p.push(bezAt(G,i/20));return p}
+function segX(p,q,r,s2){var d1x=q[0]-p[0],d1y=q[1]-p[1],d2x=s2[0]-r[0],d2y=s2[1]-r[1],den=d1x*d2y-d1y*d2x;if(Math.abs(den)<1e-9)return false;
+ var t=((r[0]-p[0])*d2y-(r[1]-p[1])*d2x)/den,u=((r[0]-p[0])*d1y-(r[1]-p[1])*d1x)/den;return t>.001&&t<.999&&u>.001&&u<.999}
+function polyCross(A,B){var c=0,i,j;for(i=0;i<A.length-1;i++)for(j=0;j<B.length-1;j++)if(segX(A[i],A[i+1],B[j],B[j+1]))c++;return c}
+/* pour chaque côté de bulle où arrivent/partent plusieurs flèches : on essaie d'échanger l'ordre des extrémités quand cela diminue les croisements réels des courbes
+   (y compris quand une flèche contourne une bulle) ; l'ordre trouvé est enregistré (extrémités fixées sur le bord) */
+function optimizeEnds(){var m=cur();computeSlots();var groups=SLOTG.slice(),polys={},changed=0;if(!groups.length)return 0;
+ (m.links||[]).forEach(function(l){polys[l.id]=polyOf(l,m)});
+ groups.forEach(function(g){var ord=g.slice().sort(function(u,v){return SLOT[u.id]-SLOT[v.id]}),orig=ord.map(function(e){return e.id}).join(),lk={};
+  g.forEach(function(e){lk[e.l.id]=e.l});var gl=Object.keys(lk).map(function(i){return lk[i]});
+  function setOrd(){ord.forEach(function(e,i){SLOT[e.id]=(i+1)/(ord.length+1)})}
+  function score(){setOrd();var np={},c=0;gl.forEach(function(l){np[l.id]=polyOf(l,m)});
+   gl.forEach(function(l,i){var P=np[l.id];if(!P)return;m.links.forEach(function(o){if(o===l)return;if(np[o.id]&&gl.indexOf(o)<i)return;var Q=np[o.id]||polys[o.id];if(!Q)return;c+=polyCross(P,Q)})});return c}
+  var best=score(),imp=true,pass=0,i,t,sc;
+  while(imp&&pass++<6){imp=false;for(i=0;i<ord.length-1;i++){t=ord[i];ord[i]=ord[i+1];ord[i+1]=t;sc=score();if(sc<best){best=sc;imp=true}else{t=ord[i];ord[i]=ord[i+1];ord[i+1]=t}}}
+  setOrd();gl.forEach(function(l){polys[l.id]=polyOf(l,m)});
+  if(ord.map(function(e){return e.id}).join()!==orig){changed++;ord.forEach(function(e){var ei=endInfo(e.n,null,e.o.x+e.o.w/2,e.o.y+e.o.h/2,e.H,SLOT[e.id]),fr=projBorder(e.n,ei.p[0],ei.p[1]),ax=sideOf(fr)[0]?1:0;
+   if(Math.abs(fr[ax]-.5)<.003)fr[ax]=.504;if(e.end==="1")e.l.fa=fr;else e.l.ta=fr})}});
+ return changed}
 /* choix du côté (gauche/droite = h, haut/bas = v) pour les deux extrémités d'une flèche, commun au départ et à l'arrivée :
    - bulles entièrement séparées horizontalement (même en diagonale) : côtés gauche/droite ;
    - sinon, bulles qui se chevauchent horizontalement mais séparées verticalement : haut/bas
@@ -598,7 +635,8 @@ function pasteClip(pt,parentId){if(!CLIP||!CLIP.nodes.length){toast("Rien à col
  if(par){tx=par.x+par.w+90+(maxx-minx)/2;ty=par.y+par.h/2}else{var p=pt||lastPt||viewCenter();tx=p[0];ty=p[1]}
  /* plusieurs collages au même endroit : on décale pour ne pas les superposer */
  var k=0;if(lastPaste&&lastPaste.c===CLIP&&Math.hypot(lastPaste.x-tx,lastPaste.y-ty)<12)k=lastPaste.k+1;lastPaste={c:CLIP,x:tx,y:ty,k:k};tx+=28*k;ty+=28*k;
- CLIP.nodes.forEach(function(n){var c=JSON.parse(JSON.stringify(n));delete c.w;delete c.h;delete c.th;delete c.iw;delete c.ih;
+ var gcnt={},gmap={};CLIP.nodes.forEach(function(n){if(n.grp)gcnt[n.grp]=(gcnt[n.grp]||0)+1});Object.keys(gcnt).forEach(function(g){if(gcnt[g]>1)gmap[g]=uid()});
+ CLIP.nodes.forEach(function(n){var c=JSON.parse(JSON.stringify(n));delete c.w;delete c.h;delete c.th;delete c.iw;delete c.ih;if(c.grp){if(gmap[c.grp])c.grp=gmap[c.grp];else delete c.grp}
   c.id=uid();map[n.id]=c.id;c.x=Math.round(n.x-cx+tx);c.y=Math.round(n.y-cy+ty);m.nodes.push(c);made.push(c)});
  var inc={};CLIP.links.forEach(function(l){var c=JSON.parse(JSON.stringify(l));c.id=uid();c.from=map[l.from];c.to=map[l.to];inc[c.to]=1;m.links.push(c)});
  if(par){var roots=made.filter(function(n){return!inc[n.id]});if(!roots.length)roots=[made[0]];roots.forEach(function(r){m.links.push({id:uid(),from:par.id,to:r.id,label:"",a:1})})}
@@ -801,7 +839,7 @@ function foldTree(mode){var m=cur(),ci=colInfo(m),c=0;
  if(!c){toast(mode==="fold"?"Tout est déjà replié.":"Rien à déplier.");return}
  save();draw();fit()}
 function foldMenu(){return[{icon:"⊟",label:"Tout replier",fn:function(){foldTree("fold")}},{icon:"⤵",label:"Déplier d’un niveau",fn:function(){foldTree("one")}},{icon:"⊞",label:"Tout déplier",fn:function(){foldTree("all")}}]}
-$("fabT").onclick=function(){var r=this.getBoundingClientRect();showCtx(r.left,r.top,foldMenu(),r)};
+$("fabT").onclick=function(){if(ctxSkip==="fabT"&&Date.now()-ctxSkipT<700){ctxSkip=null;return}var r=this.getBoundingClientRect();showCtx(r.left,r.top,foldMenu(),r)};
 /* tri de la liste des cartes (menu ☰) : dernière utilisation, dernière modification ou ordre alphabétique */
 var SORT="use",SORTN={use:"dernière utilisation",mod:"dernière modification",az:"ordre alphabétique"},menuPos=null;
 try{var svs=localStorage.getItem("mm_sort");if(SORTN[svs])SORT=svs}catch(e){}
@@ -814,8 +852,8 @@ function sortedMaps(){return maps.map(function(m,i){return{m:m,i:i}}).sort(funct
  return((USED[b.m.id]||0)-(USED[a.m.id]||0))||(a.i-b.i)}).map(function(o){return o.m})}
 function mainMenu(){var it=[{icon:"＋",label:"Nouvelle carte…",fn:newMapAct},{icon:"⧉",label:"Dupliquer cette carte",fn:dupMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true,title:"Vos cartes"}];
- sortedMaps().forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)}})});return it}
-$("fabM").onclick=function(){var r=this.getBoundingClientRect();menuPos=[r.left,r.bottom+8];showCtx(menuPos[0],menuPos[1],mainMenu())};
+ sortedMaps().forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)}})});return it}
+$("fabM").onclick=function(){if(ctxSkip==="fabM"&&Date.now()-ctxSkipT<700){ctxSkip=null;return}var r=this.getBoundingClientRect();menuPos=[r.left,r.bottom+8];showCtx(menuPos[0],menuPos[1],mainMenu())};
 $("fabC").onclick=function(){$("side").classList.toggle("on");$("help").classList.remove("on")};
 $("fabH").onclick=function(){$("help").classList.toggle("on");$("side").classList.remove("on")};
 document.addEventListener("pointerdown",function(e){var t=e.target;if(!t||!t.closest)return;
@@ -835,7 +873,9 @@ $("file").onchange=function(){var file=this.files[0];this.value="";if(!file)retu
 
 /* ---------- pan / zoom / clavier ---------- */
 var cv=$("cv"),pan=null,panMoved=false;
-cv.addEventListener("pointerdown",function(e){if(e.button===2)return;panMoved=false;pan={x:e.clientX-tr.x,y:e.clientY-tr.y,sx:e.clientX,sy:e.clientY,moved:false};cv.classList.add("drag");cv.setPointerCapture(e.pointerId)});
+cv.addEventListener("pointerdown",function(e){if(e.button===2)return;
+ if(moveMode&&selIds().length&&getN(selIds()[0])){moveMode=false;cv.classList.remove("movemode");drag={n:getN(selIds()[0]),x:e.clientX,y:e.clientY,on:false,shift:false};cv.setPointerCapture(e.pointerId);return}
+ panMoved=false;pan={x:e.clientX-tr.x,y:e.clientY-tr.y,sx:e.clientX,sy:e.clientY,moved:false};cv.classList.add("drag");cv.setPointerCapture(e.pointerId)});
 cv.addEventListener("pointermove",function(e){if(pan){if(!pan.moved&&Math.abs(e.clientX-pan.sx)+Math.abs(e.clientY-pan.sy)>4)pan.moved=true;tr.x=e.clientX-pan.x;tr.y=e.clientY-pan.y;applyT()}});
 cv.addEventListener("pointerup",function(){if(pan&&pan.moved){panMoved=true;setTimeout(function(){panMoved=false},0)}pan=null;cv.classList.remove("drag")});
 cv.addEventListener("click",function(){if(dragged||panMoved){panMoved=false;return}if(linkFrom){endLink();return}selLink=null;sel=null;draw();syncPanel()});
@@ -849,46 +889,67 @@ function unover(n){var all=cur().nodes,PAD=14,others=all.filter(function(b){retu
   if(!best||(best.x===tx&&best.y===ty))break;tx=best.x;ty=best.y}
  if(!tx&&!ty)return false;n.x=Math.round(n.x+tx);n.y=Math.round(n.y+ty);return true}
 /* mise en page automatique : un niveau (distance depuis les bulles de départ) = une colonne ; les bulles d'un même niveau ont le même x et sont espacées de la même distance minimale ;
-   l'ordre dans la colonne suit l'arbre (les enfants d'une même bulle restent côte à côte) et la position actuelle des bulles */
+   l'ordre dans la colonne suit l'arbre et limite les croisements de flèches ; les bulles d'un même groupe restent ensemble (même colonne, côte à côte, avec de la place pour leur contour) */
 function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measure);
- var byId={},out={},inn={},byY=function(a,b){return(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x};
- N.forEach(function(n){byId[n.id]=n;out[n.id]=[];inn[n.id]=0});
+ var byId={},out={},inn={},byY=function(a,b){return(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x},GP=16,gcount={};
+ N.forEach(function(n){byId[n.id]=n;out[n.id]=[];inn[n.id]=0;if(n.grp)gcount[n.grp]=(gcount[n.grp]||0)+1});
  (m.links||[]).forEach(function(l){if(byId[l.from]&&byId[l.to]&&l.from!==l.to){out[l.from].push(l.to);inn[l.to]++}});
+ var grpOf=function(n){return n.grp&&gcount[n.grp]>1?n.grp:null};
  var roots=N.filter(function(n){return!inn[n.id]}).sort(byY),level={},ord={},cnt=0;
- function bfs(starts){var q=starts.slice();starts.forEach(function(n){level[n.id]=0});
-  while(q.length){var u=q.shift();out[u.id].map(function(i){return byId[i]}).sort(byY).forEach(function(v){if(level[v.id]===undefined){level[v.id]=level[u.id]+1;q.push(v)}})}}
+ /* niveaux : une flèche entre deux bulles d'un même groupe ne fait pas changer de colonne */
+ function bfs(starts){var q=starts.slice();starts.forEach(function(n){if(level[n.id]===undefined)level[n.id]=0});
+  while(q.length){var u=q.shift();out[u.id].map(function(i){return byId[i]}).sort(byY).forEach(function(v){var w=(grpOf(u)&&grpOf(u)===grpOf(v))?0:1,nl=level[u.id]+w;if(level[v.id]===undefined||nl<level[v.id]){level[v.id]=nl;q.push(v)}})}}
  function dfs(u){if(ord[u.id]!==undefined)return;ord[u.id]=cnt++;out[u.id].map(function(i){return byId[i]}).sort(byY).forEach(dfs)}
  bfs(roots);roots.forEach(dfs);
- /* bulles sans racine (boucles) : la première non traitée devient une racine */
  N.slice().sort(byY).forEach(function(n){if(level[n.id]===undefined){bfs([n]);dfs(n)}});
+ /* un groupe tient dans une seule colonne (la plus à gauche de ses bulles) ; niveaux ensuite renumérotés sans trou */
+ var gmin={},gOrd={};N.forEach(function(n){var g=grpOf(n);if(g){gmin[g]=Math.min(gmin[g]===undefined?1e9:gmin[g],level[n.id]);gOrd[g]=Math.min(gOrd[g]===undefined?1e9:gOrd[g],ord[n.id])}});
+ N.forEach(function(n){var g=grpOf(n);if(g)level[n.id]=gmin[g]});
+ var us=[],rank={};N.forEach(function(n){if(us.indexOf(level[n.id])<0)us.push(level[n.id])});us.sort(function(a,b){return a-b});us.forEach(function(v,i){rank[v]=i});N.forEach(function(n){level[n.id]=rank[level[n.id]]});
+ var key=function(n){var g=grpOf(n);return g?gOrd[g]:ord[n.id]};
  var cols=[];N.forEach(function(n){(cols[level[n.id]]=cols[level[n.id]]||[]).push(n)});
- cols.forEach(function(c){c.sort(function(a,b){return ord[a.id]-ord[b.id]})});
- /* moins de croisements entre flèches : chaque colonne est réordonnée d'après la position moyenne des bulles liées (balayages), puis on permute des voisines si cela diminue les croisements */
+ cols.forEach(function(c){c.sort(function(a,b){return key(a)-key(b)||ord[a.id]-ord[b.id]})});
+ /* moins de croisements entre flèches : balayages par position moyenne des bulles liées (un groupe = un bloc), puis permutations de voisines si cela diminue les croisements */
  (function(){var idx={},up={},dn={},byLv={},edges=[],bc={};
   (m.links||[]).forEach(function(l){var a=byId[l.from],b=byId[l.to];if(!a||!b||Math.abs(level[a.id]-level[b.id])!==1)return;var e=level[a.id]<level[b.id]?[a,b]:[b,a];edges.push(e);
    (dn[e[0].id]=dn[e[0].id]||[]).push(e[1]);(up[e[1].id]=up[e[1].id]||[]).push(e[0]);(byLv[level[e[0].id]]=byLv[level[e[0].id]]||[]).push(e)});
   function reindex(){cols.forEach(function(c){c.forEach(function(n,i){idx[n.id]=i})})}
   function cross(){var t=0;Object.keys(byLv).forEach(function(k){var E=byLv[k],i,j;for(i=0;i<E.length;i++)for(j=i+1;j<E.length;j++){if((idx[E[i][0].id]-idx[E[j][0].id])*(idx[E[i][1].id]-idx[E[j][1].id])<0)t++}});return t}
-  function sweep(down){var d,step=down?1:-1;for(d=down?1:cols.length-2;down?d<cols.length:d>=0;d+=step){var col=cols[d];
+  function sweep(down){var d,step=down?1:-1;for(d=down?1:cols.length-2;down?d<cols.length:d>=0;d+=step){var col=cols[d],ub={};
     col.forEach(function(n){var ns=(down?up:dn)[n.id];bc[n.id]=ns&&ns.length?ns.reduce(function(t,x){return t+(idx[x.id]+.5)/cols[level[x.id]].length},0)/ns.length:(idx[n.id]+.5)/col.length});
-    col.sort(function(a,b){return bc[a.id]-bc[b.id]||idx[a.id]-idx[b.id]});col.forEach(function(n,i){idx[n.id]=i})}}
+    col.forEach(function(n){var g=grpOf(n);if(g){ub[g]=ub[g]||{s:0,c:0,i:1e9};ub[g].s+=bc[n.id];ub[g].c++;ub[g].i=Math.min(ub[g].i,idx[n.id])}});
+    var U=function(n){var g=grpOf(n);return g?ub[g].s/ub[g].c:bc[n.id]},UI=function(n){var g=grpOf(n);return g?ub[g].i:idx[n.id]};
+    col.sort(function(a,b){return U(a)-U(b)||UI(a)-UI(b)||idx[a.id]-idx[b.id]});col.forEach(function(n,i){idx[n.id]=i})}}
   if(!edges.length)return;reindex();
   var best=cross(),snap0=cols.map(function(c){return c.slice()}),it;
   for(it=0;it<6&&best>0;it++){sweep(true);sweep(false);var c0=cross();if(c0<best){best=c0;snap0=cols.map(function(c){return c.slice()})}}
   cols=snap0.map(function(c){return c.slice()});reindex();
   if(best>0&&edges.length<=120&&N.length<=200){var imp=true,pass=0;
-   while(imp&&pass++<8){imp=false;cols.forEach(function(col){for(var i=0;i<col.length-1;i++){var before=cross(),a=col[i],b=col[i+1];col[i]=b;col[i+1]=a;idx[b.id]=i;idx[a.id]=i+1;
+   while(imp&&pass++<8){imp=false;cols.forEach(function(col){for(var i=0;i<col.length-1;i++){var a=col[i],b=col[i+1];if(grpOf(a)!==grpOf(b))continue;var before=cross();col[i]=b;col[i+1]=a;idx[b.id]=i;idx[a.id]=i+1;
      if(cross()<before){imp=true}else{col[i]=a;col[i+1]=b;idx[a.id]=i;idx[b.id]=i+1}}})}}
  })();
  var x0=Math.min.apply(null,(roots.length?roots:N).map(function(n){return n.x})),
      y0=(Math.min.apply(null,N.map(function(n){return n.y}))+Math.max.apply(null,N.map(function(n){return n.y+n.h})))/2,HG=100,x=x0;
  cols.forEach(function(col){if(!col)return;
-  var tot=col.reduce(function(t,n){return t+n.h},0)+GAP*(col.length-1),y=y0-tot/2,w=0;
-  col.forEach(function(n){n.x=Math.round(x);n.y=Math.round(y);y+=n.h+GAP;w=Math.max(w,n.w)});x+=w+HG});
- /* les flèches repassent en tracé automatique */
+  /* même écart minimal partout, un peu plus grand autour d'un groupe pour laisser la place de son contour */
+  var gp=[],tot=0,y,w=0;col.forEach(function(n,i){tot+=n.h;if(i<col.length-1){var ga=grpOf(n),gb=grpOf(col[i+1]),g=GAP+(ga!==gb?((ga?GP:0)+(gb?GP:0)):0);gp.push(g);tot+=g}});
+  y=y0-tot/2;col.forEach(function(n,i){n.x=Math.round(x);n.y=Math.round(y);y+=n.h+(gp[i]||0);w=Math.max(w,n.w)});x+=w+HG});
+ /* flèches : tracé automatique, puis extrémités partagées ordonnées pour éviter les croisements */
  (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
- save();draw();fit();toast("Carte réorganisée : "+cols.filter(Boolean).length+" niveau"+(cols.filter(Boolean).length>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+".")}
+ var fixedEnds=optimizeEnds();
+ save();draw();fit();var nc=cols.filter(Boolean).length;
+ toast("Carte réorganisée : "+nc+" niveau"+(nc>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+(fixedEnds?", extrémités de flèches réordonnées":"")+".")}
 var ntId=null,ntDown=false;
+/* groupes : contour en pointillé autour des bulles d'un même groupe (champ grp des bulles) */
+function drawGroups(m){var g=$("grps");g.innerHTML="";var by={};
+ m.nodes.forEach(function(n){if(n.grp&&!CI.hid[n.id])(by[n.grp]=by[n.grp]||[]).push(n)});
+ Object.keys(by).forEach(function(k){var a=by[k];if(a.length<2)return;var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9,P=16;
+  a.forEach(function(n){x1=Math.min(x1,n.x);y1=Math.min(y1,n.y);x2=Math.max(x2,n.x+n.w);y2=Math.max(y2,n.y+n.h)});
+  el("rect",{"class":"grp",x:x1-P,y:y1-P,width:x2-x1+2*P,height:y2-y1+2*P,rx:16},g)})}
+function groupSel(){var ids=selIds().filter(function(i){return getN(i)});if(ids.length<2){toast("Sélectionnez au moins deux bulles à regrouper.");return}
+ var g=uid();ids.forEach(function(i){getN(i).grp=g});save();draw();toast(ids.length+" bulles regroupées.")}
+function ungroupSel(){var gs={};selIds().forEach(function(i){var n=getN(i);if(n&&n.grp)gs[n.grp]=1});var c=0;
+ cur().nodes.forEach(function(n){if(n.grp&&gs[n.grp]){delete n.grp;c++}});if(c){save();draw();toast("Groupe défait.")}}
 function showTip(elm,txt){var tip=$("tip");tip.textContent=txt;tip.style.display="block";var r=elm.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight,x=r.left+r.width/2-w/2,y=r.top-h-8;if(y<8)y=r.bottom+8;x=Math.max(8,Math.min(x,window.innerWidth-w-8));tip.style.left=x+"px";tip.style.top=y+"px"}
 function hideTip(){$("tip").style.display="none"}
 function openNote(id){var n=getN(id);if(!n)return;ntId=id;hideTip();$("ntTitle").textContent="Note de « "+nodeName(id)+" »";var t=$("ntt");t.value=n.note||"";$("nt").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
@@ -935,7 +996,11 @@ var ICONS=(function(){function i(p){return'<svg viewBox="0 0 24 24" width="18" h
  "⤵":i('<path d="M12 4v12M7 11l5 5 5-5M5 20h14"/>'),"⌖":i('<circle cx="12" cy="12" r="3"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/>'),
  "▦":i('<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/>'),
  "⤓":i('<path d="M12 4v11M7 11l5 5 5-5M5 20h14"/>'),"✕":i('<path d="M6 6l12 12M18 6L6 18"/>'),"⇄":i('<path d="M4 8h14M14 4l4 4-4 4M20 16H6M10 12l-4 4 4 4"/>'),
- "→":i('<path d="M4 12h15M14 7l5 5-5 5"/>'),"—":i('<path d="M5 12h14"/>'),"✎":i('<path d="M4 20l1-5L16 4l4 4L9 19z"/><path d="M14 6l4 4"/>'),"↺":i('<path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/>')}})();
+ "→":i('<path d="M4 12h15M14 7l5 5-5 5"/>'),"—":i('<path d="M5 12h14"/>'),"✎":i('<path d="M4 20l1-5L16 4l4 4L9 19z"/><path d="M14 6l4 4"/>'),"↺":i('<path d="M4 12a8 8 0 1 0 3-6.2M4 4v5h5"/>'),
+ "move":i('<path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/>'),
+ "group":i('<rect x="3" y="3" width="18" height="18" rx="3" stroke-dasharray="3 3"/><rect x="7" y="8" width="4" height="3" rx="1"/><rect x="13" y="13" width="4" height="3" rx="1"/>'),
+ "ungroup":i('<rect x="3" y="3" width="18" height="18" rx="3" stroke-dasharray="3 3" opacity=".55"/><path d="M8 8l8 8M16 8l-8 8"/>'),
+ "sel":i('<path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4"/><path d="M12 9v6M9 12h6"/>')}})();
 function showCtx(x,y,items,anc){ctxEl.innerHTML="";
  items.forEach(function(it){
   if(it==="-"){ctxEl.appendChild(document.createElement("hr"));return}
@@ -948,7 +1013,9 @@ function showCtx(x,y,items,anc){ctxEl.innerHTML="";
    ctxEl.appendChild(sr);return}
   var b=document.createElement("button");b.setAttribute("role","menuitem");if(it.danger)b.className="danger";
   var ic=document.createElement("span");ic.className="cx-i";if(ICONS[it.icon])ic.innerHTML=ICONS[it.icon];else ic.textContent=it.icon||"";var tx=document.createElement("span");tx.textContent=it.label;
-  b.appendChild(ic);b.appendChild(tx);b.onclick=function(){closeCtx();it.fn()};ctxEl.appendChild(b)});
+  b.appendChild(ic);b.appendChild(tx);b.onclick=function(){closeCtx();it.fn()};
+  if(it.mid){b.addEventListener("mousedown",function(e){if(e.button===1)e.preventDefault()});b.addEventListener("auxclick",function(e){if(e.button===1){e.preventDefault();closeCtx();it.mid()}})}
+  ctxEl.appendChild(b)});
  ctxEl.classList.add("on");var w=ctxEl.offsetWidth,h=ctxEl.offsetHeight;
  if(anc){x=anc.left-w-10;y=anc.bottom-h}
  ctxEl.style.left=Math.max(6,Math.min(x,window.innerWidth-w-6))+"px";ctxEl.style.top=Math.max(6,Math.min(y,window.innerHeight-h-6))+"px";ctxEl.focus()}
@@ -972,16 +1039,45 @@ function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
  it.push("-");
  it.push({icon:"🗑",label:"Supprimer le lien",danger:true,fn:function(){removeLink(l.id)}});
  return it}
-function bgMenu(pt){return[
- {icon:"bulle",label:"Nouvelle bulle ici",fn:function(){addBubble(pt)}},
- {icon:"📥",label:CLIP&&CLIP.nodes.length>1?"Coller les bulles ici":"Coller la bulle ici",fn:function(){pasteClip(pt)}},
- "-",
- {icon:"⌖",label:"Recentrer la vue",fn:fit},
- {icon:"▦",label:"Réorganiser la carte automatiquement",fn:reorganize},
- {icon:"⤓",label:"Exporter la carte",fn:exportAct},
- "-",
- {icon:"✕",label:"Supprimer la carte…",danger:true,fn:delMapAct}]}
+function bgMenu(pt){var it=[{icon:"bulle",label:"Nouvelle bulle ici",fn:function(){addBubble(pt)}}];
+ if(CLIP&&CLIP.nodes.length)it.push({icon:"📥",label:CLIP.nodes.length>1?"Coller les bulles ici":"Coller la bulle ici",fn:function(){pasteClip(pt)}});
+ it.push({icon:"sel",label:"Sélectionner plusieurs bulles",fn:startSelMode},"-",
+  {icon:"⌖",label:"Recentrer la vue",fn:fit},
+  {icon:"▦",label:"Réorganiser la carte automatiquement",fn:reorganize},
+  {icon:"⤓",label:"Exporter la carte",fn:exportAct},
+  "-",
+  {icon:"✕",label:"Supprimer la carte…",danger:true,fn:delMapAct});return it}
 var lastCtxT=0;
+function startSelMode(){selMode=true;moveMode=false;$("cv").classList.remove("movemode");$("cv").classList.add("selmode");$("selhint").classList.add("on");closeCtx()}
+function endSelMode(){selMode=false;if(sg){clearTimeout(sg.t);sg=null}$("cv").classList.remove("selmode");$("selhint").classList.remove("on");drawSel()}
+function startMove(){if(!selIds().length)return;moveMode=true;$("cv").classList.add("movemode");toast("Faites glisser n’importe où pour déplacer les bulles sélectionnées.")}
+function selActionMenu(){var ids=selIds(),any=ids.some(function(i){var n=getN(i);return n&&n.grp});
+ var it=[{icon:"⧉",label:"Copier",fn:copyAct},{icon:"✂",label:"Couper",fn:cutAct},{icon:"move",label:"Déplacer",fn:startMove},{icon:"group",label:"Regrouper",fn:groupSel}];
+ if(any)it.push({icon:"ungroup",label:"Dégrouper",fn:ungroupSel});return it}
+function pip(p,poly){var inside=false,i,j;for(i=0,j=poly.length-1;i<poly.length;j=i++){var xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];
+ if(((yi>p[1])!==(yj>p[1]))&&(p[0]<(xj-xi)*(p[1]-yi)/(yj-yi)+xi))inside=!inside}return inside}
+function drawSel(){var r=$("selrect"),p=$("selpath"),sr=$("stage").getBoundingClientRect();
+ if(!sg||!sg.mode){r.setAttribute("width",0);r.setAttribute("height",0);p.setAttribute("d","");return}
+ if(sg.mode==="rect"){r.setAttribute("x",Math.min(sg.x0,sg.x1)-sr.left);r.setAttribute("y",Math.min(sg.y0,sg.y1)-sr.top);r.setAttribute("width",Math.abs(sg.x1-sg.x0));r.setAttribute("height",Math.abs(sg.y1-sg.y0));p.setAttribute("d","")}
+ else{r.setAttribute("width",0);r.setAttribute("height",0);p.setAttribute("d","M"+sg.pts.map(function(q){return(q[0]-sr.left)+","+(q[1]-sr.top)}).join(" L")+" Z")}}
+function sgFinish(e){var s2=sg;sg=null;clearTimeout(s2.t);drawSel();var ids=[],m=cur();
+ if(s2.mode==="rect"){var a=toWorld({clientX:s2.x0,clientY:s2.y0}),b=toWorld({clientX:e.clientX,clientY:e.clientY}),x1=Math.min(a[0],b[0]),x2=Math.max(a[0],b[0]),y1=Math.min(a[1],b[1]),y2=Math.max(a[1],b[1]);
+  m.nodes.forEach(function(n){if(!CI.hid[n.id]&&n.x<x2&&n.x+n.w>x1&&n.y<y2&&n.y+n.h>y1)ids.push(n.id)})}
+ else if(s2.mode==="free"&&s2.pts.length>=3){var poly=s2.pts.map(function(q){return toWorld({clientX:q[0],clientY:q[1]})});
+  m.nodes.forEach(function(n){if(!CI.hid[n.id]&&pip([n.x+n.w/2,n.y+n.h/2],poly))ids.push(n.id)})}
+ else return;
+ endSelMode();
+ if(!ids.length){toast("Aucune bulle dans la zone.");return}
+ ms={};if(ids.length>1)ids.forEach(function(i){ms[i]=1});sel=ids[ids.length-1];selLink=null;draw();syncPanel();
+ showCtx(e.clientX+8,e.clientY+8,selActionMenu())}
+window.addEventListener("pointerdown",function(e){if(!selMode||e.button===2)return;var t=e.target;if(!t.closest||!t.closest("#cv"))return;e.stopPropagation();e.preventDefault();
+ sg={id:e.pointerId,x0:e.clientX,y0:e.clientY,x1:e.clientX,y1:e.clientY,pts:[[e.clientX,e.clientY]],mode:null,t:setTimeout(function(){if(sg&&!sg.mode){sg.mode="free";drawSel()}},450)}},true);
+window.addEventListener("pointermove",function(e){if(!sg||e.pointerId!==sg.id)return;sg.x1=e.clientX;sg.y1=e.clientY;
+ if(!sg.mode&&Math.hypot(e.clientX-sg.x0,e.clientY-sg.y0)>6){clearTimeout(sg.t);sg.mode="rect"}
+ if(sg.mode==="free")sg.pts.push([e.clientX,e.clientY]);drawSel()});
+window.addEventListener("pointerup",function(e){if(sg&&e.pointerId===sg.id)sgFinish(e)});
+window.addEventListener("pointercancel",function(e){if(sg&&e.pointerId===sg.id){clearTimeout(sg.t);sg=null;drawSel()}});
+$("selcancel").onclick=endSelMode;
 /* symboles de souris dans l'aide */
 (function(){var L="M7 1C3.7 1 1 3.7 1 7v1.5h6z",R="M7 1c3.3 0 6 2.7 6 6v1.5H7z",M="M6 2.5h2v4.5H6z";
  Array.prototype.forEach.call(document.querySelectorAll("#help i.m"),function(e){var k=e.getAttribute("data-m");
@@ -998,7 +1094,7 @@ cv.addEventListener("pointermove",function(e){lastPt=toWorld(e)});cv.addEventLis
 /* appui long (écran tactile) = clic droit */
 var lp=null;
 window.addEventListener("pointerdown",function(e){if(lp){clearTimeout(lp.h);lp=null}dragged=false;
- if(e.pointerType!=="touch"||!e.target.closest||!e.target.closest("#cv"))return;
+ if(e.pointerType!=="touch"||selMode||!e.target.closest||!e.target.closest("#cv"))return;
  lp={x:e.clientX,y:e.clientY,t:e.target,h:setTimeout(function(){var q=lp;lp=null;
   if(!q||(drag&&drag.on)||(mk&&mk.on)||(hd&&hd.on)||(pan&&pan.moved)||Date.now()-lastCtxT<800)return;
   drag=null;mk=null;hd=null;pan=null;cv.classList.remove("drag");dragged=true;openCtxFor(q.t,q.x,q.y)},520)}},true);
@@ -1021,14 +1117,14 @@ ctxEl.addEventListener("keydown",function(e){var bs=[].slice.call(ctxEl.querySel
  if(e.key==="ArrowDown"){e.preventDefault();bs[(i+1)%bs.length].focus()}
  else if(e.key==="ArrowUp"){e.preventDefault();bs[(i<=0?bs.length:i)-1].focus()}
  else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();closeCtx()}});
-document.addEventListener("pointerdown",function(e){if(ctxOpen()&&!e.target.closest("#ctx"))closeCtx()},true);
+document.addEventListener("pointerdown",function(e){if(ctxOpen()&&!e.target.closest("#ctx")){var fb=e.target.closest&&e.target.closest("#fabM,#fabT");ctxSkip=fb?fb.id:null;ctxSkipT=Date.now();closeCtx()}},true);
 window.addEventListener("blur",closeCtx);window.addEventListener("resize",closeCtx);
 window.addEventListener("wheel",function(){if(ctxOpen())closeCtx()},{passive:true});
 cv.addEventListener("mousedown",function(e){if(e.button===1)e.preventDefault()});
 var dragged=false,drag=null,mk=null;
 function setHl(id){clearHl();if(!id)return;hlId=id;var g=document.querySelector('.node[data-id="'+id+'"]');if(g)g.classList.add("dropt")}
 function nodeAt(e){var t=document.elementFromPoint(e.clientX,e.clientY),nd=t&&t.closest&&t.closest(".node");return nd?nd.getAttribute("data-id"):null}
-function startDrag(e,n){e.stopPropagation();if(e.button)return;drag={n:n,x:e.clientX,y:e.clientY,on:false,shift:e.shiftKey}}
+function startDrag(e,n){e.stopPropagation();if(e.button)return;moveMode=false;cv.classList.remove("movemode");drag={n:n,x:e.clientX,y:e.clientY,on:false,shift:e.shiftKey}}
 window.addEventListener("pointermove",function(e){
  if(mk){var a=getN(mk.from);if(!a){mk=null;return}
   if(!mk.on){if(Math.abs(e.clientX-mk.x0)+Math.abs(e.clientY-mk.y0)<5)return;mk.on=true;dragged=true;mk.path=[toWorld({clientX:mk.x0,clientY:mk.y0})]}
@@ -1038,7 +1134,7 @@ window.addEventListener("pointermove",function(e){
   var id=nodeAt(e);setHl(id&&id!==mk.from?id:null);return}
  if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
  if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;
-  if(!ms[drag.n.id]){if(drag.shift){var ids0=selIds();if(ids0.indexOf(drag.n.id)<0)ids0.push(drag.n.id);ms={};if(ids0.length>1)ids0.forEach(function(x){ms[x]=1});sel=drag.n.id;syncPanel()}else{ms={};if(sel!==drag.n.id){sel=drag.n.id;syncPanel()}}}}
+  if(!ms[drag.n.id]){if(drag.shift){var ids0=selIds();if(ids0.indexOf(drag.n.id)<0)ids0.push(drag.n.id);ms={};if(ids0.length>1)ids0.forEach(function(x){ms[x]=1});sel=drag.n.id;syncPanel()}else{ms={};var gm=drag.n.grp?cur().nodes.filter(function(x){return x.grp===drag.n.grp}):[];if(gm.length>1)gm.forEach(function(x){ms[x.id]=1});if(sel!==drag.n.id||gm.length>1){sel=drag.n.id;syncPanel()}}}}
  var grp=ms[drag.n.id]?Object.keys(ms).map(getN).filter(Boolean):[drag.n];
  if(!TRL)startTrail(grp,drag.n);
  grp.forEach(function(g){g.x+=ddx/tr.k;g.y+=ddy/tr.k});
@@ -1073,6 +1169,7 @@ document.addEventListener("keydown",function(e){
  if($("lb").classList.contains("on")){if(e.key==="Escape")closeLb();return}
  if($("cleanbox").classList.contains("on")){if(e.key==="Escape"&&$("cleanbox")._done)$("cleanbox")._done(null);return}
  if($("trashbox").classList.contains("on")){if(e.key==="Escape")closeTrash();return}
+ if(e.key==="Escape"&&(selMode||moveMode)){endSelMode();moveMode=false;$("cv").classList.remove("movemode");return}
  if(ctxOpen()){if(e.key==="Escape")closeCtx();return}
  if(e.key==="Escape"&&($("side").classList.contains("on")||$("help").classList.contains("on"))){$("side").classList.remove("on");$("help").classList.remove("on");return}
  if($("nt").classList.contains("on")){if(e.key==="Escape")closeNote();return}
