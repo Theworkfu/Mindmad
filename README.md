@@ -3,12 +3,14 @@ Fait mais non testé:
 
 
 a faire : 
+Ds le menu clic droit, rajoute une ligne "Regrouper des bulles" et si on clic dessus on pourra faire un rectangle si on clic une fois sur la carte ou si on laisse le doigt appuyé on peut faire une forme libre, pour entourer des cellules et les regrouper entre elles. une fois regrouper prend le en compte ds ta réorganisation auto qui doit donc les laisser grouper.
 
 
-evite que les fleches qui vont ds une même cellule se croise si possible, cellule a gauche des autres = fleche a gauche des autres 
+Femer le menu de gauche si on rappuie sur son icone. pareil pour le menu en bas à droite avec les traits horizontaux décalés.
 
 
-Si sauveagrde icone, ou si pas sauvegarde icone , nuage
+
+
 on peut mettre plusieurs images dans une cellule
 on peut redimensionner la cellule. 
 Dossier de cartes mentales
