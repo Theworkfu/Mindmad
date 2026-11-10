@@ -449,21 +449,24 @@ function pairAxis(l,a,b){var hSep=b.x>=a.x+a.w||b.x+b.w<=a.x,vSep=b.y>=a.y+a.h||
  else if(pv)h=(pv==="h");
  else h=Math.abs(a.x+a.w/2-(b.x+b.w/2))/b.w>=Math.abs(a.y+a.h/2-(b.y+b.h/2))/b.h;
  SIDE[l.id]=h?"h":"v";return h}
+var ALPHAS=(function(){var v=[24,60,110,190,300],r=[],i,j;for(i=0;i<v.length;i++)for(j=0;j<v.length;j++)r.push([v[i],v[j]]);r.sort(function(p,q){return(p[0]+p[1])-(q[0]+q[1])||Math.abs(p[0]-p[1])-Math.abs(q[0]-q[1])});return r})();
+function perpCtl(q,n,off){var d=off[0]*n[0]+off[1]*n[1];d=Math.max(d,18);return[q[0]+n[0]*d,q[1]+n[1]*d]}
 function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2;
  var H=(l.fa&&l.ta)?undefined:pairAxis(l,a,b),H1=ENDV[l.id+"1"]!==undefined?ENDV[l.id+"1"]==="h":H,H2=ENDV[l.id+"2"]!==undefined?ENDV[l.id+"2"]==="h":H,e1=endInfo(a,l.fa,bx,by,H1,SLOT[l.id+"1"]),e2=endInfo(b,l.ta,ax,ay,H2,SLOT[l.id+"2"]),q1=e1.p,q2=e2.p,c1,c2,dq=Math.hypot(q2[0]-q1[0],q2[1]-q1[1]),Hs=(l.a!==0?15:0)+(l.a===2?15:0);
  /* longueur des poignées : proportionnelle à la place disponible dans l'axe de sortie (moins les 15 px du tronçon droit sous le triangle), pour éviter les S trop serrés */
  function kk(a){var h=headLen(l,a),cons=(l.a!==0?h:0)+(l.a===2?h:0);return a>0?Math.max(6,Math.min(dq/3,(a-cons)*.5)):Math.max(24,dq/3)}
  var k1=kk((q2[0]-q1[0])*e1.n[0]+(q2[1]-q1[1])*e1.n[1]),k2=kk((q1[0]-q2[0])*e2.n[0]+(q1[1]-q2[1])*e2.n[1]);
  if(l.c1||l.c2||!l.cv){
-  c1=l.c1?[q1[0]+l.c1[0],q1[1]+l.c1[1]]:[q1[0]+e1.n[0]*k1,q1[1]+e1.n[1]*k1];
-  c2=l.c2?[q2[0]+l.c2[0],q2[1]+l.c2[1]]:[q2[0]+e2.n[0]*k2,q2[1]+e2.n[1]*k2]}
- else{var qm=[(ax+bx)/2+l.cv[0],(ay+by)/2+l.cv[1]];c1=[q1[0]+2/3*(qm[0]-q1[0]),q1[1]+2/3*(qm[1]-q1[1])];c2=[q2[0]+2/3*(qm[0]-q2[0]),q2[1]+2/3*(qm[1]-q2[1])]}
+  /* tracé manuel : seule la longueur de la poignée le long de la normale au bord est gardée, pour que la flèche arrive/parte perpendiculairement */
+  c1=l.c1?perpCtl(q1,e1.n,l.c1):[q1[0]+e1.n[0]*k1,q1[1]+e1.n[1]*k1];
+  c2=l.c2?perpCtl(q2,e2.n,l.c2):[q2[0]+e2.n[0]*k2,q2[1]+e2.n[1]*k2]}
+ else{var qm=[(ax+bx)/2+l.cv[0],(ay+by)/2+l.cv[1]];c1=perpCtl(q1,e1.n,[2/3*(qm[0]-q1[0]),2/3*(qm[1]-q1[1])]);c2=perpCtl(q2,e2.n,[2/3*(qm[0]-q2[0]),2/3*(qm[1]-q2[1])])}
  function build(c1,c2,p1,p2){p1=p1||q1;p2=p2||q2;
   return{q1:q1,q2:q2,p1:p1,p2:p2,c1:c1,c2:c2,mid:[(p1[0]+3*c1[0]+3*c2[0]+p2[0])/8,(p1[1]+3*c1[1]+3*c2[1]+p2[1])/8]}}
  var G=build(c1,c2),O=routeObst(a,b);
  /* si la flèche (même tracée à la main) traverse une autre bulle, on la contourne */
  if(!hitList(G,O).length)return G;
- var R=routeAround(l,a,b,q1,q2,c1,c2,O,build,G);
+ var R=routeAround(l,a,b,q1,q2,c1,c2,O,build,G,e1,e2);
  if(R){R.routed=1;return R}
  return G}
 function routeObst(a,b){var o=[];cur().nodes.forEach(function(n){if(CI.hid[n.id])return;o.push({id:n.id,x:n.x,y:n.y,w:n.w,h:n.h,p:(n.id===a.id||n.id===b.id)?-3:7})});return o}
@@ -484,7 +487,7 @@ function trailPts(id){if(!TRL||!TRL.ids[id])return null;var m=cur(),r=getNIn(m,T
 function sideFromTrail(o,T){var best=T[0],bd=1e18;T.forEach(function(p){var dx=Math.max(o.x-p[0],0,p[0]-o.x-o.w),dy=Math.max(o.y-p[1],0,p[1]-o.y-o.h),d=dx*dx+dy*dy;if(d<bd){bd=d;best=p}});
  var rx=(best[0]-(o.x+o.w/2))/(o.w/2),ry=(best[1]-(o.y+o.h/2))/(o.h/2);return Math.abs(ry)>=Math.abs(rx)?(ry<0?"t":"b"):(rx<0?"l":"r")}
 function wayPt(o,s,c){return s==="t"?[o.x+o.w/2,o.y-c]:s==="b"?[o.x+o.w/2,o.y+o.h+c]:s==="l"?[o.x-c,o.y+o.h/2]:[o.x+o.w+c,o.y+o.h/2]}
-function routeAround(l,a,b,q1,q2,c1,c2,O,build,G){
+function routeAround(l,a,b,q1,q2,c1,c2,O,build,G,e1,e2){
  var dx=q2[0]-q1[0],dy=q2[1]-q1[1],ln=Math.hypot(dx,dy),T=null,k;
  /* 1. flèche rattachée à la bulle qu'on déplace : on passe du même côté des autres bulles que la souris */
  if(TRL){var ma=!!TRL.ids[a.id],mb=!!TRL.ids[b.id];if(ma!==mb)T=trailPts(ma?a.id:b.id)}
@@ -494,12 +497,15 @@ function routeAround(l,a,b,q1,q2,c1,c2,O,build,G){
    pts=Object.keys(wp).map(function(id){return wayPt(wp[id].o,wp[id].s,cl)}).sort(function(u,v){return(u[0]-q1[0])*dx+(u[1]-q1[1])*dy-((v[0]-q1[0])*dx+(v[1]-q1[1])*dy)});
    ea=endInfo(a,l.fa,pts[0][0],pts[0][1]);eb=endInfo(b,l.ta,pts[pts.length-1][0],pts[pts.length-1][1]);cc=fitTan(ea.p,ea.n,pts,eb.p,eb.n);cu=build(cc[0],cc[1],ea.p,eb.p)}
   if(!hitList(cu,O).length)return cu}
- /* 2. sinon : la plus petite courbure qui évite les bulles */
- if(ln<1)return null;
- var nx=-dy/ln,ny=dx/ln,F=[[1,1],[1,.35],[.35,1],[1,-.35],[-.35,1]],D=[30,55,85,120,165,220,290,370],di,si,fi,d,cd;
- for(di=0;di<D.length;di++)for(si=-1;si<=1;si+=2)for(fi=0;fi<F.length;fi++){d=D[di]*si;
-  cd=build([c1[0]+nx*d*F[fi][0],c1[1]+ny*d*F[fi][0]],[c2[0]+nx*d*F[fi][1],c2[1]+ny*d*F[fi][1]]);
-  if(!hitList(cd,O).length)return cd}
+ /* 2. sinon : extrémités toujours perpendiculaires aux bords ; on cherche parmi plusieurs longueurs de poignées et, si besoin, d'autres côtés d'accroche (haut/bas au lieu de gauche/droite, ou l'inverse) */
+ var cur1=e1.n[0]!==0,cur2=e2.n[0]!==0,combos=[[e1,e2]],evals=0,ci,k2,x1,x2,AL,cd;
+ if(!l.fa)combos.push([endInfo(a,null,q2[0],q2[1],!cur1),e2]);
+ if(!l.ta)combos.push([e1,endInfo(b,null,q1[0],q1[1],!cur2)]);
+ if(!l.fa&&!l.ta)combos.push([endInfo(a,null,q2[0],q2[1],!cur1),endInfo(b,null,q1[0],q1[1],!cur2)]);
+ for(ci=0;ci<combos.length;ci++){x1=combos[ci][0];x2=combos[ci][1];AL=ALPHAS;
+  for(k2=0;k2<AL.length;k2++){if(++evals>60)return null;
+   cd=build([x1.p[0]+x1.n[0]*AL[k2][0],x1.p[1]+x1.n[1]*AL[k2][0]],[x2.p[0]+x2.n[0]*AL[k2][1],x2.p[1]+x2.n[1]*AL[k2][1]],x1.p,x2.p);
+   if(!hitList(cd,O).length)return cd}}
  return null}
 function bezAt(G,t){var u=1-t,A=u*u*u,B=3*u*u*t,C=3*u*t*t,D=t*t*t;return[A*G.p1[0]+B*G.c1[0]+C*G.c2[0]+D*G.p2[0],A*G.p1[1]+B*G.c1[1]+C*G.c2[1]+D*G.p2[1]]}
 function bezTan(G,t){var u=1-t;return[3*u*u*(G.c1[0]-G.p1[0])+6*u*t*(G.c2[0]-G.c1[0])+3*t*t*(G.p2[0]-G.c2[0]),3*u*u*(G.c1[1]-G.p1[1])+6*u*t*(G.c2[1]-G.c1[1])+3*t*t*(G.p2[1]-G.c2[1])]}
