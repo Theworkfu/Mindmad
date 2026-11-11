@@ -458,14 +458,14 @@ function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2
  /* longueur des poignées : proportionnelle à la place disponible dans l'axe de sortie (moins les 15 px du tronçon droit sous le triangle), pour éviter les S trop serrés */
  function kk(a){var h=headLen(l,a),cons=(l.a!==0?h:0)+(l.a===2?h:0);return a>0?Math.max(6,Math.min(dq/3,(a-cons)*.5)):Math.max(24,dq/3)}
  var k1=kk((q2[0]-q1[0])*e1.n[0]+(q2[1]-q1[1])*e1.n[1]),k2=kk((q1[0]-q2[0])*e2.n[0]+(q1[1]-q2[1])*e2.n[1]);
- var S=Math.min(22,Math.max(12,dq/3)),s1=null,s2=null;
+ var S=Math.min(22,Math.max(12,dq/3)),S1=S+(l.a===2?14:0),S2=S+(l.a!==0?14:0),s1=null,s2=null;
  /* poignée manuelle : tirée dans n'importe quelle direction, mais un tronçon droit de S px reste perpendiculaire au bord avant que la courbe commence ; poignée sur l'axe du bord : pas de tronçon */
- function manual(q,n,off){var d=off[0]*n[0]+off[1]*n[1],lx=off[0]-n[0]*d,ly=off[1]-n[1]*d;
+ function manual(q,n,off,Sx){var d=off[0]*n[0]+off[1]*n[1],lx=off[0]-n[0]*d,ly=off[1]-n[1]*d;
   if(Math.abs(lx)+Math.abs(ly)<1.5){var dd=Math.max(d,18);return{c:[q[0]+n[0]*dd,q[1]+n[1]*dd]}}
-  var mn=S+8;if(d<mn)off=[off[0]+n[0]*(mn-d),off[1]+n[1]*(mn-d)];
-  return{c:[q[0]+off[0],q[1]+off[1]],s:[q[0]+n[0]*S,q[1]+n[1]*S]}}
+  var mn=Sx+8;if(d<mn)off=[off[0]+n[0]*(mn-d),off[1]+n[1]*(mn-d)];
+  return{c:[q[0]+off[0],q[1]+off[1]],s:[q[0]+n[0]*Sx,q[1]+n[1]*Sx]}}
  if(l.c1||l.c2||!l.cv){
-  var m1=l.c1?manual(q1,e1.n,l.c1):null,m2=l.c2?manual(q2,e2.n,l.c2):null;
+  var m1=l.c1?manual(q1,e1.n,l.c1,S1):null,m2=l.c2?manual(q2,e2.n,l.c2,S2):null;
   c1=m1?m1.c:[q1[0]+e1.n[0]*k1,q1[1]+e1.n[1]*k1];s1=m1&&m1.s||null;
   c2=m2?m2.c:[q2[0]+e2.n[0]*k2,q2[1]+e2.n[1]*k2];s2=m2&&m2.s||null}
  else{var qm=[(ax+bx)/2+l.cv[0],(ay+by)/2+l.cv[1]];c1=perpCtl(q1,e1.n,[2/3*(qm[0]-q1[0]),2/3*(qm[1]-q1[1])]);c2=perpCtl(q2,e2.n,[2/3*(qm[0]-q2[0]),2/3*(qm[1]-q2[1])])}
@@ -520,6 +520,19 @@ function bezTan(G,t){var u=1-t,P=G.s1||G.p1,Q=G.s2||G.p2;return[3*u*u*(G.c1[0]-P
 /* tracé de la ligne : la courbe s'arrête 15 px avant la pointe (en translatant le point final et sa poignée), puis un segment droit, dans l'axe de la courbe
    (donc perpendiculaire au bord quand l'extrémité est automatique), rejoint la pointe : le triangle est exactement dans le prolongement de la ligne */
 function headLen(l,a){return a>0?Math.max(6,Math.min(15,a*(l.a===2?.3:.45))):15}
+/* arrondit le coin entre le tronçon droit (p→s) et le début de la courbe cubique (s, A1, A2, A3) : on coupe la cubique à t (de Casteljau) et on raccorde par une courbe quadratique tangente aux deux */
+function joinStart(p,s,A1,A2,A3,r){var nx=s[0]-p[0],ny=s[1]-p[1],L=Math.hypot(nx,ny);if(L<1||r<3)return null;nx/=L;ny/=L;r=Math.min(r,L-1);
+ var vx=A1[0]-s[0],vy=A1[1]-s[1],lv=Math.hypot(vx,vy);if(lv<1)return null;
+ var t0=Math.max(.03,Math.min(.4,r/(3*lv))),it,res=null;
+ for(it=0;it<5;it++){var t=Math.max(.01,t0/Math.pow(2,it)),rr=r*Math.pow(.75,it);if(rr<2)break;
+  var lp=function(a,b){return[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]};
+  var Q0=lp(s,A1),Q1=lp(A1,A2),Q2=lp(A2,A3),R0=lp(Q0,Q1),R1=lp(Q1,Q2),B=lp(R0,R1);
+  var tx=R1[0]-R0[0],ty=R1[1]-R0[1],lt=Math.hypot(tx,ty);if(lt<1e-6)return null;tx/=lt;ty/=lt;
+  var cr=nx*ty-ny*tx;if(Math.abs(cr)<.05)return null;
+  var A=[s[0]-nx*rr,s[1]-ny*rr],Dx=B[0]-A[0],Dy=B[1]-A[1],a=(Dx*ty-Dy*tx)/cr,b=(nx*Dy-ny*Dx)/cr;
+  if(a>=0&&b>=0&&a<=4*rr&&b<=4*rr)return{A:A,K:[A[0]+nx*a,A[1]+ny*a],B:B,c1:R1,c2:Q2};
+  if(!res)res={A:A,K:s,B:B,c1:R1,c2:Q2}}
+ return res}
 function shaft(G,l){var p1=G.p1,p2=G.p2,c1=G.c1,c2=G.c2,b1=G.s1,b2=G.s2;
  function unit(a,b){var x=a[0]-b[0],y=a[1]-b[1],n=Math.hypot(x,y);return n<1e-3?null:[x/n,y/n]}
  var d2=l.a!==0?(b2?unit(p2,b2):unit(p2,c2)):null,d1=l.a===2?(b1?unit(p1,b1):unit(p1,c1)):null;
@@ -529,7 +542,12 @@ function shaft(G,l){var p1=G.p1,p2=G.p2,c1=G.c1,c2=G.c2,b1=G.s1,b2=G.s2;
  /* tracé manuel : le tronçon droit perpendiculaire (s1/s2) fait office de queue de flèche ; sinon on raccourcit la courbe de la taille du triangle */
  var P1=b1?b1:(d1?[p1[0]-d1[0]*H1,p1[1]-d1[1]*H1]:p1),C1=b1?c1:(d1?[c1[0]-d1[0]*H1,c1[1]-d1[1]*H1]:c1),
      P2=b2?b2:(d2?[p2[0]-d2[0]*H2,p2[1]-d2[1]*H2]:p2),C2=b2?c2:(d2?[c2[0]-d2[0]*H2,c2[1]-d2[1]*H2]:c2);
- return{h1:H1,h2:H2,g:{p1:P1,c1:C1,c2:C2,p2:P2,q1:G.q1,q2:G.q2,mid:G.mid},d:"M"+p1[0]+","+p1[1]+((d1||b1)?" L"+P1[0]+","+P1[1]:"")+" C"+C1[0]+","+C1[1]+" "+C2[0]+","+C2[1]+" "+P2[0]+","+P2[1]+((d2||b2)?" L"+p2[0]+","+p2[1]:""),d1:d1,d2:d2}}
+ var CC=[P1,C1,C2,P2],j1=null,j2=null,pt=function(q){return q[0]+","+q[1]};
+ if(b1){j1=joinStart(p1,b1,C1,C2,P2,Math.min(12,Math.hypot(b1[0]-p1[0],b1[1]-p1[1])-(d1?H1:0)-2));if(j1)CC=[j1.B,j1.c1,j1.c2,P2]}
+ if(b2){var rc=joinStart(p2,b2,CC[2],CC[1],CC[0],Math.min(12,Math.hypot(b2[0]-p2[0],b2[1]-p2[1])-(d2?H2:0)-2));if(rc){j2=rc;CC=[CC[0],rc.c2,rc.c1,rc.B]}}
+ var d="M"+pt(p1)+(j1?" L"+pt(j1.A)+" Q"+pt(j1.K)+" "+pt(j1.B):((d1||b1)?" L"+pt(P1):""))
+  +" C"+pt(CC[1])+" "+pt(CC[2])+" "+pt(CC[3])+(j2?" Q"+pt(j2.K)+" "+pt(j2.A)+" L"+pt(p2):((d2||b2)?" L"+pt(p2):""));
+ return{h1:H1,h2:H2,g:{p1:P1,c1:C1,c2:C2,p2:P2,q1:G.q1,q2:G.q2,mid:G.mid},d:d,d1:d1,d2:d2}}
 function endTan(G,t){var d=bezTan(G,t);if(Math.hypot(d[0],d[1])<1e-3)d=bezTan(G,t?.97:.03);return d}
 /* ---------- effet d'électricité ----------
    Bulle sélectionnée : l'électricité remonte, dans le sens des flèches, depuis toutes les bulles
@@ -1121,7 +1139,7 @@ function drawSel(){var r=$("selrect"),p=$("selpath"),sr=$("stage").getBoundingCl
  if(!sg||!sg.mode){r.setAttribute("width",0);r.setAttribute("height",0);p.setAttribute("d","");return}
  if(sg.mode==="rect"){r.setAttribute("x",Math.min(sg.x0,sg.x1)-sr.left);r.setAttribute("y",Math.min(sg.y0,sg.y1)-sr.top);r.setAttribute("width",Math.abs(sg.x1-sg.x0));r.setAttribute("height",Math.abs(sg.y1-sg.y0));p.setAttribute("d","")}
  else{r.setAttribute("width",0);r.setAttribute("height",0);p.setAttribute("d","M"+sg.pts.map(function(q){return(q[0]-sr.left)+","+(q[1]-sr.top)}).join(" L")+" Z")}}
-function sgFinish(e){var s2=sg;sg=null;clearTimeout(s2.t);drawSel();var ids=[],m=cur();
+function sgFinish(e){var s2=sg;sg=null;clearTimeout(s2.t);drawSel();dragged=true;var ids=[],m=cur();
  if(s2.mode==="rect"){var a=toWorld({clientX:s2.x0,clientY:s2.y0}),b=toWorld({clientX:e.clientX,clientY:e.clientY}),x1=Math.min(a[0],b[0]),x2=Math.max(a[0],b[0]),y1=Math.min(a[1],b[1]),y2=Math.max(a[1],b[1]);
   m.nodes.forEach(function(n){if(!CI.hid[n.id]&&n.x<x2&&n.x+n.w>x1&&n.y<y2&&n.y+n.h>y1)ids.push(n.id)})}
  else if(s2.mode==="free"&&s2.pts.length>=3){var poly=s2.pts.map(function(q){return toWorld({clientX:q[0],clientY:q[1]})});
@@ -1132,7 +1150,7 @@ function sgFinish(e){var s2=sg;sg=null;clearTimeout(s2.t);drawSel();var ids=[],m
  ms={};if(ids.length>1)ids.forEach(function(i){ms[i]=1});sel=ids[ids.length-1];selLink=null;draw();syncPanel();
  showCtx(e.clientX+8,e.clientY+8,selActionMenu())}
 window.addEventListener("pointerdown",function(e){if(!selMode||e.button===2)return;var t=e.target;if(!t.closest||!t.closest("#cv"))return;e.stopPropagation();e.preventDefault();
- sg={id:e.pointerId,x0:e.clientX,y0:e.clientY,x1:e.clientX,y1:e.clientY,pts:[[e.clientX,e.clientY]],mode:null,t:setTimeout(function(){if(sg&&!sg.mode){sg.mode="free";drawSel()}},450)}},true);
+ dragged=true;sg={id:e.pointerId,x0:e.clientX,y0:e.clientY,x1:e.clientX,y1:e.clientY,pts:[[e.clientX,e.clientY]],mode:null,t:setTimeout(function(){if(sg&&!sg.mode){sg.mode="free";drawSel()}},450)}},true);
 window.addEventListener("pointermove",function(e){if(!sg||e.pointerId!==sg.id)return;sg.x1=e.clientX;sg.y1=e.clientY;
  if(!sg.mode&&Math.hypot(e.clientX-sg.x0,e.clientY-sg.y0)>6){clearTimeout(sg.t);sg.mode="rect"}
  if(sg.mode==="free")sg.pts.push([e.clientX,e.clientY]);drawSel()});
