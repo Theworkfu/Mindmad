@@ -420,6 +420,8 @@ function refineGroup(g,m){var ord=g.slice().sort(function(u,v){return SLOT[u.id]
  while(imp&&best>0&&pass++<4){imp=false;for(i=0;i<ord.length-1;i++){t=ord[i];ord[i]=ord[i+1];ord[i+1]=t;setOrd();sc=groupCross(gl,m);if(sc<best){best=sc;imp=true}else{t=ord[i];ord[i]=ord[i+1];ord[i+1]=t;setOrd()}}}
  setOrd()}
 /* courbes échantillonnées et croisements entre deux flèches */
+function realCost(){var m=cur(),P=[],c=0,i,j;ENDV={};SIDE={};slotsCore();(m.links||[]).forEach(function(l){var p=polyOf(l,m);if(p)P.push(p)});
+ for(i=0;i<P.length;i++)for(j=i+1;j<P.length;j++)c+=polyCross(P[i],P[j]);return c}
 function polyOf(l,m){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b||CI.hid[a.id]||CI.hid[b.id])return null;var G=linkGeom(l,a,b),p=[],i;for(i=0;i<=20;i++)p.push(bezAt(G,i/20));return p}
 function segX(p,q,r,s2){var d1x=q[0]-p[0],d1y=q[1]-p[1],d2x=s2[0]-r[0],d2y=s2[1]-r[1],den=d1x*d2y-d1y*d2x;if(Math.abs(den)<1e-9)return false;
  var t=((r[0]-p[0])*d2y-(r[1]-p[1])*d2x)/den,u=((r[0]-p[0])*d1y-(r[1]-p[1])*d1x)/den;return t>.001&&t<.999&&u>.001&&u<.999}
@@ -456,14 +458,20 @@ function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2
  /* longueur des poignées : proportionnelle à la place disponible dans l'axe de sortie (moins les 15 px du tronçon droit sous le triangle), pour éviter les S trop serrés */
  function kk(a){var h=headLen(l,a),cons=(l.a!==0?h:0)+(l.a===2?h:0);return a>0?Math.max(6,Math.min(dq/3,(a-cons)*.5)):Math.max(24,dq/3)}
  var k1=kk((q2[0]-q1[0])*e1.n[0]+(q2[1]-q1[1])*e1.n[1]),k2=kk((q1[0]-q2[0])*e2.n[0]+(q1[1]-q2[1])*e2.n[1]);
+ var S=Math.min(22,Math.max(12,dq/3)),s1=null,s2=null;
+ /* poignée manuelle : tirée dans n'importe quelle direction, mais un tronçon droit de S px reste perpendiculaire au bord avant que la courbe commence ; poignée sur l'axe du bord : pas de tronçon */
+ function manual(q,n,off){var d=off[0]*n[0]+off[1]*n[1],lx=off[0]-n[0]*d,ly=off[1]-n[1]*d;
+  if(Math.abs(lx)+Math.abs(ly)<1.5){var dd=Math.max(d,18);return{c:[q[0]+n[0]*dd,q[1]+n[1]*dd]}}
+  var mn=S+8;if(d<mn)off=[off[0]+n[0]*(mn-d),off[1]+n[1]*(mn-d)];
+  return{c:[q[0]+off[0],q[1]+off[1]],s:[q[0]+n[0]*S,q[1]+n[1]*S]}}
  if(l.c1||l.c2||!l.cv){
-  /* tracé manuel : seule la longueur de la poignée le long de la normale au bord est gardée, pour que la flèche arrive/parte perpendiculairement */
-  c1=l.c1?perpCtl(q1,e1.n,l.c1):[q1[0]+e1.n[0]*k1,q1[1]+e1.n[1]*k1];
-  c2=l.c2?perpCtl(q2,e2.n,l.c2):[q2[0]+e2.n[0]*k2,q2[1]+e2.n[1]*k2]}
+  var m1=l.c1?manual(q1,e1.n,l.c1):null,m2=l.c2?manual(q2,e2.n,l.c2):null;
+  c1=m1?m1.c:[q1[0]+e1.n[0]*k1,q1[1]+e1.n[1]*k1];s1=m1&&m1.s||null;
+  c2=m2?m2.c:[q2[0]+e2.n[0]*k2,q2[1]+e2.n[1]*k2];s2=m2&&m2.s||null}
  else{var qm=[(ax+bx)/2+l.cv[0],(ay+by)/2+l.cv[1]];c1=perpCtl(q1,e1.n,[2/3*(qm[0]-q1[0]),2/3*(qm[1]-q1[1])]);c2=perpCtl(q2,e2.n,[2/3*(qm[0]-q2[0]),2/3*(qm[1]-q2[1])])}
- function build(c1,c2,p1,p2){p1=p1||q1;p2=p2||q2;
-  return{q1:q1,q2:q2,p1:p1,p2:p2,c1:c1,c2:c2,mid:[(p1[0]+3*c1[0]+3*c2[0]+p2[0])/8,(p1[1]+3*c1[1]+3*c2[1]+p2[1])/8]}}
- var G=build(c1,c2),O=routeObst(a,b);
+ function build(c1,c2,p1,p2,sa,sb){p1=p1||q1;p2=p2||q2;
+  var b1=sa||p1,b2=sb||p2;return{q1:q1,q2:q2,p1:p1,p2:p2,s1:sa,s2:sb,c1:c1,c2:c2,mid:[(b1[0]+3*c1[0]+3*c2[0]+b2[0])/8,(b1[1]+3*c1[1]+3*c2[1]+b2[1])/8]}}
+ var G=build(c1,c2,undefined,undefined,s1,s2),O=routeObst(a,b);
  /* si la flèche (même tracée à la main) traverse une autre bulle, on la contourne */
  if(!hitList(G,O).length)return G;
  var R=routeAround(l,a,b,q1,q2,c1,c2,O,build,G,e1,e2);
@@ -507,20 +515,21 @@ function routeAround(l,a,b,q1,q2,c1,c2,O,build,G,e1,e2){
    cd=build([x1.p[0]+x1.n[0]*AL[k2][0],x1.p[1]+x1.n[1]*AL[k2][0]],[x2.p[0]+x2.n[0]*AL[k2][1],x2.p[1]+x2.n[1]*AL[k2][1]],x1.p,x2.p);
    if(!hitList(cd,O).length)return cd}}
  return null}
-function bezAt(G,t){var u=1-t,A=u*u*u,B=3*u*u*t,C=3*u*t*t,D=t*t*t;return[A*G.p1[0]+B*G.c1[0]+C*G.c2[0]+D*G.p2[0],A*G.p1[1]+B*G.c1[1]+C*G.c2[1]+D*G.p2[1]]}
-function bezTan(G,t){var u=1-t;return[3*u*u*(G.c1[0]-G.p1[0])+6*u*t*(G.c2[0]-G.c1[0])+3*t*t*(G.p2[0]-G.c2[0]),3*u*u*(G.c1[1]-G.p1[1])+6*u*t*(G.c2[1]-G.c1[1])+3*t*t*(G.p2[1]-G.c2[1])]}
+function bezAt(G,t){var u=1-t,A=u*u*u,B=3*u*u*t,C=3*u*t*t,D=t*t*t,P=G.s1||G.p1,Q=G.s2||G.p2;return[A*P[0]+B*G.c1[0]+C*G.c2[0]+D*Q[0],A*P[1]+B*G.c1[1]+C*G.c2[1]+D*Q[1]]}
+function bezTan(G,t){var u=1-t,P=G.s1||G.p1,Q=G.s2||G.p2;return[3*u*u*(G.c1[0]-P[0])+6*u*t*(G.c2[0]-G.c1[0])+3*t*t*(Q[0]-G.c2[0]),3*u*u*(G.c1[1]-P[1])+6*u*t*(G.c2[1]-G.c1[1])+3*t*t*(Q[1]-G.c2[1])]}
 /* tracé de la ligne : la courbe s'arrête 15 px avant la pointe (en translatant le point final et sa poignée), puis un segment droit, dans l'axe de la courbe
    (donc perpendiculaire au bord quand l'extrémité est automatique), rejoint la pointe : le triangle est exactement dans le prolongement de la ligne */
 function headLen(l,a){return a>0?Math.max(6,Math.min(15,a*(l.a===2?.3:.45))):15}
-function shaft(G,l){var p1=G.p1,p2=G.p2,c1=G.c1,c2=G.c2;
+function shaft(G,l){var p1=G.p1,p2=G.p2,c1=G.c1,c2=G.c2,b1=G.s1,b2=G.s2;
  function unit(a,b){var x=a[0]-b[0],y=a[1]-b[1],n=Math.hypot(x,y);return n<1e-3?null:[x/n,y/n]}
- var d2=l.a!==0?unit(p2,c2):null,d1=l.a===2?unit(p1,c1):null;
+ var d2=l.a!==0?(b2?unit(p2,b2):unit(p2,c2)):null,d1=l.a===2?(b1?unit(p1,b1):unit(p1,c1)):null;
  if(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])<14){d1=null;d2=null}
  /* le triangle rétrécit (6 à 15 px) quand la place manque entre les deux bulles, mais la ligne arrive toujours au milieu de sa base */
  var H1=d1?headLen(l,(p1[0]-p2[0])*d1[0]+(p1[1]-p2[1])*d1[1]):0,H2=d2?headLen(l,(p2[0]-p1[0])*d2[0]+(p2[1]-p1[1])*d2[1]):0;
- var P1=d1?[p1[0]-d1[0]*H1,p1[1]-d1[1]*H1]:p1,C1=d1?[c1[0]-d1[0]*H1,c1[1]-d1[1]*H1]:c1,
-     P2=d2?[p2[0]-d2[0]*H2,p2[1]-d2[1]*H2]:p2,C2=d2?[c2[0]-d2[0]*H2,c2[1]-d2[1]*H2]:c2;
- return{h1:H1,h2:H2,g:{p1:P1,c1:C1,c2:C2,p2:P2,q1:G.q1,q2:G.q2,mid:G.mid},d:"M"+p1[0]+","+p1[1]+(d1?" L"+P1[0]+","+P1[1]:"")+" C"+C1[0]+","+C1[1]+" "+C2[0]+","+C2[1]+" "+P2[0]+","+P2[1]+(d2?" L"+p2[0]+","+p2[1]:""),d1:d1,d2:d2}}
+ /* tracé manuel : le tronçon droit perpendiculaire (s1/s2) fait office de queue de flèche ; sinon on raccourcit la courbe de la taille du triangle */
+ var P1=b1?b1:(d1?[p1[0]-d1[0]*H1,p1[1]-d1[1]*H1]:p1),C1=b1?c1:(d1?[c1[0]-d1[0]*H1,c1[1]-d1[1]*H1]:c1),
+     P2=b2?b2:(d2?[p2[0]-d2[0]*H2,p2[1]-d2[1]*H2]:p2),C2=b2?c2:(d2?[c2[0]-d2[0]*H2,c2[1]-d2[1]*H2]:c2);
+ return{h1:H1,h2:H2,g:{p1:P1,c1:C1,c2:C2,p2:P2,q1:G.q1,q2:G.q2,mid:G.mid},d:"M"+p1[0]+","+p1[1]+((d1||b1)?" L"+P1[0]+","+P1[1]:"")+" C"+C1[0]+","+C1[1]+" "+C2[0]+","+C2[1]+" "+P2[0]+","+P2[1]+((d2||b2)?" L"+p2[0]+","+p2[1]:""),d1:d1,d2:d2}}
 function endTan(G,t){var d=bezTan(G,t);if(Math.hypot(d[0],d[1])<1e-3)d=bezTan(G,t?.97:.03);return d}
 /* ---------- effet d'électricité ----------
    Bulle sélectionnée : l'électricité remonte, dans le sens des flèches, depuis toutes les bulles
@@ -961,11 +970,31 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
      if(cross()<before){imp=true}else{col[i]=a;col[i+1]=b;idx[a.id]=i;idx[b.id]=i+1}}})}}
  })();
  var x0=Math.min.apply(null,(roots.length?roots:N).map(function(n){return n.x})),
-     y0=(Math.min.apply(null,N.map(function(n){return n.y}))+Math.max.apply(null,N.map(function(n){return n.y+n.h})))/2,HG=100,x=x0;
- cols.forEach(function(col){if(!col)return;
-  /* même écart minimal partout, un peu plus grand autour d'un groupe pour laisser la place de son contour */
-  var gp=[],tot=0,y,w=0;col.forEach(function(n,i){tot+=n.h;if(i<col.length-1){var ga=grpOf(n),gb=grpOf(col[i+1]),g=GAP+(ga!==gb?((ga?GP:0)+(gb?GP:0)):0);gp.push(g);tot+=g}});
-  y=y0-tot/2;col.forEach(function(n,i){n.x=Math.round(x);n.y=Math.round(y);y+=n.h+(gp[i]||0);w=Math.max(w,n.w)});x+=w+HG});
+     y0=(Math.min.apply(null,N.map(function(n){return n.y}))+Math.max.apply(null,N.map(function(n){return n.y+n.h})))/2,HG=100,colX=[],x=x0;
+ cols.forEach(function(col,ci){if(!col)return;colX[ci]=x;var w=0;col.forEach(function(n){w=Math.max(w,n.w)});x+=w+HG});
+ /* empile une colonne : même écart minimal partout, un peu plus grand autour d'un groupe pour laisser la place de son contour */
+ function stack(ci){var col=cols[ci];if(!col)return;var gp=[],tot=0,y;col.forEach(function(n,i){tot+=n.h;if(i<col.length-1){var ga=grpOf(n),gb=grpOf(col[i+1]),g=GAP+(ga!==gb?((ga?GP:0)+(gb?GP:0)):0);gp.push(g);tot+=g}});
+  y=y0-tot/2;col.forEach(function(n,i){n.x=Math.round(colX[ci]);n.y=Math.round(y);y+=n.h+(gp[i]||0)})}
+ cols.forEach(function(c,ci){stack(ci)});
+ /* des bulles peuvent être déplacées (permutées dans leur colonne) pour éviter les croisements : coût = croisements de segments entre centres + bulles traversées */
+ (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
+ var snapCols=cols.map(function(c){return c?c.slice():c}),realBefore=N.length<=150?realCost():0;
+ (function(){if(N.length>150)return;var t0=Date.now();
+  function cx(n){return[n.x+n.w/2,n.y+n.h/2]}
+  function inR(p,r){return p[0]>r.x&&p[0]<r.x+r.w&&p[1]>r.y&&p[1]<r.y+r.h}
+  function hitsRect(p,q,r){if(inR(p,r)||inR(q,r))return true;var a=[r.x,r.y],b=[r.x+r.w,r.y],c=[r.x+r.w,r.y+r.h],d=[r.x,r.y+r.h];return segX(p,q,a,b)||segX(p,q,b,c)||segX(p,q,c,d)||segX(p,q,d,a)}
+  function cost(){var S=[],c=0,i,j,k;(m.links||[]).forEach(function(l){var a=byId[l.from],b=byId[l.to];if(a&&b&&a!==b)S.push([a,b,cx(a),cx(b)])});
+   for(i=0;i<S.length;i++){for(j=i+1;j<S.length;j++){var A=S[i],B=S[j];if(A[0]===B[0]||A[0]===B[1]||A[1]===B[0]||A[1]===B[1])continue;if(segX(A[2],A[3],B[2],B[3]))c++}
+    for(k=0;k<N.length;k++){var nn=N[k];if(nn!==S[i][0]&&nn!==S[i][1]&&hitsRect(S[i][2],S[i][3],nn))c++}}
+   return c}
+  var best=cost(),pass=0,imp=true,ci,i,j;
+  while(imp&&best>0&&pass++<4&&Date.now()-t0<700){imp=false;
+   for(ci=0;ci<cols.length&&best>0;ci++){var col=cols[ci];if(!col||col.length<2)continue;
+    for(i=0;i<col.length-1&&best>0;i++)for(j=i+1;j<col.length&&best>0;j++){if(Date.now()-t0>700)return;
+     var a=col[i],b=col[j];if(grpOf(a)!==grpOf(b))continue;col[i]=b;col[j]=a;stack(ci);var sc=cost();
+     if(sc<best){best=sc;imp=true}else{col[i]=a;col[j]=b;stack(ci)}}}}})();
+ /* contrôle final avec les vraies courbes : si le déplacement n'a pas réduit les croisements, on garde la disposition précédente */
+ if(N.length<=150&&realCost()>realBefore){cols=snapCols;cols.forEach(function(c,ci){stack(ci)})}
  /* flèches : tracé automatique, puis extrémités partagées ordonnées pour éviter les croisements */
  (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
  var fixedEnds=optimizeEnds();
