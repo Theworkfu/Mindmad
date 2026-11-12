@@ -154,7 +154,7 @@ button:disabled{opacity:.4;cursor:default}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v30</div>
+    <div id="ver" title="Numéro de version de la page">v31</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -969,7 +969,7 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
  var cols=[];N.forEach(function(n){(cols[level[n.id]]=cols[level[n.id]]||[]).push(n)});
  cols.forEach(function(c){c.sort(function(a,b){return key(a)-key(b)||ord[a.id]-ord[b.id]})});
  /* moins de croisements entre flèches : balayages par position moyenne des bulles liées (un groupe = un bloc), puis permutations de voisines si cela diminue les croisements */
- (function(){var idx={},up={},dn={},byLv={},edges=[],bc={};
+ function reduceCross(){var idx={},up={},dn={},byLv={},edges=[],bc={};
   (m.links||[]).forEach(function(l){var a=byId[l.from],b=byId[l.to];if(!a||!b||Math.abs(level[a.id]-level[b.id])!==1)return;var e=level[a.id]<level[b.id]?[a,b]:[b,a];edges.push(e);
    (dn[e[0].id]=dn[e[0].id]||[]).push(e[1]);(up[e[1].id]=up[e[1].id]||[]).push(e[0]);(byLv[level[e[0].id]]=byLv[level[e[0].id]]||[]).push(e)});
   function reindex(){cols.forEach(function(c){c.forEach(function(n,i){idx[n.id]=i})})}
@@ -986,7 +986,8 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
   if(best>0&&edges.length<=120&&N.length<=200){var imp=true,pass=0;
    while(imp&&pass++<8){imp=false;cols.forEach(function(col){for(var i=0;i<col.length-1;i++){var a=col[i],b=col[i+1];if(grpOf(a)!==grpOf(b))continue;var before=cross();col[i]=b;col[i+1]=a;idx[b.id]=i;idx[a.id]=i+1;
      if(cross()<before){imp=true}else{col[i]=a;col[i+1]=b;idx[a.id]=i;idx[b.id]=i+1}}})}}
- })();
+ }
+ reduceCross();
  var x0=Math.min.apply(null,(roots.length?roots:N).map(function(n){return n.x})),
      y0=(Math.min.apply(null,N.map(function(n){return n.y}))+Math.max.apply(null,N.map(function(n){return n.y+n.h})))/2,HG=100,colX=[],x=x0;
  cols.forEach(function(col,ci){if(!col)return;colX[ci]=x;var w=0;col.forEach(function(n){w=Math.max(w,n.w)});x+=w+HG});
@@ -1013,6 +1014,8 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
      if(sc<best){best=sc;imp=true}else{col[i]=a;col[j]=b;stack(ci)}}}}})();
  /* contrôle final avec les vraies courbes : si le déplacement n'a pas réduit les croisements, on garde la disposition précédente */
  if(N.length<=150&&realCost()>realBefore){cols=snapCols;cols.forEach(function(c,ci){stack(ci)})}
+ /* dernière passe : s'il reste un croisement entre colonnes voisines qu'un simple échange de voisines supprime, on le fait (gardé seulement si les vraies courbes ne s'en trouvent pas moins bien) */
+ if(N.length<=150){var snap2=cols.map(function(c){return c?c.slice():c}),r2=realCost();reduceCross();cols.forEach(function(c,ci){stack(ci)});if(realCost()>r2){cols=snap2;cols.forEach(function(c,ci){stack(ci)})}}
  /* flèches : tracé automatique, puis extrémités partagées ordonnées pour éviter les croisements */
  (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
  var fixedEnds=optimizeEnds();
