@@ -1,3 +1,7 @@
+Doit pouvoir déplacer les bulles à l'intérieur d'un groupe, Créer un groupe même avec une seule bulle selectionnée
+
+
+
 
 Tu peux monter ou descendre une cellule d'une même colonne pour eviter les croisements de lignes
 
