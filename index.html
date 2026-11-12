@@ -154,7 +154,7 @@ button:disabled{opacity:.4;cursor:default}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v33</div>
+    <div id="ver" title="Numéro de version de la page">v34</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -721,7 +721,7 @@ function pasteClip(pt,parentId){if(!CLIP||!CLIP.nodes.length){toast("Rien à col
  if(par){tx=par.x+par.w+90+(maxx-minx)/2;ty=par.y+par.h/2}else{var p=pt||lastPt||viewCenter();tx=p[0];ty=p[1]}
  /* plusieurs collages au même endroit : on décale pour ne pas les superposer */
  var k=0;if(lastPaste&&lastPaste.c===CLIP&&Math.hypot(lastPaste.x-tx,lastPaste.y-ty)<12)k=lastPaste.k+1;lastPaste={c:CLIP,x:tx,y:ty,k:k};tx+=28*k;ty+=28*k;
- var gcnt={},gmap={};CLIP.nodes.forEach(function(n){if(n.grp)gcnt[n.grp]=(gcnt[n.grp]||0)+1});Object.keys(gcnt).forEach(function(g){if(gcnt[g]>1)gmap[g]=uid()});
+ var gcnt={},gmap={};CLIP.nodes.forEach(function(n){if(n.grp)gcnt[n.grp]=(gcnt[n.grp]||0)+1});Object.keys(gcnt).forEach(function(g){gmap[g]=uid()});
  CLIP.nodes.forEach(function(n){var c=JSON.parse(JSON.stringify(n));delete c.w;delete c.h;delete c.th;delete c.iw;delete c.ih;if(c.grp){if(gmap[c.grp])c.grp=gmap[c.grp];else delete c.grp}
   c.id=uid();map[n.id]=c.id;c.x=Math.round(n.x-cx+tx);c.y=Math.round(n.y-cy+ty);m.nodes.push(c);made.push(c)});
  var inc={};CLIP.links.forEach(function(l){var c=JSON.parse(JSON.stringify(l));c.id=uid();c.from=map[l.from];c.to=map[l.to];inc[c.to]=1;m.links.push(c)});
@@ -980,7 +980,7 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
  var byId={},out={},inn={},byY=function(a,b){return(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x},GP=16,gcount={};
  N.forEach(function(n){byId[n.id]=n;out[n.id]=[];inn[n.id]=0;if(n.grp)gcount[n.grp]=(gcount[n.grp]||0)+1});
  (m.links||[]).forEach(function(l){if(byId[l.from]&&byId[l.to]&&l.from!==l.to){out[l.from].push(l.to);inn[l.to]++}});
- var grpOf=function(n){return n.grp&&gcount[n.grp]>1?n.grp:null};
+ var grpOf=function(n){return n.grp?n.grp:null};
  var roots=N.filter(function(n){return!inn[n.id]}).sort(byY),level={},ord={},cnt=0;
  /* niveaux : une flèche entre deux bulles d'un même groupe ne fait pas changer de colonne */
  function bfs(starts){var q=starts.slice();starts.forEach(function(n){if(level[n.id]===undefined)level[n.id]=0});
@@ -1053,16 +1053,16 @@ var ntId=null,ntDown=false;
 /* groupes : contour en pointillé autour des bulles d'un même groupe (champ grp des bulles) */
 function drawGroups(m){var g=$("grps");g.innerHTML="";var by={};
  m.nodes.forEach(function(n){if(n.grp&&!CI.hid[n.id])(by[n.grp]=by[n.grp]||[]).push(n)});
- Object.keys(by).forEach(function(k){var a=by[k];if(a.length<2)return;var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9,P=16;
+ Object.keys(by).forEach(function(k){var a=by[k];if(!a.length)return;var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9,P=16;
   a.forEach(function(n){x1=Math.min(x1,n.x);y1=Math.min(y1,n.y);x2=Math.max(x2,n.x+n.w);y2=Math.max(y2,n.y+n.h)});
   var r=el("rect",{"class":"grp","data-g":k,x:x1-P,y:y1-P,width:x2-x1+2*P,height:y2-y1+2*P,rx:16},g);
   /* glisser dans le cadre déplace tout le groupe ; un clic sélectionne ses bulles ; clic droit : menu (Dégrouper) */
-  r.addEventListener("pointerdown",function(e){if(selMode||e.button)return;startDrag(e,a[0])});
+  r.addEventListener("pointerdown",function(e){if(selMode||e.button)return;startDrag(e,a[0]);if(drag)drag.group=k});
   r.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;ms={};a.forEach(function(n){ms[n.id]=1});sel=a[a.length-1].id;selLink=null;draw();syncPanel()})})}
 function ungroupGroup(gid){var c=0;cur().nodes.forEach(function(n){if(n.grp===gid){delete n.grp;c++}});if(c){save();draw();toast("Groupe défait.")}}
 function grpMenu(gid,pt){return[{icon:"ungroup",label:"Dégrouper",fn:function(){ungroupGroup(gid)}},"-"].concat(bgMenu(pt))}
-function groupSel(){var ids=selIds().filter(function(i){return getN(i)});if(ids.length<2){toast("Sélectionnez au moins deux bulles à regrouper.");return}
- var g=uid();ids.forEach(function(i){getN(i).grp=g});save();draw();toast(ids.length+" bulles regroupées.")}
+function groupSel(){var ids=selIds().filter(function(i){return getN(i)});if(!ids.length){toast("Sélectionnez d’abord une ou plusieurs bulles.");return}
+ var g=uid();ids.forEach(function(i){getN(i).grp=g});save();draw();toast(ids.length>1?ids.length+" bulles regroupées.":"Groupe créé.")}
 function ungroupSel(){var gs={};selIds().forEach(function(i){var n=getN(i);if(n&&n.grp)gs[n.grp]=1});var c=0;
  cur().nodes.forEach(function(n){if(n.grp&&gs[n.grp]){delete n.grp;c++}});if(c){save();draw();toast("Groupe défait.")}}
 function showTip(elm,txt){var tip=$("tip");tip.textContent=txt;tip.style.display="block";var r=elm.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight,x=r.left+r.width/2-w/2,y=r.top-h-8;if(y<8)y=r.bottom+8;x=Math.max(8,Math.min(x,window.innerWidth-w-8));tip.style.left=x+"px";tip.style.top=y+"px"}
@@ -1143,6 +1143,7 @@ function nodeMenu(n){var ids=selIds(),multi=ids.length>1&&ids.indexOf(n.id)>=0,a
  {icon:"✂",label:"Couper",fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}cutAct()}}];
  if(multi){it.push({icon:"group",label:"Regrouper les bulles",fn:groupSel});if(anyG)it.push({icon:"ungroup",label:"Dégrouper",fn:ungroupSel})}
  else if(n.grp)it.push({icon:"ungroup",label:"Dégrouper",fn:function(){ungroupGroup(n.grp)}});
+ else it.push({icon:"group",label:"Créer un groupe",fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}groupSel()}});
  it.push("-",{icon:"🗑",label:"Supprimer la bulle",danger:true,fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}rm()}});
  return it}
 function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
@@ -1161,6 +1162,7 @@ function bgMenu(pt){var it=[{icon:"bulle",label:"Nouvelle bulle ici",fn:function
  if(CLIP&&CLIP.nodes.length)it.push({icon:"📥",label:CLIP.nodes.length>1?"Coller les bulles ici":"Coller la bulle ici",fn:function(){pasteClip(pt)}});
  it.push({icon:"sel",label:"Sélectionner plusieurs bulles",fn:startSelMode});
  if(selIds().length>1)it.push({icon:"⧉",label:"Copier la sélection",fn:copyAct},{icon:"✂",label:"Couper la sélection",fn:cutAct},{icon:"group",label:"Regrouper la sélection",fn:groupSel});
+ else if(selIds().length===1&&getN(selIds()[0]))it.push({icon:"group",label:"Créer un groupe avec la bulle sélectionnée",fn:groupSel});
  it.push("-",
   {icon:"⌖",label:"Recentrer la vue",fn:fit},
   {icon:"▦",label:"Réorganiser la carte automatiquement",fn:reorganize},
@@ -1189,7 +1191,7 @@ function sgFinish(e){var s2=sg;sg=null;clearTimeout(s2.t);drawSel();dragged=true
  endSelMode();
  if(!ids.length){toast("Aucune bulle dans la zone.");return}
  ms={};if(ids.length>1)ids.forEach(function(i){ms[i]=1});sel=ids[ids.length-1];selLink=null;draw();syncPanel();
- toast(ids.length+(ids.length>1?" bulles sélectionnées":" bulle sélectionnée")+" : clic droit pour copier, couper ou regrouper.")}
+ toast(ids.length+(ids.length>1?" bulles sélectionnées":" bulle sélectionnée")+" : clic droit pour copier, couper ou "+(ids.length>1?"regrouper":"créer un groupe")+".")}
 window.addEventListener("pointerdown",function(e){if(!selMode||e.button===2)return;var t=e.target;if(!t.closest||!t.closest("#cv"))return;e.stopPropagation();e.preventDefault();
  dragged=true;sg={id:e.pointerId,x0:e.clientX,y0:e.clientY,x1:e.clientX,y1:e.clientY,pts:[[e.clientX,e.clientY]],mode:null,t:setTimeout(function(){if(sg&&!sg.mode){sg.mode="free";drawSel()}},450)}},true);
 window.addEventListener("pointermove",function(e){if(!sg||e.pointerId!==sg.id)return;sg.x1=e.clientX;sg.y1=e.clientY;
@@ -1255,7 +1257,7 @@ window.addEventListener("pointermove",function(e){
   var id=nodeAt(e);setHl(id&&id!==mk.from?id:null);return}
  if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
  if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;
-  if(!ms[drag.n.id]){if(drag.shift){var ids0=selIds();if(ids0.indexOf(drag.n.id)<0)ids0.push(drag.n.id);ms={};if(ids0.length>1)ids0.forEach(function(x){ms[x]=1});sel=drag.n.id;syncPanel()}else{ms={};var gm=drag.n.grp?cur().nodes.filter(function(x){return x.grp===drag.n.grp}):[];if(gm.length>1)gm.forEach(function(x){ms[x.id]=1});if(sel!==drag.n.id||gm.length>1){sel=drag.n.id;syncPanel()}}}}
+  if(!ms[drag.n.id]){if(drag.shift){var ids0=selIds();if(ids0.indexOf(drag.n.id)<0)ids0.push(drag.n.id);ms={};if(ids0.length>1)ids0.forEach(function(x){ms[x]=1});sel=drag.n.id;syncPanel()}else{ms={};if(drag.group)cur().nodes.forEach(function(x){if(x.grp===drag.group)ms[x.id]=1});if(sel!==drag.n.id){sel=drag.n.id;syncPanel()}}}}
  var grp=ms[drag.n.id]?Object.keys(ms).map(getN).filter(Boolean):[drag.n];
  if(!TRL)startTrail(grp,drag.n);
  grp.forEach(function(g){g.x+=ddx/tr.k;g.y+=ddy/tr.k});
