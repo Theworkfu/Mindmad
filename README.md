@@ -1,4 +1,4 @@
-Si une nouvelle bulle est crée et n'appartient pas à un groupe il ne faut pas la placer visuellement dans un groupe. Si elle appartient à un groupe, rattache la au groupe
+Une bulle qui n'appartient pas à un groupe, ne doit pas se situer dans la zone encadrée. si on la glisse dans cette zone encadrée alors elle appartiendera au groupe
 
 
 
