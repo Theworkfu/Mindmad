@@ -1,4 +1,6 @@
-Doit pouvoir déplacer les bulles à l'intérieur d'un groupe, Créer un groupe même avec une seule bulle selectionnée
+Doit pouvoir déplacer les bulles à l'intérieur d'un groupe
+Créer un groupe même avec une seule bulle selectionnée
+Si une nouvelle bulle est crée il ne faut pas la placer visuellement dans un groupe
 
 
 
