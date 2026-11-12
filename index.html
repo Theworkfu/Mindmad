@@ -48,7 +48,7 @@ input[type=text],input[type=url],input[type=password],textarea{width:100%;paddin
 #fabs{position:absolute;right:14px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:22;display:flex;flex-direction:column;gap:10px}
 .fab svg{display:block;margin:auto}
 #ver{position:absolute;right:12px;top:70px;width:56px;text-align:center;font-size:11px;color:var(--muted);z-index:22;pointer-events:none}
-.grp{fill:color-mix(in srgb,var(--accent) 7%,transparent);stroke:var(--muted);stroke-width:1.7;stroke-dasharray:7 6;pointer-events:none}
+.grp{fill:color-mix(in srgb,var(--accent) 7%,transparent);stroke:var(--muted);stroke-width:1.7;stroke-dasharray:7 6;pointer-events:all;cursor:move}
 svg#cv.selmode,svg#cv.selmode .node{cursor:crosshair}svg#cv.movemode,svg#cv.movemode .node{cursor:move}
 #selov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:18}
 #selov rect,#selov path{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 4}
@@ -154,13 +154,13 @@ button:disabled{opacity:.4;cursor:default}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v31</div>
+    <div id="ver" title="Numéro de version de la page">v33</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
-    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle enfant reliée · ↵ Entrée : bulle sœur</div><div>Menu du fond → Sélectionner plusieurs bulles : rectangle (glisser) ou forme libre (maintenir puis glisser), puis copier, couper, déplacer ou regrouper</div><div><i class="m" data-m="M"></i> sur une carte du menu ☰ : l’ouvrir dans un nouvel onglet</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
+    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div>Menu du fond → Sélectionner plusieurs bulles : rectangle (glisser) ou forme libre (maintenir puis glisser), puis clic droit : copier, couper ou regrouper (glisser une bulle sélectionnée les déplace toutes)</div><div><i class="m" data-m="M"></i> sur une carte du menu ☰ : l’ouvrir dans un nouvel onglet</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
     <div id="fabs"><button class="fab" id="fabT" title="Replier / déplier les bulles" aria-label="Replier ou déplier"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 6h9M8 12h9M12 18h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
   </div>
   <aside id="side">
@@ -428,7 +428,34 @@ function segX(p,q,r,s2){var d1x=q[0]-p[0],d1y=q[1]-p[1],d2x=s2[0]-r[0],d2y=s2[1]
 function polyCross(A,B){var c=0,i,j;for(i=0;i<A.length-1;i++)for(j=0;j<B.length-1;j++)if(segX(A[i],A[i+1],B[j],B[j+1]))c++;return c}
 /* pour chaque côté de bulle où arrivent/partent plusieurs flèches : on essaie d'échanger l'ordre des extrémités quand cela diminue les croisements réels des courbes
    (y compris quand une flèche contourne une bulle) ; l'ordre trouvé est enregistré (extrémités fixées sur le bord) */
-function optimizeEnds(){var m=cur();computeSlots();var groups=SLOTG.slice(),polys={},changed=0;if(!groups.length)return 0;
+/* changements de bord pour supprimer des croisements (réorganisation) : pour chaque flèche qui en croise une autre, on essaie de faire arriver/partir l'une de ses extrémités par l'autre axe (haut/bas ↔ gauche/droite) et on garde le changement si les courbes se croisent moins */
+function sideAxisOf(l,end,m){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b)return null;var G=linkGeom(l,a,b),p=end==="1"?G.p1:G.p2,n=end==="1"?a:b;
+ return(Math.abs(p[0]-n.x)<1e-6||Math.abs(p[0]-n.x-n.w)<1e-6)?"h":"v"}
+function optimizeSides(m,budget){var t0=Date.now(),links=m.links||[],polys={},changed=0,pass;ENDV={};slotsCore();
+ links.forEach(function(l){polys[l.id]=polyOf(l,m)});
+ function incident(nid){return links.filter(function(l){return l.from===nid||l.to===nid})}
+ function incCost(inc,P){var c=0;inc.forEach(function(l,i){var A=P[l.id];if(!A)return;links.forEach(function(o){if(o===l)return;if(inc.indexOf(o)>=0&&inc.indexOf(o)<i)return;var B=P[o.id];if(B)c+=polyCross(A,B)})});return c}
+ for(pass=0;pass<3;pass++){var imp=false,cand=[];
+  links.forEach(function(l){var A=polys[l.id],c=0;if(!A)return;links.forEach(function(o){if(o!==l&&polys[o.id])c+=polyCross(A,polys[o.id])});if(c)cand.push([c,l])});
+  cand.sort(function(x,y){return y[0]-x[0]});
+  for(var ci=0;ci<cand.length;ci++){var l=cand[ci][1];
+   ["1","2"].forEach(function(end){if(Date.now()-t0>budget)return;if((end==="1"&&l.fa)||(end==="2"&&l.ta))return;
+    var key=l.id+end,n=getNIn(m,end==="1"?l.from:l.to);if(!n)return;var inc=incident(n.id),before=incCost(inc,polys);if(!before)return;
+    var ax=sideAxisOf(l,end,m);if(!ax)return;var prev=ENDV[key],sS=SLOT,sG=SLOTG;
+    ENDV[key]=ax==="h"?"v":"h";slotsCore();
+    var np={},k;inc.forEach(function(l2){np[l2.id]=polyOf(l2,m)});var P2={};for(k in polys)P2[k]=polys[k];for(k in np)P2[k]=np[k];
+    if(incCost(inc,P2)<before){polys=P2;imp=true;changed++}else{if(prev===undefined)delete ENDV[key];else ENDV[key]=prev;SLOT=sS;SLOTG=sG}})}
+  if(!imp||Date.now()-t0>budget)break}
+ return changed}
+/* les côtés choisis sont enregistrés (extrémités fixées sur le bord) ; on fixe tout le groupe d'extrémités concerné pour garder des positions réparties */
+function bakeEnds(m){var done={};
+ function bake(e){var ei=endInfo(e.n,null,e.o.x+e.o.w/2,e.o.y+e.o.h/2,e.H,SLOT[e.id]),fr=projBorder(e.n,ei.p[0],ei.p[1]),ax=sideOf(fr)[0]?1:0;
+  if(Math.abs(fr[ax]-.5)<.003)fr[ax]=.504;if(e.end==="1")e.l.fa=fr;else e.l.ta=fr;done[e.id]=1}
+ SLOTG.forEach(function(g){if(g.some(function(e){return ENDV[e.id]!==undefined}))g.forEach(bake)});
+ Object.keys(ENDV).forEach(function(key){if(done[key])return;var end=key.slice(-1),lid=key.slice(0,-1),l=(m.links||[]).filter(function(x){return x.id===lid})[0];if(!l)return;
+  var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b)return;var n=end==="1"?a:b,o=end==="1"?b:a,ei=endInfo(n,null,o.x+o.w/2,o.y+o.h/2,ENDV[key]==="h"),fr=projBorder(n,ei.p[0],ei.p[1]);
+  if(end==="1")l.fa=fr;else l.ta=fr})}
+function optimizeEnds(){var m=cur();slotsCore();var groups=SLOTG.slice(),polys={},changed=0;if(!groups.length)return 0;
  (m.links||[]).forEach(function(l){polys[l.id]=polyOf(l,m)});
  groups.forEach(function(g){var ord=g.slice().sort(function(u,v){return SLOT[u.id]-SLOT[v.id]}),orig=ord.map(function(e){return e.id}).join(),lk={};
   g.forEach(function(e){lk[e.l.id]=e.l});var gl=Object.keys(lk).map(function(i){return lk[i]});
@@ -666,12 +693,6 @@ function addLinked(){var f=getN(sel);if(!f){toast("Sélectionnez d’abord une b
  var n=spawn(f.x+f.w+150,f.y+f.h/2,0);
  if(kids.length){n.x=kids[0].x;n.y=Math.round(Math.max.apply(null,kids.map(function(c){return c.y+c.h}))+GAP);unover(n)}
  m.links.push({id:uid(),from:f.id,to:n.id,label:"",a:1});sel=n.id;selLink=null;save();draw();syncPanel();openEd(n.id,true)}
-function addSibling(){var s=getN(sel);if(!s){toast("Sélectionnez d’abord une bulle.");return}
- var m=cur(),parents=(m.links||[]).filter(function(l){return l.to===s.id}).map(function(l){return getNIn(m,l.from)}).filter(Boolean);
- var n=spawn(s.x+s.w/2,s.y+s.h+GAP+17,s.c||0);
- n.x=s.x;n.y=Math.round(s.y+s.h+GAP);unover(n);
- parents.forEach(function(p){delete p.col;m.links.push({id:uid(),from:p.id,to:n.id,label:"",a:1})});
- ms={};sel=n.id;selLink=null;save();draw();syncPanel();openEd(n.id,true)}
 function nodeName(id){var n=getN(id);return n?((n.t||"").replace(/\s*\n+\s*/g," ")||"(vide)"):"?"}
 function removeLink(id){var m=cur();m.links=(m.links||[]).filter(function(l){return l.id!==id});if(selLink===id)selLink=null;save();draw();syncPanel()}
 function endLink(){linkFrom=null;document.body.classList.remove("linking");$("toast").classList.remove("on")}
@@ -1024,16 +1045,22 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
  if(N.length<=150){var snap2=cols.map(function(c){return c?c.slice():c}),r2=realCost();reduceCross();cols.forEach(function(c,ci){stack(ci)});if(realCost()>r2){cols=snap2;cols.forEach(function(c,ci){stack(ci)})}}
  /* flèches : tracé automatique, puis extrémités partagées ordonnées pour éviter les croisements */
  (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
+ var sw=0;if(N.length<=150){sw=optimizeSides(m,700);bakeEnds(m);ENDV={}}
  var fixedEnds=optimizeEnds();
  save();draw();fit();var nc=cols.filter(Boolean).length;
- toast("Carte réorganisée : "+nc+" niveau"+(nc>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+(fixedEnds?", extrémités de flèches réordonnées":"")+".")}
+ toast("Carte réorganisée : "+nc+" niveau"+(nc>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+(sw?", "+sw+" extrémité"+(sw>1?"s":"")+" changée"+(sw>1?"s":"")+" de bord":"")+(fixedEnds?", extrémités de flèches réordonnées":"")+".")}
 var ntId=null,ntDown=false;
 /* groupes : contour en pointillé autour des bulles d'un même groupe (champ grp des bulles) */
 function drawGroups(m){var g=$("grps");g.innerHTML="";var by={};
  m.nodes.forEach(function(n){if(n.grp&&!CI.hid[n.id])(by[n.grp]=by[n.grp]||[]).push(n)});
  Object.keys(by).forEach(function(k){var a=by[k];if(a.length<2)return;var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9,P=16;
   a.forEach(function(n){x1=Math.min(x1,n.x);y1=Math.min(y1,n.y);x2=Math.max(x2,n.x+n.w);y2=Math.max(y2,n.y+n.h)});
-  el("rect",{"class":"grp",x:x1-P,y:y1-P,width:x2-x1+2*P,height:y2-y1+2*P,rx:16},g)})}
+  var r=el("rect",{"class":"grp","data-g":k,x:x1-P,y:y1-P,width:x2-x1+2*P,height:y2-y1+2*P,rx:16},g);
+  /* glisser dans le cadre déplace tout le groupe ; un clic sélectionne ses bulles ; clic droit : menu (Dégrouper) */
+  r.addEventListener("pointerdown",function(e){if(selMode||e.button)return;startDrag(e,a[0])});
+  r.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;ms={};a.forEach(function(n){ms[n.id]=1});sel=a[a.length-1].id;selLink=null;draw();syncPanel()})})}
+function ungroupGroup(gid){var c=0;cur().nodes.forEach(function(n){if(n.grp===gid){delete n.grp;c++}});if(c){save();draw();toast("Groupe défait.")}}
+function grpMenu(gid,pt){return[{icon:"ungroup",label:"Dégrouper",fn:function(){ungroupGroup(gid)}},"-"].concat(bgMenu(pt))}
 function groupSel(){var ids=selIds().filter(function(i){return getN(i)});if(ids.length<2){toast("Sélectionnez au moins deux bulles à regrouper.");return}
  var g=uid();ids.forEach(function(i){getN(i).grp=g});save();draw();toast(ids.length+" bulles regroupées.")}
 function ungroupSel(){var gs={};selIds().forEach(function(i){var n=getN(i);if(n&&n.grp)gs[n.grp]=1});var c=0;
@@ -1107,14 +1134,17 @@ function showCtx(x,y,items,anc){ctxEl.innerHTML="";
  ctxEl.classList.add("on");var w=ctxEl.offsetWidth,h=ctxEl.offsetHeight;
  if(anc){x=anc.left-w-10;y=anc.bottom-h}
  ctxEl.style.left=Math.max(6,Math.min(x,window.innerWidth-w-6))+"px";ctxEl.style.top=Math.max(6,Math.min(y,window.innerHeight-h-6))+"px";ctxEl.focus()}
-function nodeMenu(n){return[
- {colors:true,cur:n.c||0,fn:function(i){var ids=selIds();if(ids.indexOf(n.id)<0)ids=[n.id];ids.forEach(function(id){var x=getN(id);if(x)x.c=i});save();draw();syncPanel()}},
+function nodeMenu(n){var ids=selIds(),multi=ids.length>1&&ids.indexOf(n.id)>=0,anyG=multi&&ids.some(function(i){var x=getN(i);return x&&x.grp});
+ var it=[
+ {colors:true,cur:n.c||0,fn:function(i){var ids2=selIds();if(ids2.indexOf(n.id)<0)ids2=[n.id];ids2.forEach(function(id){var x=getN(id);if(x)x.c=i});save();draw();syncPanel()}},
  {icon:"📝",label:n.note?"Modifier la note":"Ajouter une note",fn:function(){openNote(n.id)}},
  "-",
  {icon:"⧉",label:"Copier",fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}copyAct()}},
- {icon:"✂",label:"Couper",fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}cutAct()}},
- "-",
- {icon:"🗑",label:"Supprimer la bulle",danger:true,fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}rm()}}]}
+ {icon:"✂",label:"Couper",fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}cutAct()}}];
+ if(multi){it.push({icon:"group",label:"Regrouper les bulles",fn:groupSel});if(anyG)it.push({icon:"ungroup",label:"Dégrouper",fn:ungroupSel})}
+ else if(n.grp)it.push({icon:"ungroup",label:"Dégrouper",fn:function(){ungroupGroup(n.grp)}});
+ it.push("-",{icon:"🗑",label:"Supprimer la bulle",danger:true,fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}rm()}});
+ return it}
 function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
  function setA(v){return function(){l.a=v;delete l.rv;save();draw();syncPanel()}}
  if(a===1)it.push({icon:"⇄",label:"Inverser le sens",fn:function(){invLink(l)}});
@@ -1129,7 +1159,9 @@ function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
  return it}
 function bgMenu(pt){var it=[{icon:"bulle",label:"Nouvelle bulle ici",fn:function(){addBubble(pt)}}];
  if(CLIP&&CLIP.nodes.length)it.push({icon:"📥",label:CLIP.nodes.length>1?"Coller les bulles ici":"Coller la bulle ici",fn:function(){pasteClip(pt)}});
- it.push({icon:"sel",label:"Sélectionner plusieurs bulles",fn:startSelMode},"-",
+ it.push({icon:"sel",label:"Sélectionner plusieurs bulles",fn:startSelMode});
+ if(selIds().length>1)it.push({icon:"⧉",label:"Copier la sélection",fn:copyAct},{icon:"✂",label:"Couper la sélection",fn:cutAct},{icon:"group",label:"Regrouper la sélection",fn:groupSel});
+ it.push("-",
   {icon:"⌖",label:"Recentrer la vue",fn:fit},
   {icon:"▦",label:"Réorganiser la carte automatiquement",fn:reorganize},
   {icon:"⤓",label:"Exporter la carte",fn:exportAct},
@@ -1157,7 +1189,7 @@ function sgFinish(e){var s2=sg;sg=null;clearTimeout(s2.t);drawSel();dragged=true
  endSelMode();
  if(!ids.length){toast("Aucune bulle dans la zone.");return}
  ms={};if(ids.length>1)ids.forEach(function(i){ms[i]=1});sel=ids[ids.length-1];selLink=null;draw();syncPanel();
- showCtx(e.clientX+8,e.clientY+8,selActionMenu())}
+ toast(ids.length+(ids.length>1?" bulles sélectionnées":" bulle sélectionnée")+" : clic droit pour copier, couper ou regrouper.")}
 window.addEventListener("pointerdown",function(e){if(!selMode||e.button===2)return;var t=e.target;if(!t.closest||!t.closest("#cv"))return;e.stopPropagation();e.preventDefault();
  dragged=true;sg={id:e.pointerId,x0:e.clientX,y0:e.clientY,x1:e.clientX,y1:e.clientY,pts:[[e.clientX,e.clientY]],mode:null,t:setTimeout(function(){if(sg&&!sg.mode){sg.mode="free";drawSel()}},450)}},true);
 window.addEventListener("pointermove",function(e){if(!sg||e.pointerId!==sg.id)return;sg.x1=e.clientX;sg.y1=e.clientY;
@@ -1171,10 +1203,11 @@ $("selcancel").onclick=endSelMode;
  Array.prototype.forEach.call(document.querySelectorAll("#help i.m"),function(e){var k=e.getAttribute("data-m");
   e.innerHTML='<svg class="ms" viewBox="0 0 14 20"><path d="'+(k==="M"?M:k==="R"?R:L)+'" fill="var(--accent)"/><rect x="1" y="1" width="12" height="18" rx="6" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M1 8.5h12M7 1v7.5" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>'+(k==="L2"?"×2":k==="LD"?"✥":"")})})();
 function openCtxFor(t,cx,cy){if(linkFrom)endLink();
- var nd=t.closest&&t.closest(".node"),lk=t.closest&&t.closest(".lk"),items;
+ var nd=t.closest&&t.closest(".node"),lk=t.closest&&t.closest(".lk"),gp=t.closest&&t.closest(".grp"),items;
  if(!lk&&!nd&&selLink&&t.closest&&t.closest(".lkh"))lk={getAttribute:function(){return selLink}};
  if(nd){var id=nd.getAttribute("data-id");if(sel!==id||selLink){sel=id;selLink=null;draw();syncPanel()}var n=getN(id);if(!n)return;items=nodeMenu(n)}
  else if(lk){var lid=lk.getAttribute("data-id"),l=(cur().links||[]).filter(function(x){return x.id===lid})[0];if(!l)return;if(selLink!==lid||sel){selLink=lid;sel=null;draw();syncPanel()}items=linkMenu(l)}
+ else if(gp)items=grpMenu(gp.getAttribute("data-g"),toWorld({clientX:cx,clientY:cy}));
  else items=bgMenu(toWorld({clientX:cx,clientY:cy}));
  lastCtxT=Date.now();showCtx(cx,cy,items)}
 cv.addEventListener("contextmenu",function(e){e.preventDefault();openCtxFor(e.target,e.clientX,e.clientY)});
@@ -1270,7 +1303,7 @@ document.addEventListener("keydown",function(e){
   if(kc==="c"&&selIds().length){e.preventDefault();copyAct();return}
   if(kc==="x"&&selIds().length){e.preventDefault();cutAct();return}}
  if(e.key==="Tab"&&sel&&!inField){e.preventDefault();addLinked()}
- else if(e.key==="Enter"&&sel&&!inField){e.preventDefault();addSibling()}
+
  else if((e.key==="Delete")&&!inField){if(selLink)removeLink(selLink);else rm()}
 });
 
