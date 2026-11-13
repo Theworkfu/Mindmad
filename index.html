@@ -1092,6 +1092,8 @@ function shiftOutOfZones(list){var ids={},free=list.filter(function(n){return!n.
 /* mise en page automatique : un niveau (distance depuis les bulles de départ) = une colonne ; les bulles d'un même niveau ont le même x et sont espacées de la même distance minimale ;
    l'ordre dans la colonne suit l'arbre et limite les croisements de flèches ; les bulles d'un même groupe restent ensemble (même colonne, côte à côte, avec de la place pour leur contour) */
 function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measure);
+ /* on oublie d'emblée tous les tracés existants (extrémités fixées, courbes réglées à la main, tracés de contournement en mémoire) : la réorganisation repart d'un tracé 100 % automatique */
+ (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};ENDV={};RCACHE={};RCN=0;POLYC={};POLYN=0;
  var byId={},out={},inn={},byY=function(a,b){return(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x},GP=16,gcount={};
  N.forEach(function(n){byId[n.id]=n;out[n.id]=[];inn[n.id]=0;if(n.grp)gcount[n.grp]=(gcount[n.grp]||0)+1});
  (m.links||[]).forEach(function(l){if(byId[l.from]&&byId[l.to]&&l.from!==l.to){out[l.from].push(l.to);inn[l.to]++}});
