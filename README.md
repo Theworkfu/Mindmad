@@ -1,9 +1,11 @@
-Numéro de version sous l'icône du nuage stp
+Donne moi la possibilité de donner un titre à un groupe
 
-on peut mettre plusieurs images dans une cellule, ou avertissement si on remplace une image ds une bulle ou y'a deja une image
+on peut mettre plusieurs images dans une cellule, ou avertissement si on remplace une image ds une bulle ou y'a deja une image.
+
+Lorsqu'une image est insérée dans une bulle, il ne faut pas que ça déforme trop la bulle, donc tu peux réduire son echelle visuellement
 
 on peut redimensionner la cellule. 
 
-Dossier de cartes mentales
+Numéro de version sous l'icône du nuage stp
 
 
