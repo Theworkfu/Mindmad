@@ -1,7 +1,3 @@
-Enter = cellule soeur
-
-Tu peux monter ou descendre une cellule d'une même colonne pour eviter les croisements de lignes
-
 Numéro de version sous l'icône du nuage stp
 
 on peut mettre plusieurs images dans une cellule, ou avertissement si on remplace une image ds une bulle ou y'a deja une image
