@@ -49,6 +49,7 @@ input[type=text],input[type=url],input[type=password],textarea{width:100%;paddin
 .fab svg{display:block;margin:auto}
 #ver{position:absolute;right:12px;top:70px;width:56px;text-align:center;font-size:11px;color:var(--muted);z-index:22;pointer-events:none}
 .grp{fill:color-mix(in srgb,var(--accent) 7%,transparent);stroke:var(--muted);stroke-width:1.7;stroke-dasharray:7 6;pointer-events:all;cursor:move}
+.grp.drop{fill:color-mix(in srgb,var(--accent) 20%,transparent);stroke:var(--accent);stroke-width:2.6}
 svg#cv.selmode,svg#cv.selmode .node{cursor:crosshair}svg#cv.movemode,svg#cv.movemode .node{cursor:move}
 #selov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:18}
 #selov rect,#selov path{fill:color-mix(in srgb,var(--accent) 12%,transparent);stroke:var(--accent);stroke-width:1.6;stroke-dasharray:5 4}
@@ -726,7 +727,7 @@ function pasteClip(pt,parentId){if(!CLIP||!CLIP.nodes.length){toast("Rien à col
   c.id=uid();map[n.id]=c.id;c.x=Math.round(n.x-cx+tx);c.y=Math.round(n.y-cy+ty);m.nodes.push(c);made.push(c)});
  var inc={};CLIP.links.forEach(function(l){var c=JSON.parse(JSON.stringify(l));c.id=uid();c.from=map[l.from];c.to=map[l.to];inc[c.to]=1;m.links.push(c)});
  if(par){var roots=made.filter(function(n){return!inc[n.id]});if(!roots.length)roots=[made[0]];roots.forEach(function(r){m.links.push({id:uid(),from:par.id,to:r.id,label:"",a:1})})}
- if(made.length===1){measure(made[0]);unover(made[0])}
+ if(made.length===1){measure(made[0]);unover(made[0])}else{made.forEach(measure);shiftOutOfZones(made)}
  selLink=null;ms={};if(made.length>1)made.forEach(function(n){ms[n.id]=1});sel=made[made.length-1].id;
  save();draw();syncPanel();toast(made.length+(made.length>1?" bulles collées.":" bulle collée."))}
 function rm(){var ids=selIds().filter(function(i){return getN(i)});if(!ids.length)return;var m=cur();m.nodes=m.nodes.filter(function(x){return ids.indexOf(x.id)<0});pruneLinks(m);sel=null;ms={};save();draw();syncPanel()}
@@ -965,15 +966,28 @@ cv.addEventListener("pointerdown",function(e){if(e.button===2)return;
 cv.addEventListener("pointermove",function(e){if(pan){if(!pan.moved&&Math.abs(e.clientX-pan.sx)+Math.abs(e.clientY-pan.sy)>4)pan.moved=true;tr.x=e.clientX-pan.x;tr.y=e.clientY-pan.y;applyT()}});
 cv.addEventListener("pointerup",function(){if(pan&&pan.moved){panMoved=true;setTimeout(function(){panMoved=false},0)}pan=null;cv.classList.remove("drag")});
 cv.addEventListener("click",function(){if(dragged||panMoved){panMoved=false;return}if(linkFrom){endLink();return}selLink=null;sel=null;draw();syncPanel()});
-function unover(n){var all=cur().nodes,PAD=14,others=all.filter(function(b){return b!==n&&!CI.hid[b.id]});
- function ov(sx,sy,b){return n.x+sx<b.x+b.w+PAD&&b.x<n.x+sx+n.w+PAD&&n.y+sy<b.y+b.h+PAD&&b.y<n.y+sy+n.h+PAD}
+/* cadres des groupes (mêmes dimensions que le contour dessiné) ; skip : ids de bulles à ignorer */
+function grpRects(skip){var by={},out=[];cur().nodes.forEach(function(n){if(n.grp&&!CI.hid[n.id]&&!(skip&&skip[n.id]))(by[n.grp]=by[n.grp]||[]).push(n)});
+ Object.keys(by).forEach(function(k){var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9,P=16;by[k].forEach(function(n){x1=Math.min(x1,n.x);y1=Math.min(y1,n.y);x2=Math.max(x2,n.x+n.w);y2=Math.max(y2,n.y+n.h)});
+  out.push({g:k,x:x1-P,y:y1-P,w:x2-x1+2*P,h:y2-y1+2*P})});return out}
+/* cadre dans lequel tombe le centre d'une bulle (le plus petit s'il y en a plusieurs) */
+function zoneAt(n,skip){var best=null,cx=n.x+n.w/2,cy=n.y+n.h/2;grpRects(skip).forEach(function(r){if(cx>r.x&&cx<r.x+r.w&&cy>r.y&&cy<r.y+r.h&&(!best||r.w*r.h<best.w*best.h))best=r});return best}
+function inZone(n,skip){return grpRects(skip).some(function(r){return n.x<r.x+r.w&&r.x<n.x+n.w&&n.y<r.y+r.h&&r.y<n.y+n.h})}
+/* écarte la bulle des autres bulles ; une bulle non groupée est aussi écartée des cadres de groupe */
+function unover(n){var all=cur().nodes,PAD=14,others=all.filter(function(b){return b!==n&&!CI.hid[b.id]}).map(function(b){return{x:b.x,y:b.y,w:b.w,h:b.h,p:PAD}});
+ if(!n.grp)grpRects().forEach(function(r){others.push({x:r.x,y:r.y,w:r.w,h:r.h,p:8})});
+ function ov(sx,sy,b){var p=b.p;return n.x+sx<b.x+b.w+p&&b.x<n.x+sx+n.w+p&&n.y+sy<b.y+b.h+p&&b.y<n.y+sy+n.h+p}
  function count(sx,sy){var c=0;others.forEach(function(b){if(ov(sx,sy,b))c++});return c}
  var tx=0,ty=0;
- for(var it=0;it<8;it++){if(!count(tx,ty))break;var cand=[];
-  others.forEach(function(b){if(!ov(tx,ty,b))return;cand.push([b.x-PAD-(n.x+n.w)-1,ty],[b.x+b.w+PAD-n.x+1,ty],[tx,b.y-PAD-(n.y+n.h)-1],[tx,b.y+b.h+PAD-n.y+1])});
+ for(var it=0;it<12;it++){if(!count(tx,ty))break;var cand=[];
+  others.forEach(function(b){if(!ov(tx,ty,b))return;cand.push([b.x-b.p-(n.x+n.w)-1,ty],[b.x+b.w+b.p-n.x+1,ty],[tx,b.y-b.p-(n.y+n.h)-1],[tx,b.y+b.h+b.p-n.y+1])});
   var best=null;cand.forEach(function(c){var k=count(c[0],c[1]),d=Math.abs(c[0])+Math.abs(c[1]);if(!best||k<best.k||(k===best.k&&d<best.d))best={x:c[0],y:c[1],k:k,d:d}});
   if(!best||(best.x===tx&&best.y===ty))break;tx=best.x;ty=best.y}
  if(!tx&&!ty)return false;n.x=Math.round(n.x+tx);n.y=Math.round(n.y+ty);return true}
+/* un bloc de bulles qui vient d'être créé (collage) : si une bulle non groupée tombe dans un cadre existant, tout le bloc est décalé vers le bas */
+function shiftOutOfZones(list){var ids={},free=list.filter(function(n){return!n.grp}),k;list.forEach(function(n){ids[n.id]=1});if(!free.length)return;
+ function hit(){var R=grpRects(ids);return free.some(function(n){return R.some(function(r){return n.x<r.x+r.w+8&&r.x<n.x+n.w+8&&n.y<r.y+r.h+8&&r.y<n.y+n.h+8})})}
+ for(k=0;k<80&&hit();k++)list.forEach(function(n){n.y+=30})}
 /* mise en page automatique : un niveau (distance depuis les bulles de départ) = une colonne ; les bulles d'un même niveau ont le même x et sont espacées de la même distance minimale ;
    l'ordre dans la colonne suit l'arbre et limite les croisements de flèches ; les bulles d'un même groupe restent ensemble (même colonne, côte à côte, avec de la place pour leur contour) */
 function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measure);
@@ -1043,6 +1057,8 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
  if(N.length<=150&&realCost()>realBefore){cols=snapCols;cols.forEach(function(c,ci){stack(ci)})}
  /* dernière passe : s'il reste un croisement entre colonnes voisines qu'un simple échange de voisines supprime, on le fait (gardé seulement si les vraies courbes ne s'en trouvent pas moins bien) */
  if(N.length<=150){var snap2=cols.map(function(c){return c?c.slice():c}),r2=realCost();reduceCross();cols.forEach(function(c,ci){stack(ci)});if(realCost()>r2){cols=snap2;cols.forEach(function(c,ci){stack(ci)})}}
+ /* une bulle non groupée ne doit jamais se trouver dans un cadre de groupe */
+ N.forEach(function(n){if(!n.grp&&!CI.hid[n.id]&&inZone(n))unover(n)});
  /* flèches : tracé automatique, puis extrémités partagées ordonnées pour éviter les croisements */
  (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
  var sw=0;if(N.length<=150){sw=optimizeSides(m,700);bakeEnds(m);ENDV={}}
@@ -1050,12 +1066,13 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
  save();draw();fit();var nc=cols.filter(Boolean).length;
  toast("Carte réorganisée : "+nc+" niveau"+(nc>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+(sw?", "+sw+" extrémité"+(sw>1?"s":"")+" changée"+(sw>1?"s":"")+" de bord":"")+(fixedEnds?", extrémités de flèches réordonnées":"")+".")}
 var ntId=null,ntDown=false;
+var dropG={};
 /* groupes : contour en pointillé autour des bulles d'un même groupe (champ grp des bulles) */
 function drawGroups(m){var g=$("grps");g.innerHTML="";var by={};
  m.nodes.forEach(function(n){if(n.grp&&!CI.hid[n.id])(by[n.grp]=by[n.grp]||[]).push(n)});
  Object.keys(by).forEach(function(k){var a=by[k];if(!a.length)return;var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9,P=16;
   a.forEach(function(n){x1=Math.min(x1,n.x);y1=Math.min(y1,n.y);x2=Math.max(x2,n.x+n.w);y2=Math.max(y2,n.y+n.h)});
-  var r=el("rect",{"class":"grp","data-g":k,x:x1-P,y:y1-P,width:x2-x1+2*P,height:y2-y1+2*P,rx:16},g);
+  var r=el("rect",{"class":"grp"+(dropG&&dropG[k]?" drop":""),"data-g":k,x:x1-P,y:y1-P,width:x2-x1+2*P,height:y2-y1+2*P,rx:16},g);
   /* glisser dans le cadre déplace tout le groupe ; un clic sélectionne ses bulles ; clic droit : menu (Dégrouper) */
   r.addEventListener("pointerdown",function(e){if(selMode||e.button)return;startDrag(e,a[0]);if(drag)drag.group=k});
   r.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;ms={};a.forEach(function(n){ms[n.id]=1});sel=a[a.length-1].id;selLink=null;draw();syncPanel()})})}
@@ -1262,6 +1279,7 @@ window.addEventListener("pointermove",function(e){
  if(!TRL)startTrail(grp,drag.n);
  grp.forEach(function(g){g.x+=ddx/tr.k;g.y+=ddy/tr.k});
  var cc=[drag.n.x+drag.n.w/2,drag.n.y+drag.n.h/2],lt=TRL.pts[TRL.pts.length-1];if(Math.hypot(cc[0]-lt[0],cc[1]-lt[1])>3)TRL.pts.push(cc);
+ dropG={};grp.forEach(function(g){if(!g.grp){var z=zoneAt(g);if(z)dropG[z.g]=1}});
  drag.x=e.clientX;drag.y=e.clientY;draw()});
 /* au début d'un déplacement : les flèches reliées à une seule des bulles déplacées redeviennent automatiques (elles tournent autour du contour) */
 function startTrail(grp,n){TRL={ids:{},ref:n.id,pts:[[n.x+n.w/2,n.y+n.h/2]]};grp.forEach(function(g){TRL.ids[g.id]=1});
@@ -1283,7 +1301,12 @@ function endDrag(e){
  if(hd){if(hd.on){var tp1=$("tmpl");if(tp1)tp1.remove();clearHl();
   if(hd.tgt){var l1=(cur().links||[]).filter(function(x){return x.id===hd.id})[0];if(l1)reattach(l1,hd.kind,hd.tgt,hd.x,hd.y)}
   save();draw();syncPanel();setTimeout(function(){dragged=false},0)}hd=null}
- if(drag&&drag.on){if(Object.keys(ms).length<2)unover(drag.n);bakeRoutes();TRL=null;save();draw();setTimeout(function(){dragged=false},0)}drag=null}
+ if(drag&&drag.on){var mv=ms[drag.n.id]?Object.keys(ms).map(getN).filter(Boolean):[drag.n],jn=[];
+  /* une bulle non groupée déposée dans un cadre rejoint le groupe de ce cadre */
+  mv.forEach(function(n){if(!n.grp){var z=zoneAt(n);if(z)jn.push([n,z.g])}});
+  jn.forEach(function(p){p[0].grp=p[1]});if(jn.length)toast(jn.length>1?jn.length+" bulles ajoutées au groupe.":"Bulle ajoutée au groupe.");
+  dropG={};
+  if(Object.keys(ms).length<2)unover(drag.n);bakeRoutes();TRL=null;save();draw();setTimeout(function(){dragged=false},0)}drag=null}
 window.addEventListener("pointerup",endDrag);window.addEventListener("pointercancel",endDrag);
 cv.addEventListener("dblclick",function(e){if(e.target.closest&&e.target.closest(".node,.lk,.lkh,.lhandle,.tog"))return;if(linkFrom)return;addBubble(toWorld(e))});
 cv.addEventListener("wheel",function(e){e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,k2=Math.max(.2,Math.min(3,tr.k*(e.deltaY<0?1.1:.9)));
