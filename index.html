@@ -155,13 +155,13 @@ button:disabled{opacity:.4;cursor:default}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v34</div>
+    <div id="ver" title="Numéro de version de la page">v35</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
-    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div>Menu du fond → Sélectionner plusieurs bulles : rectangle (glisser) ou forme libre (maintenir puis glisser), puis clic droit : copier, couper ou regrouper (glisser une bulle sélectionnée les déplace toutes)</div><div><i class="m" data-m="M"></i> sur une carte du menu ☰ : l’ouvrir dans un nouvel onglet</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
+    <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div>↵ Entrée : bulle sœur (mêmes bulles parentes que la bulle sélectionnée)</div><div>Menu du fond → Sélectionner plusieurs bulles : rectangle (glisser) ou forme libre (maintenir puis glisser), puis clic droit : copier, couper ou regrouper (glisser une bulle sélectionnée les déplace toutes)</div><div><i class="m" data-m="M"></i> sur une carte du menu ☰ : l’ouvrir dans un nouvel onglet</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle · poignées rondes : courber la flèche</div><div><i class="m" data-m="L2"></i> sur le titre : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
     <div id="fabs"><button class="fab" id="fabT" title="Replier / déplier les bulles" aria-label="Replier ou déplier"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M4 6h9M8 12h9M12 18h8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="fab" id="fabH" title="Aide et raccourcis" aria-label="Aide">?</button></div>
   </div>
   <aside id="side">
@@ -423,7 +423,7 @@ function refineGroup(g,m){var ord=g.slice().sort(function(u,v){return SLOT[u.id]
 /* courbes échantillonnées et croisements entre deux flèches */
 function realCost(){var m=cur(),P=[],c=0,i,j;ENDV={};SIDE={};slotsCore();(m.links||[]).forEach(function(l){var p=polyOf(l,m);if(p)P.push(p)});
  for(i=0;i<P.length;i++)for(j=i+1;j<P.length;j++)c+=polyCross(P[i],P[j]);return c}
-function polyOf(l,m){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b||CI.hid[a.id]||CI.hid[b.id])return null;var G=linkGeom(l,a,b),p=[],i;for(i=0;i<=20;i++)p.push(bezAt(G,i/20));return p}
+function polyOf(l,m){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b||CI.hid[a.id]||CI.hid[b.id])return null;var G=linkGeom(l,a,b),p=[],i;if(G.pts)return G.pts;for(i=0;i<=20;i++)p.push(bezAt(G,i/20));return p}
 function segX(p,q,r,s2){var d1x=q[0]-p[0],d1y=q[1]-p[1],d2x=s2[0]-r[0],d2y=s2[1]-r[1],den=d1x*d2y-d1y*d2x;if(Math.abs(den)<1e-9)return false;
  var t=((r[0]-p[0])*d2y-(r[1]-p[1])*d2x)/den,u=((r[0]-p[0])*d1y-(r[1]-p[1])*d1x)/den;return t>.001&&t<.999&&u>.001&&u<.999}
 function polyCross(A,B){var c=0,i,j;for(i=0;i<A.length-1;i++)for(j=0;j<B.length-1;j++)if(segX(A[i],A[i+1],B[j],B[j+1]))c++;return c}
@@ -502,11 +502,16 @@ function linkGeom(l,a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2
  var G=build(c1,c2,undefined,undefined,s1,s2),O=routeObst(a,b);
  /* si la flèche (même tracée à la main) traverse une autre bulle, on la contourne */
  if(!hitList(G,O).length)return G;
+ var ck=null,cv;
+ if(!TRL){ck=[q1,q2,c1,c2,l.a,!!l.fa,!!l.ta].join("|")+"#"+O.map(function(o){return o.x+","+o.y+","+o.w+","+o.h+","+o.p}).join(";");cv=RCACHE[ck];if(cv!==undefined)return cv||G}
  var R=routeAround(l,a,b,q1,q2,c1,c2,O,build,G,e1,e2);
- if(R){R.routed=1;return R}
- return G}
+ if(R)R.routed=1;
+ /* dernier recours : chemin à angles droits arrondis qui contourne toutes les bulles (départ et arrivée perpendiculaires au bord) */
+ else R=polyRoute(l,a,b,e1,e2,O);
+ if(ck){if(++RCN>500){RCACHE={};RCN=1}RCACHE[ck]=R||false}
+ return R||G}
 function routeObst(a,b){var o=[];cur().nodes.forEach(function(n){if(CI.hid[n.id])return;o.push({id:n.id,x:n.x,y:n.y,w:n.w,h:n.h,p:(n.id===a.id||n.id===b.id)?-3:7})});return o}
-function hitList(G,O){var out=[],seen={};for(var i=1;i<30;i++){var P=bezAt(G,i/30);for(var j=0;j<O.length;j++){var r=O[j],p=r.p;if(!seen[j]&&P[0]>r.x-p&&P[0]<r.x+r.w+p&&P[1]>r.y-p&&P[1]<r.y+r.h+p){seen[j]=1;out.push(r)}}}return out}
+function hitList(G,O){var out=[],seen={};for(var i=1;i<80;i++){var P=bezAt(G,i/80);for(var j=0;j<O.length;j++){var r=O[j],p=r.p;if(!seen[j]&&P[0]>r.x-p&&P[0]<r.x+r.w+p&&P[1]>r.y-p&&P[1]<r.y+r.h+p){seen[j]=1;out.push(r)}}}return out}
 /* courbe de Bézier qui part de P0 dans la direction T1, arrive en P3 en venant de la direction T2 (normales aux bords) et passe près des points intermédiaires */
 function fitTan(P0,T1,pts,P3,T2){var all=[P0].concat(pts,[P3]),cum=[0],i;for(i=1;i<all.length;i++)cum[i]=cum[i-1]+Math.hypot(all[i][0]-all[i-1][0],all[i][1]-all[i-1][1]);
  var tot=cum[cum.length-1]||1;
@@ -539,12 +544,92 @@ function routeAround(l,a,b,q1,q2,c1,c2,O,build,G,e1,e2){
  if(!l.ta)combos.push([e1,endInfo(b,null,q1[0],q1[1],!cur2)]);
  if(!l.fa&&!l.ta)combos.push([endInfo(a,null,q2[0],q2[1],!cur1),endInfo(b,null,q1[0],q1[1],!cur2)]);
  for(ci=0;ci<combos.length;ci++){x1=combos[ci][0];x2=combos[ci][1];AL=ALPHAS;
-  for(k2=0;k2<AL.length;k2++){if(++evals>60)return null;
+  for(k2=0;k2<AL.length;k2++){if(++evals>60)return routeVia(l,a,b,q1,q2,O,build,G,e1,e2);
    cd=build([x1.p[0]+x1.n[0]*AL[k2][0],x1.p[1]+x1.n[1]*AL[k2][0]],[x2.p[0]+x2.n[0]*AL[k2][1],x2.p[1]+x2.n[1]*AL[k2][1]],x1.p,x2.p);
    if(!hitList(cd,O).length)return cd}}
- return null}
-function bezAt(G,t){var u=1-t,A=u*u*u,B=3*u*u*t,C=3*u*t*t,D=t*t*t,P=G.s1||G.p1,Q=G.s2||G.p2;return[A*P[0]+B*G.c1[0]+C*G.c2[0]+D*Q[0],A*P[1]+B*G.c1[1]+C*G.c2[1]+D*Q[1]]}
-function bezTan(G,t){var u=1-t,P=G.s1||G.p1,Q=G.s2||G.p2;return[3*u*u*(G.c1[0]-P[0])+6*u*t*(G.c2[0]-G.c1[0])+3*t*t*(Q[0]-G.c2[0]),3*u*u*(G.c1[1]-P[1])+6*u*t*(G.c2[1]-G.c1[1])+3*t*t*(Q[1]-G.c2[1])]}
+ return routeVia(l,a,b,q1,q2,O,build,G,e1,e2)}
+/* courbe qui passe par des points de contournement : pour chaque bulle traversée (3 au plus) on essaie de passer au-dessus, en dessous, à gauche ou à droite, et on garde la plus courte courbe qui ne traverse rien */
+function routeVia(l,a,b,q1,q2,O,build,G,e1,e2){var bl=hitList(G,O).filter(function(o){return o.p>0});if(!bl.length||bl.length>3)return null;
+ var dx=q2[0]-q1[0],dy=q2[1]-q1[1],SD=["t","b","l","r"],best=null,evals=0;
+ function proj(p){return(p[0]-q1[0])*dx+(p[1]-q1[1])*dy}
+ function rec(i,sel){if(evals>90)return;
+  if(i===bl.length){evals++;var pts=sel.map(function(sd,k){return wayPt(bl[k],sd,26)}).sort(function(u,v){return proj(u)-proj(v)}),
+    ea=l.fa?e1:endInfo(a,null,pts[0][0],pts[0][1]),eb=l.ta?e2:endInfo(b,null,pts[pts.length-1][0],pts[pts.length-1][1]),
+    cc=fitTan(ea.p,ea.n,pts,eb.p,eb.n),cu=build(cc[0],cc[1],ea.p,eb.p);
+   if(!hitList(cu,O).length){var ln=bezLen(cu);if(!best||ln<best.len)best={len:ln,g:cu}}return}
+  SD.forEach(function(sd){sel[i]=sd;rec(i+1,sel)})}
+ rec(0,[]);return best&&best.g}
+/* ---- tracé de secours : segments droits à angles arrondis, trouvés par recherche de plus court chemin entre les bulles ---- */
+var POLYC={},POLYN=0,RCACHE={},RCN=0;
+function cumOf(P){var c=[0],i;for(i=1;i<P.length;i++)c[i]=c[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);return c}
+function ptIdx(G,t){var P=G.pts,c=G.cum||(G.cum=cumOf(P)),d=Math.max(0,Math.min(1,t))*c[c.length-1],k=1;while(k<P.length-1&&c[k]<d)k++;return[k,d,c]}
+function ptAt(G,t){var r=ptIdx(G,t),k=r[0],c=r[2],P=G.pts,sg=(c[k]-c[k-1])||1,u=(r[1]-c[k-1])/sg;return[P[k-1][0]+(P[k][0]-P[k-1][0])*u,P[k-1][1]+(P[k][1]-P[k-1][1])*u]}
+function ptTan(G,t){var k=ptIdx(G,t)[0],P=G.pts;return[P[k][0]-P[k-1][0],P[k][1]-P[k-1][1]]}
+function roundPoly(P,r){var d="M"+P[0][0]+","+P[0][1],pts=[P[0]],i,k;
+ for(i=1;i<P.length-1;i++){var a=P[i-1],b=P[i],c=P[i+1],l1=Math.hypot(b[0]-a[0],b[1]-a[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]);if(l1<1e-6||l2<1e-6)continue;
+  var rr=Math.min(r,l1/2,l2/2),A=[b[0]-(b[0]-a[0])/l1*rr,b[1]-(b[1]-a[1])/l1*rr],B=[b[0]+(c[0]-b[0])/l2*rr,b[1]+(c[1]-b[1])/l2*rr];
+  d+=" L"+A[0]+","+A[1]+" Q"+b[0]+","+b[1]+" "+B[0]+","+B[1];pts.push(A);
+  for(k=1;k<6;k++){var t=k/6,u=1-t;pts.push([u*u*A[0]+2*u*t*b[0]+t*t*B[0],u*u*A[1]+2*u*t*b[1]+t*t*B[1]])}
+  pts.push(B)}
+ var e=P[P.length-1];d+=" L"+e[0]+","+e[1];pts.push(e);return{d:d,pts:pts}}
+function simplifyPoly(P){var o=[P[0]],i;for(i=1;i<P.length-1;i++){var a=o[o.length-1],b=P[i],c=P[i+1],cr=(b[0]-a[0])*(c[1]-b[1])-(b[1]-a[1])*(c[0]-b[0]),dt=(b[0]-a[0])*(c[0]-b[0])+(b[1]-a[1])*(c[1]-b[1]);if(Math.abs(cr)<1e-6&&dt>0)continue;o.push(b)}o.push(P[P.length-1]);return o}
+function polyGeom(P,q1,q2){var rp=roundPoly(P,12),G={q1:q1,q2:q2,p1:q1,p2:q2,s1:null,s2:null,c1:P[1],c2:P[P.length-2],poly:P,pts:rp.pts,routed:1};G.cum=cumOf(G.pts);G.mid=ptAt(G,.5);return G}
+function shaftPoly(G,l){var P=G.poly.map(function(p){return p.slice()}),n=P.length,p1=P[0],p2=P[n-1];
+ function unit(a,b){var x=a[0]-b[0],y=a[1]-b[1],q=Math.hypot(x,y);return q<1e-3?null:[x/q,y/q]}
+ var d2=l.a!==0?unit(p2,P[n-2]):null,d1=l.a===2?unit(p1,P[1]):null,H1=d1?headLen(l,99):0,H2=d2?headLen(l,99):0;
+ if(d1)P[0]=[p1[0]-d1[0]*H1,p1[1]-d1[1]*H1];if(d2)P[n-1]=[p2[0]-d2[0]*H2,p2[1]-d2[1]*H2];
+ var rp=roundPoly(P,12);
+ return{h1:H1,h2:H2,g:{p1:P[0],p2:P[n-1],c1:G.c1,c2:G.c2,q1:G.q1,q2:G.q2,mid:G.mid,pts:rp.pts},d:rp.d,d1:d1,d2:d2}}
+function sideEnd(n,s){return{p:[n.x+n.w*(s[0]>0?1:s[0]<0?0:.5),n.y+n.h*(s[1]>0?1:s[1]<0?0:.5)],n:s}}
+function polyRoute(l,a,b,e1,e2,O){var SD=[[1,0],[-1,0],[0,1],[0,-1]],cur1=e1.n[0]!==0,cur2=e2.n[0]!==0,tried={},best=null,tier,i,j;
+ function key(x,y){return x.p+"|"+x.n+"|"+y.p+"|"+y.n}
+ function tryC(x,y,bias){var k=key(x,y);if(tried[k])return;tried[k]=1;var r=routePoly(x.p,x.n,y.p,y.n,O);if(r&&(!best||r.cost+bias<best.cost))best={cost:r.cost+bias,poly:r.poly,q1:x.p,q2:y.p}}
+ tryC(e1,e2,0);
+ if(!l.fa)tryC(endInfo(a,null,e2.p[0],e2.p[1],!cur1),e2,40);
+ if(!l.ta)tryC(e1,endInfo(b,null,e1.p[0],e1.p[1],!cur2),40);
+ if(!best){var A=l.fa?[e1]:SD.map(function(s){return sideEnd(a,s)}),B=l.ta?[e2]:SD.map(function(s){return sideEnd(b,s)});
+  for(i=0;i<A.length;i++)for(j=0;j<B.length;j++)tryC(A[i],B[j],60)}
+ return best?polyGeom(best.poly,best.q1,best.q2):null}
+function routePoly(q1,n1,q2,n2,O){var ST=30,PD=16,s1=[q1[0]+n1[0]*ST,q1[1]+n1[1]*ST],s2=[q2[0]+n2[0]*ST,q2[1]+n2[1]*ST],
+  bx0=Math.min(q1[0],q2[0])-240,bx1=Math.max(q1[0],q2[0])+240,by0=Math.min(q1[1],q2[1])-240,by1=Math.max(q1[1],q2[1])+240,R=[],i;
+ if(Math.abs(s1[0]-s2[0])<.5&&Math.abs(s1[1]-s2[1])<.5)return null;
+ for(i=0;i<O.length;i++){var o=O[i];if(o.x+o.w+PD>bx0&&o.x-PD<bx1&&o.y+o.h+PD>by0&&o.y-PD<by1)R.push({x:o.x-PD,y:o.y-PD,x2:o.x+o.w+PD,y2:o.y+o.h+PD,o:o})}
+ if(R.length>40)return null;
+ var key=[q1,n1,q2,n2].join("|")+"#"+R.map(function(r){return[r.x,r.y,r.x2,r.y2,r.o.p<0?1:0].join(",")}).join(";");
+ if(POLYC[key]!==undefined)return POLYC[key];
+ var res=polyCalc(q1,n1,q2,n2,s1,s2,R,ST);if(++POLYN>400){POLYC={};POLYN=1}POLYC[key]=res;return res}
+function polyCalc(q1,n1,q2,n2,s1,s2,R,ST){var TURN=60,E=.01,i,j,a;
+ function ins(x,y){for(var k=0;k<R.length;k++){var r=R[k];if(x>r.x+E&&x<r.x2-E&&y>r.y+E&&y<r.y2-E)return true}return false}
+ if(ins(s1[0],s1[1])||ins(s2[0],s2[1]))return null;
+ var stubs=[[q1,n1],[q2,n2]];
+ for(i=0;i<2;i++)for(j=1;j<=3;j++){var px=stubs[i][0][0]+stubs[i][1][0]*ST*j/3,py=stubs[i][0][1]+stubs[i][1][1]*ST*j/3;
+  for(a=0;a<R.length;a++){var o=R[a].o;if(o.p<0)continue;if(px>o.x-7&&px<o.x+o.w+7&&py>o.y-7&&py<o.y+o.h+7)return null}}
+ var xs=[s1[0],s2[0]],ys=[s1[1],s2[1]];R.forEach(function(r){xs.push(r.x,r.x2);ys.push(r.y,r.y2)});
+ function uniq(v){v.sort(function(p,q){return p-q});var o=[];v.forEach(function(x){if(!o.length||x-o[o.length-1]>.5)o.push(x)});return o}
+ function mids(v){var o=[],k;for(k=0;k<v.length;k++){o.push(v[k]);if(k<v.length-1&&v[k+1]-v[k]>10)o.push((v[k]+v[k+1])/2)}return o}
+ function near(v,x){var b=0,bd=1e18,k;for(k=0;k<v.length;k++){var d=Math.abs(v[k]-x);if(d<bd){bd=d;b=k}}return b}
+ xs=uniq(xs);ys=uniq(ys);if(xs.length<=70)xs=mids(xs);if(ys.length<=70)ys=mids(ys);
+ var si=near(xs,s1[0]),sj=near(ys,s1[1]),gi=near(xs,s2[0]),gj=near(ys,s2[1]);xs[si]=s1[0];ys[sj]=s1[1];xs[gi]=s2[0];ys[gj]=s2[1];
+ var W=xs.length,H=ys.length,DX=[1,-1,0,0],DY=[0,0,1,-1],OPP=[1,0,3,2];
+ function dirOf(v){return v[0]>0?0:v[0]<0?1:v[1]>0?2:3}
+ var d0=dirOf(n1),dF=dirOf([-n2[0],-n2[1]]),dist=new Float64Array(W*H*4).fill(Infinity),prev=new Int32Array(W*H*4).fill(-1),eh=new Int8Array(W*H),ev=new Int8Array(W*H);
+ function edgeOK(x,y,nd){var arr,ix;if(nd<2){arr=eh;ix=y*W+(nd===0?x:x-1);if(!arr[ix]){var xa=nd===0?x:x-1;arr[ix]=ins((xs[xa]+xs[xa+1])/2,ys[y])?2:1}return arr[ix]===1}
+  arr=ev;var ya=nd===2?y:y-1;ix=ya*W+x;if(!arr[ix])arr[ix]=ins(xs[x],(ys[ya]+ys[ya+1])/2)?2:1;return arr[ix]===1}
+ var heap=[];
+ function hpush(it){heap.push(it);var c=heap.length-1;while(c>0){var p=(c-1)>>1;if(heap[p][0]<=heap[c][0])break;var t=heap[p];heap[p]=heap[c];heap[c]=t;c=p}}
+ function hpop(){var top=heap[0],last=heap.pop();if(heap.length){heap[0]=last;var c=0,n=heap.length;for(;;){var l=2*c+1,r=l+1,m=c;if(l<n&&heap[l][0]<heap[m][0])m=l;if(r<n&&heap[r][0]<heap[m][0])m=r;if(m===c)break;var t=heap[m];heap[m]=heap[c];heap[c]=t;c=m}}return top}
+ var st0=((sj*W+si)<<2)|d0,found=-1;dist[st0]=0;hpush([0,st0]);
+ while(heap.length){var top=hpop(),c=top[0],st=top[1];if(c>dist[st])continue;var d=st&3,nd0=st>>2,x=nd0%W,y=(nd0/W)|0;
+  if(x===gi&&y===gj){found=st;break}
+  for(var nd=0;nd<4;nd++){if(nd===OPP[d])continue;var nx=x+DX[nd],ny=y+DY[nd];if(nx<0||ny<0||nx>=W||ny>=H)continue;if(!edgeOK(x,y,nd))continue;
+   var nc=c+Math.abs(xs[nx]-xs[x])+Math.abs(ys[ny]-ys[y])+(nd!==d?TURN:0);
+   if(nx===gi&&ny===gj){if(nd===OPP[dF])continue;if(nd!==dF)nc+=TURN}
+   var ns=((ny*W+nx)<<2)|nd;if(nc<dist[ns]){dist[ns]=nc;prev[ns]=st;hpush([nc,ns])}}}
+ if(found<0)return null;
+ var pts=[],sx=found;while(sx!==-1){var nn=sx>>2;pts.push([xs[nn%W],ys[(nn/W)|0]]);sx=prev[sx]}pts.reverse();
+ return{poly:simplifyPoly([q1].concat(pts,[q2])),cost:dist[found]}}
+function bezAt(G,t){if(G.pts)return ptAt(G,t);var u=1-t,A=u*u*u,B=3*u*u*t,C=3*u*t*t,D=t*t*t,P=G.s1||G.p1,Q=G.s2||G.p2;return[A*P[0]+B*G.c1[0]+C*G.c2[0]+D*Q[0],A*P[1]+B*G.c1[1]+C*G.c2[1]+D*Q[1]]}
+function bezTan(G,t){if(G.pts)return ptTan(G,t);var u=1-t,P=G.s1||G.p1,Q=G.s2||G.p2;return[3*u*u*(G.c1[0]-P[0])+6*u*t*(G.c2[0]-G.c1[0])+3*t*t*(Q[0]-G.c2[0]),3*u*u*(G.c1[1]-P[1])+6*u*t*(G.c2[1]-G.c1[1])+3*t*t*(Q[1]-G.c2[1])]}
 /* tracé de la ligne : la courbe s'arrête 15 px avant la pointe (en translatant le point final et sa poignée), puis un segment droit, dans l'axe de la courbe
    (donc perpendiculaire au bord quand l'extrémité est automatique), rejoint la pointe : le triangle est exactement dans le prolongement de la ligne */
 function headLen(l,a){return a>0?Math.max(6,Math.min(15,a*(l.a===2?.3:.45))):15}
@@ -561,7 +646,7 @@ function joinStart(p,s,A1,A2,A3,r){var nx=s[0]-p[0],ny=s[1]-p[1],L=Math.hypot(nx
   if(a>=0&&b>=0&&a<=4*rr&&b<=4*rr)return{A:A,K:[A[0]+nx*a,A[1]+ny*a],B:B,c1:R1,c2:Q2};
   if(!res)res={A:A,K:s,B:B,c1:R1,c2:Q2}}
  return res}
-function shaft(G,l){var p1=G.p1,p2=G.p2,c1=G.c1,c2=G.c2,b1=G.s1,b2=G.s2;
+function shaft(G,l){if(G.poly)return shaftPoly(G,l);var p1=G.p1,p2=G.p2,c1=G.c1,c2=G.c2,b1=G.s1,b2=G.s2;
  function unit(a,b){var x=a[0]-b[0],y=a[1]-b[1],n=Math.hypot(x,y);return n<1e-3?null:[x/n,y/n]}
  var d2=l.a!==0?(b2?unit(p2,b2):unit(p2,c2)):null,d1=l.a===2?(b1?unit(p1,b1):unit(p1,c1)):null;
  if(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])<14){d1=null;d2=null}
@@ -598,7 +683,7 @@ function zapPlan(){var m=cur(),S=sel&&getNIn(m,sel);if(!S)return[];var L=m.links
   if(G[r.u]&&B[r.v])markArc(r)               /* chemins source → … → bulle sélectionnée, dans le sens des flèches */
  });
  return Object.keys(res).map(function(k){return res[k]})}
-function zapPts(G){var len=Math.hypot(G.c1[0]-G.p1[0],G.c1[1]-G.p1[1])+Math.hypot(G.c2[0]-G.c1[0],G.c2[1]-G.c1[1])+Math.hypot(G.p2[0]-G.c2[0],G.p2[1]-G.c2[1]),N=Math.max(6,Math.round(len/12)),pts=[];
+function zapPts(G){var len=G.pts?bezLen(G):Math.hypot(G.c1[0]-G.p1[0],G.c1[1]-G.p1[1])+Math.hypot(G.c2[0]-G.c1[0],G.c2[1]-G.c1[1])+Math.hypot(G.p2[0]-G.c2[0],G.p2[1]-G.c2[1]),N=Math.max(6,Math.round(len/12)),pts=[];
  for(var i=0;i<=N;i++){var t=i/N,P=bezAt(G,t),T=bezTan(G,t),tl=Math.hypot(T[0],T[1])||1,j=(i===0||i===N)?0:(Math.random()-.5)*8;pts.push([P[0]-T[1]/tl*j,P[1]+T[0]/tl*j])}
  return pts}
 var ZB=[0,.13,.38,.85];
@@ -694,6 +779,15 @@ function addLinked(){var f=getN(sel);if(!f){toast("Sélectionnez d’abord une b
  var n=spawn(f.x+f.w+150,f.y+f.h/2,0);
  if(kids.length){n.x=kids[0].x;n.y=Math.round(Math.max.apply(null,kids.map(function(c){return c.y+c.h}))+GAP);unover(n)}
  m.links.push({id:uid(),from:f.id,to:n.id,label:"",a:1});sel=n.id;selLink=null;save();draw();syncPanel();openEd(n.id,true)}
+/* Entrée : nouvelle bulle sœur = reliée aux mêmes bulles parentes que la bulle sélectionnée, placée sous ses sœurs */
+function addSibling(){var f=getN(sel);if(!f){toast("Sélectionnez d’abord une bulle.");return}
+ var m=cur(),pl=[],seen={};m.links.forEach(function(l){if(l.to===f.id&&l.from!==f.id&&!seen[l.from]){var p=getNIn(m,l.from);if(p){seen[l.from]=1;pl.push(p)}}});
+ if(!pl.length){toast("Cette bulle n’a pas de bulle parente : Tab crée une bulle reliée.");return}
+ pl.forEach(function(p){delete p.col});
+ var sibs=[f];m.links.forEach(function(l){if(l.from===pl[0].id){var c=getNIn(m,l.to);if(c&&c!==f&&!CI.hid[c.id]&&Math.abs(c.x-f.x)<40)sibs.push(c)}});
+ var n=spawn(f.x+f.w/2,f.y+f.h/2,0);n.c=f.c||0;n.x=f.x;n.y=Math.round(Math.max.apply(null,sibs.map(function(c){return c.y+c.h}))+GAP);unover(n);
+ pl.forEach(function(p){m.links.push({id:uid(),from:p.id,to:n.id,label:"",a:1})});
+ sel=n.id;selLink=null;ms={};save();draw();syncPanel();openEd(n.id,true)}
 function nodeName(id){var n=getN(id);return n?((n.t||"").replace(/\s*\n+\s*/g," ")||"(vide)"):"?"}
 function removeLink(id){var m=cur();m.links=(m.links||[]).filter(function(l){return l.id!==id});if(selLink===id)selLink=null;save();draw();syncPanel()}
 function endLink(){linkFrom=null;document.body.classList.remove("linking");$("toast").classList.remove("on")}
@@ -938,8 +1032,9 @@ function sortedMaps(){return maps.map(function(m,i){return{m:m,i:i}}).sort(funct
  if(SORT==="mod")return((b.m.mod||0)-(a.m.mod||0))||(a.i-b.i);
  return((USED[b.m.id]||0)-(USED[a.m.id]||0))||(a.i-b.i)}).map(function(o){return o.m})}
 function mainMenu(){var it=[{icon:"＋",label:"Nouvelle carte…",fn:newMapAct},{icon:"⧉",label:"Dupliquer cette carte",fn:dupMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
-  {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true,title:"Vos cartes"}];
- sortedMaps().forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)}})});return it}
+  {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true,title:"Vos cartes · clic droit : supprimer"}];
+ sortedMaps().forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
+  rc:function(x,y){showCtx(x,y,[{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){delMapById(m.id)}}])}})});return it}
 $("fabM").onclick=function(){if(ctxSkip==="fabM"&&Date.now()-ctxSkipT<700){ctxSkip=null;return}var r=this.getBoundingClientRect();menuPos=[r.left,r.bottom+8];showCtx(menuPos[0],menuPos[1],mainMenu())};
 $("fabC").onclick=function(){$("side").classList.toggle("on");$("help").classList.remove("on")};
 $("fabH").onclick=function(){$("help").classList.toggle("on");$("side").classList.remove("on")};
@@ -947,9 +1042,15 @@ document.addEventListener("pointerdown",function(e){var t=e.target;if(!t||!t.clo
  if($("side").classList.contains("on")&&!t.closest("#side,#fabC"))$("side").classList.remove("on");
  if($("help").classList.contains("on")&&!t.closest("#help,#fabH"))$("help").classList.remove("on")},true);
 function newMapAct(){var t=prompt("Titre de la carte :","Votre carte");if(!t)return;var m=newMap(t);leaveMap();maps.push(m);curId=m.id;sel=m.nodes[0].id;save();refreshMaps();draw();syncPanel();fit()}
-function delMapAct(){var m=cur();if(!confirm("Mettre la carte « "+flat(m.title)+" » à la corbeille ?\n\nVous pourrez la récupérer pendant 30 jours."))return;
+function delMapAct(){delMapById(curId)}
+/* met une carte (la carte courante ou une autre) à la corbeille, après confirmation */
+function delMapById(id){var m=maps.filter(function(x){return x.id===id})[0];if(!m)return;
+ if(!confirm("Supprimer la carte « "+flat(m.title)+" » ?\n\nElle sera mise à la corbeille : vous pourrez la récupérer pendant 30 jours."))return;
  delete H[m.id];var gone=JSON.parse(JSON.stringify(m));gone.deletedAt=Date.now();trash.push(gone);
- maps=maps.filter(function(x){return x.id!==m.id});if(!maps.length)maps=[newMap()];curId=maps[0].id;sel=null;selLink=null;ensureHist(cur());save();refreshMaps();draw();syncPanel();fit();toast("Carte mise à la corbeille : récupérable pendant 30 jours.")}
+ var wasCur=m.id===curId;maps=maps.filter(function(x){return x.id!==m.id});if(!maps.length)maps=[newMap()];
+ if(wasCur||!maps.some(function(x){return x.id===curId})){curId=maps[0].id;sel=null;selLink=null;ensureHist(cur());save();refreshMaps();draw();syncPanel();fit()}
+ else{save();refreshMaps()}
+ toast("Carte mise à la corbeille : récupérable pendant 30 jours.")}
 $("trashclose").onclick=closeTrash;
 $("trashclear").onclick=function(){if(!trash.length||!confirm("Vider la corbeille ? Les "+trash.length+" carte(s) seront supprimées définitivement."))return;trash=[];persist();renderTrash()};
 $("trashbox").addEventListener("pointerdown",function(e){trDown=e.target===this});
@@ -1031,7 +1132,7 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
  reduceCross();
  var x0=Math.min.apply(null,(roots.length?roots:N).map(function(n){return n.x})),
      y0=(Math.min.apply(null,N.map(function(n){return n.y}))+Math.max.apply(null,N.map(function(n){return n.y+n.h})))/2,HG=100,colX=[],x=x0;
- cols.forEach(function(col,ci){if(!col)return;colX[ci]=x;var w=0;col.forEach(function(n){w=Math.max(w,n.w)});x+=w+HG});
+ function placeX(){var x=x0;cols.forEach(function(col,ci){if(!col||!col.length)return;colX[ci]=x;var w=0;col.forEach(function(n){w=Math.max(w,n.w)});x+=w+HG})}placeX();
  /* empile une colonne : même écart minimal partout, un peu plus grand autour d'un groupe pour laisser la place de son contour */
  function stack(ci){var col=cols[ci];if(!col)return;var gp=[],tot=0,y;col.forEach(function(n,i){tot+=n.h;if(i<col.length-1){var ga=grpOf(n),gb=grpOf(col[i+1]),g=GAP+(ga!==gb?((ga?GP:0)+(gb?GP:0)):0);gp.push(g);tot+=g}});
   y=y0-tot/2;col.forEach(function(n,i){n.x=Math.round(colX[ci]);n.y=Math.round(y);y+=n.h+(gp[i]||0)})}
@@ -1057,14 +1158,45 @@ function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measur
  if(N.length<=150&&realCost()>realBefore){cols=snapCols;cols.forEach(function(c,ci){stack(ci)})}
  /* dernière passe : s'il reste un croisement entre colonnes voisines qu'un simple échange de voisines supprime, on le fait (gardé seulement si les vraies courbes ne s'en trouvent pas moins bien) */
  if(N.length<=150){var snap2=cols.map(function(c){return c?c.slice():c}),r2=realCost();reduceCross();cols.forEach(function(c,ci){stack(ci)});if(realCost()>r2){cols=snap2;cols.forEach(function(c,ci){stack(ci)})}}
+ /* dernier recours : s'il reste des flèches qui se croisent (courbes réelles), on déplace des bulles — d'abord dans leur colonne, puis vers une colonne voisine — tant que cela supprime des croisements */
+ var movedN=0;
+ if(N.length<=120&&(m.links||[]).length<=160){(function(){var t0=Date.now(),BUD=2200,orig={},pass,i;
+  cols.forEach(function(c,ci){(c||[]).forEach(function(n){orig[n.id]=ci})});
+  function relayout(){placeX();cols.forEach(function(c,ci){stack(ci)})}
+  function shift(){var s=0;cols.forEach(function(c,ci){(c||[]).forEach(function(n){s+=Math.abs(ci-orig[n.id])})});return s}
+  function scan(){ENDV={};SIDE={};slotsCore();var L=m.links||[],P=L.map(function(l){return polyOf(l,m)}),c=0,hit={},a,b;
+   for(a=0;a<L.length;a++)if(P[a])for(b=a+1;b<L.length;b++)if(P[b]){var k=polyCross(P[a],P[b]);if(k){c+=k;hit[L[a].id]=1;hit[L[b].id]=1}}
+   return{c:c,hit:hit,score:c*100+shift()*2}}
+  var st=scan();if(!st.c)return;
+  function members(key){var r=key.charAt(0)==="g"?N.filter(function(n){return n.grp===key.slice(2)}):[byId[key.slice(2)]];return r.sort(function(p,q){return p.y-q.y})}
+  function colOf(n){for(var ci=0;ci<cols.length;ci++)if(cols[ci]&&cols[ci].indexOf(n)>=0)return ci;return -1}
+  function ents(hit){var seen={},out=[];(m.links||[]).forEach(function(l){if(!hit[l.id])return;[l.from,l.to].forEach(function(id){var n=byId[id];if(!n)return;var k=n.grp?"g:"+n.grp:"n:"+n.id;if(!seen[k]){seen[k]=1;out.push(k)}})});return out}
+  function sig(cs){return cs.map(function(c){return(c||[]).map(function(n){return n.id}).join(",")}).join("|")}
+  function tryMove(key,ci,ix){var mem=members(key),from=colOf(mem[0]),ids={},nc=cols.map(function(c){return c?c.slice():c}),old=cols,sg0=sig(cols),tg;
+   if(from<0)return false;mem.forEach(function(n){ids[n.id]=1});
+   nc[from]=nc[from].filter(function(n){return!ids[n.id]});tg=nc[ci];
+   if(ix>tg.length)return false;
+   if(ix>0&&ix<tg.length&&grpOf(tg[ix-1])&&grpOf(tg[ix-1])===grpOf(tg[ix]))return false;
+   nc[ci]=tg.slice(0,ix).concat(mem,tg.slice(ix));
+   if(sig(nc)===sg0)return false;
+   cols=nc;relayout();var s2=scan();
+   if(s2.score<st.score){st=s2;movedN++;return true}
+   cols=old;relayout();return false}
+  for(pass=0;pass<5&&st.c>0&&Date.now()-t0<BUD;pass++){var imp=false,E=ents(st.hit),e;
+   for(e=0;e<E.length&&!imp;e++){var key=E[e],mem=members(key),from=colOf(mem[0]),cand=[],ci,ix;if(from<0)continue;
+    for(ci=Math.max(0,from-2);ci<=Math.min(cols.length-1,from+2);ci++){if(!cols[ci])continue;var len=cols[ci].length-(ci===from?mem.length:0);for(ix=0;ix<=len;ix++)cand.push([ci,ix,Math.abs(ci-from)])}
+    cand.sort(function(p,q){return p[2]-q[2]});
+    for(i=0;i<cand.length;i++){if(Date.now()-t0>BUD)break;if(tryMove(key,cand[i][0],cand[i][1])){imp=true;break}}}
+   if(!imp)break}
+  relayout()})()}
  /* une bulle non groupée ne doit jamais se trouver dans un cadre de groupe */
  N.forEach(function(n){if(!n.grp&&!CI.hid[n.id]&&inZone(n))unover(n)});
  /* flèches : tracé automatique, puis extrémités partagées ordonnées pour éviter les croisements */
  (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
  var sw=0;if(N.length<=150){sw=optimizeSides(m,700);bakeEnds(m);ENDV={}}
  var fixedEnds=optimizeEnds();
- save();draw();fit();var nc=cols.filter(Boolean).length;
- toast("Carte réorganisée : "+nc+" niveau"+(nc>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+(sw?", "+sw+" extrémité"+(sw>1?"s":"")+" changée"+(sw>1?"s":"")+" de bord":"")+(fixedEnds?", extrémités de flèches réordonnées":"")+".")}
+ save();draw();fit();var nc=cols.filter(function(c){return c&&c.length}).length;
+ toast("Carte réorganisée : "+nc+" niveau"+(nc>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+(sw?", "+sw+" extrémité"+(sw>1?"s":"")+" changée"+(sw>1?"s":"")+" de bord":"")+(fixedEnds?", extrémités de flèches réordonnées":"")+(movedN?", "+movedN+" bulle"+(movedN>1?"s":"")+" déplacée"+(movedN>1?"s":"")+" pour éviter des croisements":"")+".")}
 var ntId=null,ntDown=false;
 var dropG={};
 /* groupes : contour en pointillé autour des bulles d'un même groupe (champ grp des bulles) */
@@ -1146,6 +1278,7 @@ function showCtx(x,y,items,anc){ctxEl.innerHTML="";
   var b=document.createElement("button");b.setAttribute("role","menuitem");if(it.danger)b.className="danger";
   var ic=document.createElement("span");ic.className="cx-i";if(ICONS[it.icon])ic.innerHTML=ICONS[it.icon];else ic.textContent=it.icon||"";var tx=document.createElement("span");tx.textContent=it.label;
   b.appendChild(ic);b.appendChild(tx);b.onclick=function(){closeCtx();it.fn()};
+  if(it.rc){b.addEventListener("contextmenu",function(e){e.preventDefault();e.stopPropagation();it.rc(e.clientX,e.clientY)})}
   if(it.mid){b.addEventListener("mousedown",function(e){if(e.button===1)e.preventDefault()});b.addEventListener("auxclick",function(e){if(e.button===1){e.preventDefault();closeCtx();it.mid()}})}
   ctxEl.appendChild(b)});
  ctxEl.classList.add("on");var w=ctxEl.offsetWidth,h=ctxEl.offsetHeight;
@@ -1328,7 +1461,7 @@ document.addEventListener("keydown",function(e){
   if(kc==="c"&&selIds().length){e.preventDefault();copyAct();return}
   if(kc==="x"&&selIds().length){e.preventDefault();cutAct();return}}
  if(e.key==="Tab"&&sel&&!inField){e.preventDefault();addLinked()}
-
+ else if(e.key==="Enter"&&sel&&!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.shiftKey&&!(ae&&ae.tagName==="BUTTON")){e.preventDefault();addSibling()}
  else if((e.key==="Delete")&&!inField){if(selLink)removeLink(selLink);else rm()}
 });
 
