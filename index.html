@@ -421,54 +421,10 @@ function refineGroup(g,m){var ord=g.slice().sort(function(u,v){return SLOT[u.id]
  while(imp&&best>0&&pass++<4){imp=false;for(i=0;i<ord.length-1;i++){t=ord[i];ord[i]=ord[i+1];ord[i+1]=t;setOrd();sc=groupCross(gl,m);if(sc<best){best=sc;imp=true}else{t=ord[i];ord[i]=ord[i+1];ord[i+1]=t;setOrd()}}}
  setOrd()}
 /* courbes échantillonnées et croisements entre deux flèches */
-function realCost(){var m=cur(),P=[],c=0,i,j;ENDV={};SIDE={};slotsCore();(m.links||[]).forEach(function(l){var p=polyOf(l,m);if(p)P.push(p)});
- for(i=0;i<P.length;i++)for(j=i+1;j<P.length;j++)c+=polyCross(P[i],P[j]);return c}
 function polyOf(l,m){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b||CI.hid[a.id]||CI.hid[b.id])return null;var G=linkGeom(l,a,b),p=[],i;if(G.pts)return G.pts;for(i=0;i<=20;i++)p.push(bezAt(G,i/20));return p}
 function segX(p,q,r,s2){var d1x=q[0]-p[0],d1y=q[1]-p[1],d2x=s2[0]-r[0],d2y=s2[1]-r[1],den=d1x*d2y-d1y*d2x;if(Math.abs(den)<1e-9)return false;
  var t=((r[0]-p[0])*d2y-(r[1]-p[1])*d2x)/den,u=((r[0]-p[0])*d1y-(r[1]-p[1])*d1x)/den;return t>.001&&t<.999&&u>.001&&u<.999}
 function polyCross(A,B){var c=0,i,j;for(i=0;i<A.length-1;i++)for(j=0;j<B.length-1;j++)if(segX(A[i],A[i+1],B[j],B[j+1]))c++;return c}
-/* pour chaque côté de bulle où arrivent/partent plusieurs flèches : on essaie d'échanger l'ordre des extrémités quand cela diminue les croisements réels des courbes
-   (y compris quand une flèche contourne une bulle) ; l'ordre trouvé est enregistré (extrémités fixées sur le bord) */
-/* changements de bord pour supprimer des croisements (réorganisation) : pour chaque flèche qui en croise une autre, on essaie de faire arriver/partir l'une de ses extrémités par l'autre axe (haut/bas ↔ gauche/droite) et on garde le changement si les courbes se croisent moins */
-function sideAxisOf(l,end,m){var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b)return null;var G=linkGeom(l,a,b),p=end==="1"?G.p1:G.p2,n=end==="1"?a:b;
- return(Math.abs(p[0]-n.x)<1e-6||Math.abs(p[0]-n.x-n.w)<1e-6)?"h":"v"}
-function optimizeSides(m,budget){var t0=Date.now(),links=m.links||[],polys={},changed=0,pass;ENDV={};slotsCore();
- links.forEach(function(l){polys[l.id]=polyOf(l,m)});
- function incident(nid){return links.filter(function(l){return l.from===nid||l.to===nid})}
- function incCost(inc,P){var c=0;inc.forEach(function(l,i){var A=P[l.id];if(!A)return;links.forEach(function(o){if(o===l)return;if(inc.indexOf(o)>=0&&inc.indexOf(o)<i)return;var B=P[o.id];if(B)c+=polyCross(A,B)})});return c}
- for(pass=0;pass<3;pass++){var imp=false,cand=[];
-  links.forEach(function(l){var A=polys[l.id],c=0;if(!A)return;links.forEach(function(o){if(o!==l&&polys[o.id])c+=polyCross(A,polys[o.id])});if(c)cand.push([c,l])});
-  cand.sort(function(x,y){return y[0]-x[0]});
-  for(var ci=0;ci<cand.length;ci++){var l=cand[ci][1];
-   ["1","2"].forEach(function(end){if(Date.now()-t0>budget)return;if((end==="1"&&l.fa)||(end==="2"&&l.ta))return;
-    var key=l.id+end,n=getNIn(m,end==="1"?l.from:l.to);if(!n)return;var inc=incident(n.id),before=incCost(inc,polys);if(!before)return;
-    var ax=sideAxisOf(l,end,m);if(!ax)return;var prev=ENDV[key],sS=SLOT,sG=SLOTG;
-    ENDV[key]=ax==="h"?"v":"h";slotsCore();
-    var np={},k;inc.forEach(function(l2){np[l2.id]=polyOf(l2,m)});var P2={};for(k in polys)P2[k]=polys[k];for(k in np)P2[k]=np[k];
-    if(incCost(inc,P2)<before){polys=P2;imp=true;changed++}else{if(prev===undefined)delete ENDV[key];else ENDV[key]=prev;SLOT=sS;SLOTG=sG}})}
-  if(!imp||Date.now()-t0>budget)break}
- return changed}
-/* les côtés choisis sont enregistrés (extrémités fixées sur le bord) ; on fixe tout le groupe d'extrémités concerné pour garder des positions réparties */
-function bakeEnds(m){var done={};
- function bake(e){var ei=endInfo(e.n,null,e.o.x+e.o.w/2,e.o.y+e.o.h/2,e.H,SLOT[e.id]),fr=projBorder(e.n,ei.p[0],ei.p[1]),ax=sideOf(fr)[0]?1:0;
-  if(Math.abs(fr[ax]-.5)<.003)fr[ax]=.504;if(e.end==="1")e.l.fa=fr;else e.l.ta=fr;done[e.id]=1}
- SLOTG.forEach(function(g){if(g.some(function(e){return ENDV[e.id]!==undefined}))g.forEach(bake)});
- Object.keys(ENDV).forEach(function(key){if(done[key])return;var end=key.slice(-1),lid=key.slice(0,-1),l=(m.links||[]).filter(function(x){return x.id===lid})[0];if(!l)return;
-  var a=getNIn(m,l.from),b=getNIn(m,l.to);if(!a||!b)return;var n=end==="1"?a:b,o=end==="1"?b:a,ei=endInfo(n,null,o.x+o.w/2,o.y+o.h/2,ENDV[key]==="h"),fr=projBorder(n,ei.p[0],ei.p[1]);
-  if(end==="1")l.fa=fr;else l.ta=fr})}
-function optimizeEnds(){var m=cur();slotsCore();var groups=SLOTG.slice(),polys={},changed=0;if(!groups.length)return 0;
- (m.links||[]).forEach(function(l){polys[l.id]=polyOf(l,m)});
- groups.forEach(function(g){var ord=g.slice().sort(function(u,v){return SLOT[u.id]-SLOT[v.id]}),orig=ord.map(function(e){return e.id}).join(),lk={};
-  g.forEach(function(e){lk[e.l.id]=e.l});var gl=Object.keys(lk).map(function(i){return lk[i]});
-  function setOrd(){ord.forEach(function(e,i){SLOT[e.id]=(i+1)/(ord.length+1)})}
-  function score(){setOrd();var np={},c=0;gl.forEach(function(l){np[l.id]=polyOf(l,m)});
-   gl.forEach(function(l,i){var P=np[l.id];if(!P)return;m.links.forEach(function(o){if(o===l)return;if(np[o.id]&&gl.indexOf(o)<i)return;var Q=np[o.id]||polys[o.id];if(!Q)return;c+=polyCross(P,Q)})});return c}
-  var best=score(),imp=true,pass=0,i,t,sc;
-  while(imp&&pass++<6){imp=false;for(i=0;i<ord.length-1;i++){t=ord[i];ord[i]=ord[i+1];ord[i+1]=t;sc=score();if(sc<best){best=sc;imp=true}else{t=ord[i];ord[i]=ord[i+1];ord[i+1]=t}}}
-  setOrd();gl.forEach(function(l){polys[l.id]=polyOf(l,m)});
-  if(ord.map(function(e){return e.id}).join()!==orig){changed++;ord.forEach(function(e){var ei=endInfo(e.n,null,e.o.x+e.o.w/2,e.o.y+e.o.h/2,e.H,SLOT[e.id]),fr=projBorder(e.n,ei.p[0],ei.p[1]),ax=sideOf(fr)[0]?1:0;
-   if(Math.abs(fr[ax]-.5)<.003)fr[ax]=.504;if(e.end==="1")e.l.fa=fr;else e.l.ta=fr})}});
- return changed}
 /* choix du côté (gauche/droite = h, haut/bas = v) pour les deux extrémités d'une flèche, commun au départ et à l'arrivée :
    - bulles entièrement séparées horizontalement (même en diagonale) : côtés gauche/droite ;
    - sinon, bulles qui se chevauchent horizontalement mais séparées verticalement : haut/bas
@@ -1089,116 +1045,6 @@ function unover(n){var all=cur().nodes,PAD=14,others=all.filter(function(b){retu
 function shiftOutOfZones(list){var ids={},free=list.filter(function(n){return!n.grp}),k;list.forEach(function(n){ids[n.id]=1});if(!free.length)return;
  function hit(){var R=grpRects(ids);return free.some(function(n){return R.some(function(r){return n.x<r.x+r.w+8&&r.x<n.x+n.w+8&&n.y<r.y+r.h+8&&r.y<n.y+n.h+8})})}
  for(k=0;k<80&&hit();k++)list.forEach(function(n){n.y+=30})}
-/* mise en page automatique : un niveau (distance depuis les bulles de départ) = une colonne ; les bulles d'un même niveau ont le même x et sont espacées de la même distance minimale ;
-   l'ordre dans la colonne suit l'arbre et limite les croisements de flèches ; les bulles d'un même groupe restent ensemble (même colonne, côte à côte, avec de la place pour leur contour) */
-function reorganize(){var m=cur(),N=m.nodes;if(!N.length)return;N.forEach(measure);
- /* on oublie d'emblée tous les tracés existants (extrémités fixées, courbes réglées à la main, tracés de contournement en mémoire) : la réorganisation repart d'un tracé 100 % automatique */
- (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};ENDV={};RCACHE={};RCN=0;POLYC={};POLYN=0;
- var byId={},out={},inn={},byY=function(a,b){return(a.y+a.h/2)-(b.y+b.h/2)||a.x-b.x},GP=16,gcount={};
- N.forEach(function(n){byId[n.id]=n;out[n.id]=[];inn[n.id]=0;if(n.grp)gcount[n.grp]=(gcount[n.grp]||0)+1});
- (m.links||[]).forEach(function(l){if(byId[l.from]&&byId[l.to]&&l.from!==l.to){out[l.from].push(l.to);inn[l.to]++}});
- var grpOf=function(n){return n.grp?n.grp:null};
- var roots=N.filter(function(n){return!inn[n.id]}).sort(byY),level={},ord={},cnt=0;
- /* niveaux : une flèche entre deux bulles d'un même groupe ne fait pas changer de colonne */
- function bfs(starts){var q=starts.slice();starts.forEach(function(n){if(level[n.id]===undefined)level[n.id]=0});
-  while(q.length){var u=q.shift();out[u.id].map(function(i){return byId[i]}).sort(byY).forEach(function(v){var w=(grpOf(u)&&grpOf(u)===grpOf(v))?0:1,nl=level[u.id]+w;if(level[v.id]===undefined||nl<level[v.id]){level[v.id]=nl;q.push(v)}})}}
- function dfs(u){if(ord[u.id]!==undefined)return;ord[u.id]=cnt++;out[u.id].map(function(i){return byId[i]}).sort(byY).forEach(dfs)}
- bfs(roots);roots.forEach(dfs);
- N.slice().sort(byY).forEach(function(n){if(level[n.id]===undefined){bfs([n]);dfs(n)}});
- /* un groupe tient dans une seule colonne (la plus à gauche de ses bulles) ; niveaux ensuite renumérotés sans trou */
- var gmin={},gOrd={};N.forEach(function(n){var g=grpOf(n);if(g){gmin[g]=Math.min(gmin[g]===undefined?1e9:gmin[g],level[n.id]);gOrd[g]=Math.min(gOrd[g]===undefined?1e9:gOrd[g],ord[n.id])}});
- N.forEach(function(n){var g=grpOf(n);if(g)level[n.id]=gmin[g]});
- var us=[],rank={};N.forEach(function(n){if(us.indexOf(level[n.id])<0)us.push(level[n.id])});us.sort(function(a,b){return a-b});us.forEach(function(v,i){rank[v]=i});N.forEach(function(n){level[n.id]=rank[level[n.id]]});
- var key=function(n){var g=grpOf(n);return g?gOrd[g]:ord[n.id]};
- var cols=[];N.forEach(function(n){(cols[level[n.id]]=cols[level[n.id]]||[]).push(n)});
- cols.forEach(function(c){c.sort(function(a,b){return key(a)-key(b)||ord[a.id]-ord[b.id]})});
- /* moins de croisements entre flèches : balayages par position moyenne des bulles liées (un groupe = un bloc), puis permutations de voisines si cela diminue les croisements */
- function reduceCross(){var idx={},up={},dn={},byLv={},edges=[],bc={};
-  (m.links||[]).forEach(function(l){var a=byId[l.from],b=byId[l.to];if(!a||!b||Math.abs(level[a.id]-level[b.id])!==1)return;var e=level[a.id]<level[b.id]?[a,b]:[b,a];edges.push(e);
-   (dn[e[0].id]=dn[e[0].id]||[]).push(e[1]);(up[e[1].id]=up[e[1].id]||[]).push(e[0]);(byLv[level[e[0].id]]=byLv[level[e[0].id]]||[]).push(e)});
-  function reindex(){cols.forEach(function(c){c.forEach(function(n,i){idx[n.id]=i})})}
-  function cross(){var t=0;Object.keys(byLv).forEach(function(k){var E=byLv[k],i,j;for(i=0;i<E.length;i++)for(j=i+1;j<E.length;j++){if((idx[E[i][0].id]-idx[E[j][0].id])*(idx[E[i][1].id]-idx[E[j][1].id])<0)t++}});return t}
-  function sweep(down){var d,step=down?1:-1;for(d=down?1:cols.length-2;down?d<cols.length:d>=0;d+=step){var col=cols[d],ub={};
-    col.forEach(function(n){var ns=(down?up:dn)[n.id];bc[n.id]=ns&&ns.length?ns.reduce(function(t,x){return t+(idx[x.id]+.5)/cols[level[x.id]].length},0)/ns.length:(idx[n.id]+.5)/col.length});
-    col.forEach(function(n){var g=grpOf(n);if(g){ub[g]=ub[g]||{s:0,c:0,i:1e9};ub[g].s+=bc[n.id];ub[g].c++;ub[g].i=Math.min(ub[g].i,idx[n.id])}});
-    var U=function(n){var g=grpOf(n);return g?ub[g].s/ub[g].c:bc[n.id]},UI=function(n){var g=grpOf(n);return g?ub[g].i:idx[n.id]};
-    col.sort(function(a,b){return U(a)-U(b)||UI(a)-UI(b)||idx[a.id]-idx[b.id]});col.forEach(function(n,i){idx[n.id]=i})}}
-  if(!edges.length)return;reindex();
-  var best=cross(),snap0=cols.map(function(c){return c.slice()}),it;
-  for(it=0;it<6&&best>0;it++){sweep(true);sweep(false);var c0=cross();if(c0<best){best=c0;snap0=cols.map(function(c){return c.slice()})}}
-  cols=snap0.map(function(c){return c.slice()});reindex();
-  if(best>0&&edges.length<=120&&N.length<=200){var imp=true,pass=0;
-   while(imp&&pass++<8){imp=false;cols.forEach(function(col){for(var i=0;i<col.length-1;i++){var a=col[i],b=col[i+1];if(grpOf(a)!==grpOf(b))continue;var before=cross();col[i]=b;col[i+1]=a;idx[b.id]=i;idx[a.id]=i+1;
-     if(cross()<before){imp=true}else{col[i]=a;col[i+1]=b;idx[a.id]=i;idx[b.id]=i+1}}})}}
- }
- reduceCross();
- var x0=Math.min.apply(null,(roots.length?roots:N).map(function(n){return n.x})),
-     y0=(Math.min.apply(null,N.map(function(n){return n.y}))+Math.max.apply(null,N.map(function(n){return n.y+n.h})))/2,HG=100,colX=[],x=x0;
- function placeX(){var x=x0;cols.forEach(function(col,ci){if(!col||!col.length)return;colX[ci]=x;var w=0;col.forEach(function(n){w=Math.max(w,n.w)});x+=w+HG})}placeX();
- /* empile une colonne : même écart minimal partout, un peu plus grand autour d'un groupe pour laisser la place de son contour */
- function stack(ci){var col=cols[ci];if(!col)return;var gp=[],tot=0,y;col.forEach(function(n,i){tot+=n.h;if(i<col.length-1){var ga=grpOf(n),gb=grpOf(col[i+1]),g=GAP+(ga!==gb?((ga?GP:0)+(gb?GP:0)):0);gp.push(g);tot+=g}});
-  y=y0-tot/2;col.forEach(function(n,i){n.x=Math.round(colX[ci]);n.y=Math.round(y);y+=n.h+(gp[i]||0)})}
- cols.forEach(function(c,ci){stack(ci)});
- /* des bulles peuvent être déplacées (permutées dans leur colonne) pour éviter les croisements : coût = croisements de segments entre centres + bulles traversées */
- (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
- var snapCols=cols.map(function(c){return c?c.slice():c}),realBefore=N.length<=150?realCost():0;
- (function(){if(N.length>150)return;var t0=Date.now();
-  function cx(n){return[n.x+n.w/2,n.y+n.h/2]}
-  function inR(p,r){return p[0]>r.x&&p[0]<r.x+r.w&&p[1]>r.y&&p[1]<r.y+r.h}
-  function hitsRect(p,q,r){if(inR(p,r)||inR(q,r))return true;var a=[r.x,r.y],b=[r.x+r.w,r.y],c=[r.x+r.w,r.y+r.h],d=[r.x,r.y+r.h];return segX(p,q,a,b)||segX(p,q,b,c)||segX(p,q,c,d)||segX(p,q,d,a)}
-  function cost(){var S=[],c=0,i,j,k;(m.links||[]).forEach(function(l){var a=byId[l.from],b=byId[l.to];if(a&&b&&a!==b)S.push([a,b,cx(a),cx(b)])});
-   for(i=0;i<S.length;i++){for(j=i+1;j<S.length;j++){var A=S[i],B=S[j];if(A[0]===B[0]||A[0]===B[1]||A[1]===B[0]||A[1]===B[1])continue;if(segX(A[2],A[3],B[2],B[3]))c++}
-    for(k=0;k<N.length;k++){var nn=N[k];if(nn!==S[i][0]&&nn!==S[i][1]&&hitsRect(S[i][2],S[i][3],nn))c++}}
-   return c}
-  var best=cost(),pass=0,imp=true,ci,i,j;
-  while(imp&&best>0&&pass++<4&&Date.now()-t0<700){imp=false;
-   for(ci=0;ci<cols.length&&best>0;ci++){var col=cols[ci];if(!col||col.length<2)continue;
-    for(i=0;i<col.length-1&&best>0;i++)for(j=i+1;j<col.length&&best>0;j++){if(Date.now()-t0>700)return;
-     var a=col[i],b=col[j];if(grpOf(a)!==grpOf(b))continue;col[i]=b;col[j]=a;stack(ci);var sc=cost();
-     if(sc<best){best=sc;imp=true}else{col[i]=a;col[j]=b;stack(ci)}}}}})();
- /* contrôle final avec les vraies courbes : si le déplacement n'a pas réduit les croisements, on garde la disposition précédente */
- if(N.length<=150&&realCost()>realBefore){cols=snapCols;cols.forEach(function(c,ci){stack(ci)})}
- /* dernière passe : s'il reste un croisement entre colonnes voisines qu'un simple échange de voisines supprime, on le fait (gardé seulement si les vraies courbes ne s'en trouvent pas moins bien) */
- if(N.length<=150){var snap2=cols.map(function(c){return c?c.slice():c}),r2=realCost();reduceCross();cols.forEach(function(c,ci){stack(ci)});if(realCost()>r2){cols=snap2;cols.forEach(function(c,ci){stack(ci)})}}
- /* dernier recours : s'il reste des flèches qui se croisent (courbes réelles), on déplace des bulles — d'abord dans leur colonne, puis vers une colonne voisine — tant que cela supprime des croisements */
- var movedN=0;
- if(N.length<=120&&(m.links||[]).length<=160){(function(){var t0=Date.now(),BUD=2200,orig={},pass,i;
-  cols.forEach(function(c,ci){(c||[]).forEach(function(n){orig[n.id]=ci})});
-  function relayout(){placeX();cols.forEach(function(c,ci){stack(ci)})}
-  function shift(){var s=0;cols.forEach(function(c,ci){(c||[]).forEach(function(n){s+=Math.abs(ci-orig[n.id])})});return s}
-  function scan(){ENDV={};SIDE={};slotsCore();var L=m.links||[],P=L.map(function(l){return polyOf(l,m)}),c=0,hit={},a,b;
-   for(a=0;a<L.length;a++)if(P[a])for(b=a+1;b<L.length;b++)if(P[b]){var k=polyCross(P[a],P[b]);if(k){c+=k;hit[L[a].id]=1;hit[L[b].id]=1}}
-   return{c:c,hit:hit,score:c*100+shift()*2}}
-  var st=scan();if(!st.c)return;
-  function members(key){var r=key.charAt(0)==="g"?N.filter(function(n){return n.grp===key.slice(2)}):[byId[key.slice(2)]];return r.sort(function(p,q){return p.y-q.y})}
-  function colOf(n){for(var ci=0;ci<cols.length;ci++)if(cols[ci]&&cols[ci].indexOf(n)>=0)return ci;return -1}
-  function ents(hit){var seen={},out=[];(m.links||[]).forEach(function(l){if(!hit[l.id])return;[l.from,l.to].forEach(function(id){var n=byId[id];if(!n)return;var k=n.grp?"g:"+n.grp:"n:"+n.id;if(!seen[k]){seen[k]=1;out.push(k)}})});return out}
-  function sig(cs){return cs.map(function(c){return(c||[]).map(function(n){return n.id}).join(",")}).join("|")}
-  function tryMove(key,ci,ix){var mem=members(key),from=colOf(mem[0]),ids={},nc=cols.map(function(c){return c?c.slice():c}),old=cols,sg0=sig(cols),tg;
-   if(from<0)return false;mem.forEach(function(n){ids[n.id]=1});
-   nc[from]=nc[from].filter(function(n){return!ids[n.id]});tg=nc[ci];
-   if(ix>tg.length)return false;
-   if(ix>0&&ix<tg.length&&grpOf(tg[ix-1])&&grpOf(tg[ix-1])===grpOf(tg[ix]))return false;
-   nc[ci]=tg.slice(0,ix).concat(mem,tg.slice(ix));
-   if(sig(nc)===sg0)return false;
-   cols=nc;relayout();var s2=scan();
-   if(s2.score<st.score){st=s2;movedN++;return true}
-   cols=old;relayout();return false}
-  for(pass=0;pass<5&&st.c>0&&Date.now()-t0<BUD;pass++){var imp=false,E=ents(st.hit),e;
-   for(e=0;e<E.length&&!imp;e++){var key=E[e],mem=members(key),from=colOf(mem[0]),cand=[],ci,ix;if(from<0)continue;
-    for(ci=Math.max(0,from-2);ci<=Math.min(cols.length-1,from+2);ci++){if(!cols[ci])continue;var len=cols[ci].length-(ci===from?mem.length:0);for(ix=0;ix<=len;ix++)cand.push([ci,ix,Math.abs(ci-from)])}
-    cand.sort(function(p,q){return p[2]-q[2]});
-    for(i=0;i<cand.length;i++){if(Date.now()-t0>BUD)break;if(tryMove(key,cand[i][0],cand[i][1])){imp=true;break}}}
-   if(!imp)break}
-  relayout()})()}
- /* une bulle non groupée ne doit jamais se trouver dans un cadre de groupe */
- N.forEach(function(n){if(!n.grp&&!CI.hid[n.id]&&inZone(n))unover(n)});
- /* flèches : tracé automatique, puis extrémités partagées ordonnées pour éviter les croisements */
- (m.links||[]).forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2});SIDE={};
- var sw=0;if(N.length<=150){sw=optimizeSides(m,700);bakeEnds(m);ENDV={}}
- var fixedEnds=optimizeEnds();
- save();draw();fit();var nc=cols.filter(function(c){return c&&c.length}).length;
- toast("Carte réorganisée : "+nc+" niveau"+(nc>1?"x":"")+", "+N.length+" bulle"+(N.length>1?"s":"")+(sw?", "+sw+" extrémité"+(sw>1?"s":"")+" changée"+(sw>1?"s":"")+" de bord":"")+(fixedEnds?", extrémités de flèches réordonnées":"")+(movedN?", "+movedN+" bulle"+(movedN>1?"s":"")+" déplacée"+(movedN>1?"s":"")+" pour éviter des croisements":"")+".")}
 var ntId=null,ntDown=false;
 var dropG={};
 /* groupes : contour en pointillé autour des bulles d'un même groupe (champ grp des bulles) */
@@ -1317,7 +1163,6 @@ function bgMenu(pt){var it=[{icon:"bulle",label:"Nouvelle bulle ici",fn:function
  else if(selIds().length===1&&getN(selIds()[0]))it.push({icon:"group",label:"Créer un groupe avec la bulle sélectionnée",fn:groupSel});
  it.push("-",
   {icon:"⌖",label:"Recentrer la vue",fn:fit},
-  {icon:"▦",label:"Réorganiser la carte automatiquement",fn:reorganize},
   {icon:"⤓",label:"Exporter la carte",fn:exportAct},
   "-",
   {icon:"✕",label:"Supprimer la carte…",danger:true,fn:delMapAct});return it}
