@@ -3,7 +3,7 @@ Ne cache pas le menu de gaucge quand je fais un clic droit sur une carte
 
 Donne moi la possibilité de donner un titre à un groupe
 
-Oublie les courbes avec les poignées, remet un fonctionnement classique des lignes à la manière de gitmind
+Il faut revoir la réorganisation automatique. le tracé manuel et la réorganisation automatique sont 2 fonctionnements différents.
 
 on peut mettre plusieurs images dans une cellule, ou avertissement si on remplace une image ds une bulle ou y'a deja une image.
 
