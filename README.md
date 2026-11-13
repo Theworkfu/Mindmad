@@ -3,6 +3,8 @@ Lorsqu'une image est insérée dans une bulle, il ne faut pas que ça déforme t
 
 Enlève toute notion de réorganisation automatique
 
+Barré un texte
+
 
 Ne cache pas le menu de gaucge quand je fais un clic droit sur une carte
 
