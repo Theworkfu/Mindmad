@@ -1,6 +1,8 @@
 
 Lorsqu'une image est insérée dans une bulle, il ne faut pas que ça déforme trop la bulle, donc tu peux réduire son echelle visuellement
 
+Enlève toute notion de réorganisation automatique
+
 
 Ne cache pas le menu de gaucge quand je fais un clic droit sur une carte
 
