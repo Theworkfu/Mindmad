@@ -371,17 +371,44 @@ var selLink=null,linkFrom=null;
 function edgePt(n,tx,ty){var cx=n.x+n.w/2,cy=n.y+n.h/2,dx=tx-cx,dy=ty-cy,sx=dx?(n.w/2)/Math.abs(dx):1e9,sy=dy?(n.h/2)/Math.abs(dy):1e9,t=Math.min(sx,sy);return[cx+dx*t,cy+dy*t]}
 function arrowHead(tip,from,g,L){L=L||15;var dx=tip[0]-from[0],dy=tip[1]-from[1],l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;var bx=tip[0]-dx*L,by=tip[1]-dy*L,px=-dy*L/2,py=dx*L/2;
  el("path",{"class":"lkarrow",d:"M"+tip[0]+","+tip[1]+" L"+(bx+px)+","+(by+py)+" L"+(bx-px)+","+(by-py)+" Z"},g)}
-/* flèche = simple segment droit : du bord de la bulle de départ au bord de la bulle d'arrivée, sur la droite qui joint leurs deux centres */
-function linkGeom(l,a,b){var p1=edgePt(a,b.x+b.w/2,b.y+b.h/2),p2=edgePt(b,a.x+a.w/2,a.y+a.h/2);return{p1:p1,p2:p2,mid:[(p1[0]+p2[0])/2,(p1[1]+p2[1])/2]}}
-function lineAt(G,t){return[G.p1[0]+(G.p2[0]-G.p1[0])*t,G.p1[1]+(G.p2[1]-G.p1[1])*t]}
-function lineLen(G){return Math.max(Math.hypot(G.p2[0]-G.p1[0],G.p2[1]-G.p1[1]),1)}
+/* flèche : segment droit du bord de la bulle de départ au bord de la bulle d'arrivée (sur la droite qui joint leurs centres) ;
+   si une autre bulle se trouve sur le trajet, la flèche la contourne par le plus court chemin à segments droits (marge de 10 px autour des bulles) */
+var LCACHE={},LCN=0,LPAD=10;
+function segRect(p,q,r){var e=.5,x1=r.x+e,x2=r.x2-e,y1=r.y+e,y2=r.y2-e,dx=q[0]-p[0],dy=q[1]-p[1],t0=0,t1=1,P=[-dx,dx,-dy,dy],Q=[p[0]-x1,x2-p[0],p[1]-y1,y2-p[1]],i;
+ for(i=0;i<4;i++){if(P[i]===0){if(Q[i]<0)return false}else{var t=Q[i]/P[i];if(P[i]<0){if(t>t1)return false;if(t>t0)t0=t}else{if(t<t0)return false;if(t<t1)t1=t}}}
+ return t1-t0>1e-6}
+function inRect(p,r){return p[0]>r.x&&p[0]<r.x2&&p[1]>r.y&&p[1]<r.y2}
+function padRect(n){return{x:n.x-LPAD,y:n.y-LPAD,x2:n.x+n.w+LPAD,y2:n.y+n.h+LPAD}}
+/* chemin le plus court de ca à cb qui ne traverse aucune des bulles R (a et b : les deux bulles reliées) ; renvoie les points de passage, ou null */
+function detour(ca,cb,R,a,b){var V=[ca,cb],RA=padRect(a),RB=padRect(b),i,j,k;
+ R.forEach(function(r){[[r.x,r.y],[r.x2,r.y],[r.x,r.y2],[r.x2,r.y2]].forEach(function(c){for(k=0;k<R.length;k++)if(inRect(c,R[k]))return;if(inRect(c,RA)||inRect(c,RB))return;V.push(c)})});
+ if(V.length>90)return null;
+ function vis(iu,iv){var p=V[iu],q=V[iv],k;for(k=0;k<R.length;k++)if(segRect(p,q,R[k]))return false;
+  if(iu!==0&&iv!==0&&segRect(p,q,RA))return false;if(iu!==1&&iv!==1&&segRect(p,q,RB))return false;return true}
+ var n=V.length,dist=[],prev=[],done=[];for(i=0;i<n;i++){dist[i]=Infinity;prev[i]=-1;done[i]=false}dist[0]=0;
+ for(;;){var u=-1;for(i=0;i<n;i++)if(!done[i]&&(u<0||dist[i]<dist[u]))u=i;if(u<0||dist[u]===Infinity)return null;if(u===1)break;done[u]=true;
+  for(j=0;j<n;j++){if(done[j])continue;var d=dist[u]+Math.hypot(V[j][0]-V[u][0],V[j][1]-V[u][1]);if(d<dist[j]&&vis(u,j)){dist[j]=d;prev[j]=u}}}
+ var path=[],x=prev[1];while(x>0){path.unshift(V[x]);x=prev[x]}return path}
+function linkGeom(l,a,b){var ca=[a.x+a.w/2,a.y+a.h/2],cb=[b.x+b.w/2,b.y+b.h/2],p1=edgePt(a,cb[0],cb[1]),p2=edgePt(b,ca[0],ca[1]),pts=[p1,p2],R=[],G,k;
+ var x0=Math.min(ca[0],cb[0])-150,x1=Math.max(ca[0],cb[0])+150,y0=Math.min(ca[1],cb[1])-150,y1=Math.max(ca[1],cb[1])+150;
+ cur().nodes.forEach(function(n){if(n===a||n===b||CI.hid[n.id])return;var r=padRect(n);if(r.x2<x0||r.x>x1||r.y2<y0||r.y>y1)return;if(inRect(ca,r)||inRect(cb,r))return;R.push(r)});
+ for(k=0;k<R.length;k++)if(segRect(p1,p2,R[k]))break;
+ if(k<R.length){var key=[ca,cb,a.w,a.h,b.w,b.h].join(",")+"#"+R.map(function(r){return[r.x,r.y,r.x2,r.y2].join(",")}).join(";"),path=LCACHE[key];
+  if(path===undefined){path=detour(ca,cb,R,a,b);if(++LCN>500){LCACHE={};LCN=1}LCACHE[key]=path||false}
+  if(path&&path.length){p1=edgePt(a,path[0][0],path[0][1]);p2=edgePt(b,path[path.length-1][0],path[path.length-1][1]);pts=[p1].concat(path,[p2])}}
+ G={p1:p1,p2:p2,pts:pts};G.mid=lineAt(G,.5);return G}
+function lineCum(G){if(!G.cum){var c=[0],P=G.pts,i;for(i=1;i<P.length;i++)c[i]=c[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);G.cum=c}return G.cum}
+function lineLen(G){var c=lineCum(G);return Math.max(c[c.length-1],1)}
+/* point situé à la fraction t (0..1) de la longueur du tracé */
+function lineAt(G,t){var P=G.pts,c=lineCum(G),d=Math.max(0,Math.min(1,t))*c[c.length-1],k=1;while(k<P.length-1&&c[k]<d)k++;var sg=(c[k]-c[k-1])||1,u=(d-c[k-1])/sg;return[P[k-1][0]+(P[k][0]-P[k-1][0])*u,P[k-1][1]+(P[k][1]-P[k-1][1])*u]}
 /* taille du triangle de la pointe : 6 à 15 px, plus petit quand la place manque entre les deux bulles */
 function headLen(l,a){return a>0?Math.max(6,Math.min(15,a*(l.a===2?.3:.45))):15}
 /* trait de la flèche : il s'arrête avant le(s) triangle(s) de pointe */
-function shaft(G,l){var p1=G.p1,p2=G.p2,L=Math.hypot(p2[0]-p1[0],p2[1]-p1[1]),u=L<2?null:[(p2[0]-p1[0])/L,(p2[1]-p1[1])/L],
- d2=(l.a!==0&&u)?u:null,d1=(l.a===2&&u)?[-u[0],-u[1]]:null,H1=d1?headLen(l,L):0,H2=d2?headLen(l,L):0,
- P1=d1?[p1[0]+u[0]*H1,p1[1]+u[1]*H1]:p1,P2=d2?[p2[0]-u[0]*H2,p2[1]-u[1]*H2]:p2;
- return{h1:H1,h2:H2,g:{p1:P1,p2:P2,mid:G.mid},d:"M"+P1[0]+","+P1[1]+" L"+P2[0]+","+P2[1],d1:d1,d2:d2}}
+function shaft(G,l){var P=G.pts.map(function(p){return p.slice()}),n=P.length,p1=P[0],p2=P[n-1];
+ function seg(i,j){var x=P[j][0]-P[i][0],y=P[j][1]-P[i][1],L=Math.hypot(x,y);return{L:L,u:L<2?null:[x/L,y/L]}}
+ var f=seg(0,1),e=seg(n-2,n-1),d2=(l.a!==0&&e.u)?e.u:null,d1=(l.a===2&&f.u)?[-f.u[0],-f.u[1]]:null,H1=d1?headLen(l,f.L):0,H2=d2?headLen(l,e.L):0;
+ if(d1)P[0]=[p1[0]+f.u[0]*H1,p1[1]+f.u[1]*H1];if(d2)P[n-1]=[p2[0]-e.u[0]*H2,p2[1]-e.u[1]*H2];
+ return{h1:H1,h2:H2,g:{pts:P,p1:P[0],p2:P[n-1],mid:G.mid},d:"M"+P.map(function(q){return q[0]+","+q[1]}).join(" L"),d1:d1,d2:d2}}
 /* ---------- effet d'électricité ----------
    Bulle sélectionnée : l'électricité remonte, dans le sens des flèches, depuis toutes les bulles
    qui l'alimentent (jusqu'aux bulles de départ) ; sur les flèches qui en partent, un seul cran.
@@ -403,8 +430,8 @@ function zapPlan(){var m=cur(),S=sel&&getNIn(m,sel);if(!S)return[];var L=m.links
   if(G[r.u]&&B[r.v])markArc(r)               /* chemins source → … → bulle sélectionnée, dans le sens des flèches */
  });
  return Object.keys(res).map(function(k){return res[k]})}
-function zapPts(G){var len=lineLen(G),N=Math.max(6,Math.round(len/12)),pts=[],tx=(G.p2[0]-G.p1[0])/len,ty=(G.p2[1]-G.p1[1])/len;
- for(var i=0;i<=N;i++){var P=lineAt(G,i/N),j=(i===0||i===N)?0:(Math.random()-.5)*8;pts.push([P[0]-ty*j,P[1]+tx*j])}
+function zapPts(G){var len=lineLen(G),N=Math.max(6,Math.round(len/12)),pts=[];
+ for(var i=0;i<=N;i++){var t=i/N,P=lineAt(G,t),A=lineAt(G,Math.max(0,t-.01)),B=lineAt(G,Math.min(1,t+.01)),tx=B[0]-A[0],ty=B[1]-A[1],tl=Math.hypot(tx,ty)||1,j=(i===0||i===N)?0:(Math.random()-.5)*8;pts.push([P[0]-ty/tl*j,P[1]+tx/tl*j])}
  return pts}
 var ZB=[0,.13,.38,.85];
 function zapPP(x){x=x%2;if(x<0)x+=2;return x<1?x:2-x}
