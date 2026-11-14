@@ -257,6 +257,9 @@ var curId=store.get("mm_cur",maps[0].id);
 /* ouverture d'une carte dans un nouvel onglet : adresse#carte=identifiant */
 try{var hmm=/[#&]carte=([^&]+)/.exec(location.hash);if(hmm){var hid=decodeURIComponent(hmm[1]);if(maps.some(function(x){return x.id===hid}))curId=hid}}catch(e){}
 function openMapTab(id){try{window.open(location.href.split("#")[0]+"#carte="+encodeURIComponent(id),"_blank")}catch(e){}}
+/* l'adresse (#carte=identifiant) suit toujours la carte affichée dans cet onglet : un rafraîchissement, ou une adresse copiée, retombe sur la bonne carte */
+function syncUrl(){try{var h="#carte="+encodeURIComponent(curId);if(location.hash!==h)history.replaceState(null,"",location.pathname+location.search+h)}catch(e){}}
+window.addEventListener("hashchange",function(){var mm=/[#&]carte=([^&]+)/.exec(location.hash);if(!mm)return;var id;try{id=decodeURIComponent(mm[1])}catch(e){return}if(id!==curId&&maps.some(function(x){return x.id===id}))switchMap(id)});
 /* plusieurs onglets : si une autre fenêtre enregistre une carte plus récente, on la reprend */
 window.addEventListener("storage",function(e){if(e.key!=="mm_maps"||!e.newValue)return;var list;try{list=JSON.parse(e.newValue)}catch(x){return}
  var ch=false,curCh=false;list.forEach(function(r){var l=maps.filter(function(m){return m.id===r.id})[0];
@@ -528,7 +531,7 @@ function fit(){var cv=$("cv"),W=cv.clientWidth,H=cv.clientHeight,N=cur().nodes.f
 
 /* ---------- panneau ---------- */
 function syncPanel(){}
-function refreshMaps(){var t=$("mTitle");if(t.querySelector("input"))return;t.textContent=flat(cur().title)}
+function refreshMaps(){syncUrl();var t=$("mTitle");if(t.querySelector("input"))return;t.textContent=flat(cur().title)}
 
 /* ---------- actions ---------- */
 function viewCenter(){var cv=$("cv");return[(cv.clientWidth/2-tr.x)/tr.k,(cv.clientHeight/2-tr.y)/tr.k]}
