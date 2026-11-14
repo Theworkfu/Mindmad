@@ -128,6 +128,9 @@ button:disabled{opacity:.4;cursor:default}
 #ctx .cx-sw{display:flex;flex-wrap:wrap;gap:7px;padding:6px 10px}
 #ctx .cx-sw button.cx-c{width:22px;height:22px;padding:0;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
 #ctx .cx-sw button.cx-c.on{outline:2px solid var(--ink)}
+#edc{max-height:calc(100vh - 48px);overflow:auto}
+#edi{display:block;max-width:100%;height:auto;align-self:center;border-radius:8px;background:var(--bg)}
+#edi[hidden]{display:none}
 #edl{display:none;flex-direction:column;gap:4px;padding:8px 10px;border:1px dashed var(--line);border-radius:8px;font-size:13px}
 #edl.on{display:flex}
 #edl a{color:var(--link);text-decoration:underline;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -183,7 +186,7 @@ button:disabled{opacity:.4;cursor:default}
     <div class="hint" id="ghCleanState"></div>
   </aside>
 </main>
-<div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><div id="edl" aria-label="Liens du texte"></div><div class="hint">Entrée : nouvelle ligne · Ctrl+clic sur un lien pour l’ouvrir · cliquez à l’extérieur pour valider</div></div></div>
+<div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><img id="edi" alt="Image de la bulle" hidden><div id="edl" aria-label="Liens du texte"></div><div class="hint">Entrée : nouvelle ligne · Ctrl+clic sur un lien pour l’ouvrir · cliquez à l’extérieur pour valider</div></div></div>
 <div id="nt" role="dialog" aria-modal="true" aria-label="Modifier la note"><div id="ntc"><div class="hint" id="ntTitle"></div><textarea id="ntt" rows="6" placeholder="Votre note…"></textarea><div class="row" style="align-items:center"><span class="hint" style="flex:1">Cliquez à l’extérieur pour valider</span><button id="ntDel" class="danger">Supprimer la note</button></div></div></div>
 <div id="tip" role="tooltip"></div>
 <div id="ctx" role="menu" tabindex="-1"></div>
@@ -825,12 +828,16 @@ function renderEdLinks(){var box=$("edl");box.innerHTML="";var seen={},us=findUr
  us.forEach(function(o){var a=document.createElement("a");a.href=o.url;a.target="_blank";a.rel="noopener noreferrer";a.textContent="↗ "+o.url;a.title="Ouvrir ce lien";box.appendChild(a)});
  box.classList.toggle("on",us.length>0)}
 $("edt").addEventListener("click",function(e){if(!(e.ctrlKey||e.metaKey))return;var i=this.selectionStart,u=findUrls(this.value).filter(function(o){return i>=o.s&&i<=o.e})[0];if(u)window.open(u.url,"_blank","noopener,noreferrer")});
-function openEd(id,all){var n=getN(id);if(!n)return;edId=id;edLink=null;var t=$("edt");t.value=n.t;renderEdLinks();$("ed").classList.add("on");t.focus();if(all)t.select();else t.setSelectionRange(t.value.length,t.value.length)}
-function closeEd(){$("ed").classList.remove("on");
+/* fenêtre d'édition d'une bulle : son image y apparaît à sa taille d'origine (la fenêtre s'élargit si besoin, sans dépasser l'écran ; au-delà, on fait défiler) */
+function showEdImg(n){var im=$("edi"),box=$("edc");box.style.width="";im.onload=null;
+ if(!n||!n.img){im.hidden=true;im.removeAttribute("src");return}
+ im.onload=function(){box.style.width=Math.min(Math.max(480,im.naturalWidth+30),Math.round(window.innerWidth*.92))+"px"};im.hidden=false;im.setAttribute("src",imgUrl(n.img))}
+function openEd(id,all){var n=getN(id);if(!n)return;edId=id;edLink=null;showEdImg(n);var t=$("edt");t.value=n.t;renderEdLinks();$("ed").classList.add("on");t.focus();if(all)t.select();else t.setSelectionRange(t.value.length,t.value.length)}
+function closeEd(){$("ed").classList.remove("on");showEdImg(null);
  if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(l&&!(l.label||"").trim()){delete l.label;save();draw()}else if(l&&/[ \t]+$/m.test(l.label)){l.label=l.label.replace(/[ \t]+$/gm,"");save();draw()}}
  if(edId){var en=getN(edId);if(en){var tt=(en.t||"").replace(/[ \t]+$/gm,"").replace(/\s+$/,"");if(tt!==en.t){en.t=tt;save();draw()}}}
  edId=null;edLink=null}
-function editLabel(l){closeCtx();if(selLink!==l.id||sel){selLink=l.id;sel=null;draw()}edId=null;edLink=l.id;var t=$("edt");t.value=l.label||"";renderEdLinks();$("ed").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
+function editLabel(l){closeCtx();showEdImg(null);if(selLink!==l.id||sel){selLink=l.id;sel=null;draw()}edId=null;edLink=l.id;var t=$("edt");t.value=l.label||"";renderEdLinks();$("ed").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
 $("edt").addEventListener("input",function(){if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(!l)return;l.label=this.value;save("l"+l.id);draw();renderEdLinks();return}var n=getN(edId);if(!n)return;n.t=this.value;save("t"+n.id);draw();renderEdLinks()});
 $("ed").addEventListener("pointerdown",function(e){edDown=e.target===this});
 $("ed").addEventListener("click",function(e){if(e.target===this&&edDown)closeEd()});
