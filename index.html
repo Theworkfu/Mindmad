@@ -392,9 +392,10 @@ function detour(s1,s2,R){var V=[s1,s2],i,j,k;
  for(;;){var u=-1;for(i=0;i<n;i++)if(!done[i]&&(u<0||dist[i]<dist[u]))u=i;if(u<0||dist[u]===Infinity)return null;if(u===1)break;done[u]=true;
   for(j=0;j<n;j++){if(done[j])continue;var d=dist[u]+Math.hypot(V[j][0]-V[u][0],V[j][1]-V[u][1]);if(d<dist[j]&&vis(u,j)){dist[j]=d;prev[j]=u}}}
  var path=[],x=prev[1];while(x>0){path.unshift(V[x]);x=prev[x]}return path}
-/* côtés des deux bulles qui se font face : séparées horizontalement → gauche/droite, sinon séparées verticalement → haut/bas, sinon (bulles qui se chevauchent) selon la direction des centres */
+/* côtés des deux bulles qui se font face : bulle à droite → bord droit de la première et bord gauche de la seconde, bulle à gauche → l'inverse, bulle en haut → bord du bas de celle du haut et bord du haut de celle du bas, etc. ;
+   séparées sur un seul axe → cet axe ; en diagonale ou si elles se chevauchent → axe dans lequel les centres sont le plus éloignés (relativement à la taille des bulles) */
 function facing(a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2,hs=b.x>=a.x+a.w?1:(b.x+b.w<=a.x?-1:0),vs=b.y>=a.y+a.h?1:(b.y+b.h<=a.y?-1:0),h,n1;
- if(hs&&vs){var hg=hs>0?b.x-(a.x+a.w):a.x-(b.x+b.w),vg=vs>0?b.y-(a.y+a.h):a.y-(b.y+b.h);h=hg>=vg}
+ if(hs&&vs)h=Math.abs(bx-ax)/(a.w+b.w)>=Math.abs(by-ay)/(a.h+b.h)
  else if(hs)h=true;else if(vs)h=false;else h=Math.abs(bx-ax)/(a.w+b.w)>=Math.abs(by-ay)/(a.h+b.h);
  n1=h?[(hs||(bx>=ax?1:-1)),0]:[0,(vs||(by>=ay?1:-1))];return n1}
 function sidePt(n,d){return[n.x+n.w*(d[0]>0?1:d[0]<0?0:.5),n.y+n.h*(d[1]>0?1:d[1]<0?0:.5)]}
@@ -424,7 +425,7 @@ function linkGeom(l,a,b){var f=facing(a,b),n2=[-f[0],-f[1]],O=[],G,x0=Math.min(a
  var r=sideRoute(a,b,f,n2,O,false),P=r.pts;
  if(!r.ok){/* le tracé direct touche une bulle : on essaie les autres côtés des deux bulles et on garde le plus court tracé dégagé */
   var key=[a.x,a.y,a.w,a.h,b.x,b.y,b.w,b.h].join(",")+"#"+O.map(function(o){return[o.x,o.y,o.x2,o.y2].join(",")}).join(";"),ch=SCACHE[key];
-  if(ch===undefined){var best=null;DIRS.forEach(function(d1){DIRS.forEach(function(d2){if(d1[0]===f[0]&&d1[1]===f[1]&&d2[0]===n2[0]&&d2[1]===n2[1])return;var c=sideRoute(a,b,d1,d2,O,true);if(c&&(!best||c.len<best.len))best=c});});
+  if(ch===undefined){var best=null;DIRS.forEach(function(d1){DIRS.forEach(function(d2){if(d1[0]===f[0]&&d1[1]===f[1]&&d2[0]===n2[0]&&d2[1]===n2[1])return;var c=sideRoute(a,b,d1,d2,O,true);if(c){c.sc=c.len+((d1[0]===f[0]&&d1[1]===f[1])?0:90)+((d2[0]===n2[0]&&d2[1]===n2[1])?0:90);if(!best||c.sc<best.sc)best=c}});});
    ch=best?best.pts:false;if(++SCN>500){SCACHE={};SCN=1}SCACHE[key]=ch}
   if(ch)P=ch}
  G={pts:P};G.p1=P[0];G.p2=P[P.length-1];G.mid=lineAt(G,.5);return G}
