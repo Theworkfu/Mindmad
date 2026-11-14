@@ -211,8 +211,9 @@ function needDim(u){if(!u||imgDim[u]!==undefined)return;imgDim[u]=0;var i=new Im
 var MC=null,MF="";
 function textW(t){try{if(!MC){MC=document.createElement("canvas").getContext("2d");MF=getComputedStyle(document.body).fontFamily||"sans-serif"}MC.font="14px "+MF;var w=MC.measureText(t).width;if(w>0)return w}catch(e){}return t.length*7.4}
 function measure(n){var L=dispText(n.t).split("\n");n.w=Math.max(60,Math.round(Math.max.apply(null,L.map(textW))+16));n.th=30+(L.length-1)*18;n.h=n.th;
- if(n.img){n.w=Math.max(n.w,150);var u=imgUrl(n.img),d=imgDim[u],fw=n.w-16,iw=fw,ih=IMGH;needDim(u);
-  if(d&&d!==-1){ih=fw*d[1]/d[0];if(ih>IMGMAX){ih=IMGMAX;iw=ih*d[0]/d[1]}}
+ /* image : sa taille suit le texte de la bulle — largeur au plus celle du texte (110 px minimum pour la bulle), hauteur proportionnée à cette largeur et au nombre de lignes de texte (180 px au plus) — pour ne pas déformer la bulle */
+ if(n.img){n.w=Math.max(n.w,110);var u=imgUrl(n.img),d=imgDim[u],fw=n.w-16,iw=fw,hmax=Math.max(48,Math.min(IMGMAX,Math.round(fw*.85),Math.round(60+n.th*1.5))),ih=Math.min(IMGH,hmax);needDim(u);
+  if(d&&d!==-1){ih=fw*d[1]/d[0];if(ih>hmax){ih=hmax;iw=ih*d[0]/d[1]}}
   n.iw=Math.round(iw);n.ih=Math.round(ih);n.h+=n.ih+8}}
 /* ancien format (arbre parent / enfants) : converti une fois en bulles libres + liens */
 function oSize(n){n.ch=n.ch||[];measure(n);n.ch.forEach(oSize)}
