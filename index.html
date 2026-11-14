@@ -392,12 +392,15 @@ function detour(s1,s2,R){var V=[s1,s2],i,j,k;
  for(;;){var u=-1;for(i=0;i<n;i++)if(!done[i]&&(u<0||dist[i]<dist[u]))u=i;if(u<0||dist[u]===Infinity)return null;if(u===1)break;done[u]=true;
   for(j=0;j<n;j++){if(done[j])continue;var d=dist[u]+Math.hypot(V[j][0]-V[u][0],V[j][1]-V[u][1]);if(d<dist[j]&&vis(u,j)){dist[j]=d;prev[j]=u}}}
  var path=[],x=prev[1];while(x>0){path.unshift(V[x]);x=prev[x]}return path}
-/* côtés des deux bulles qui se font face : bulle à droite → bord droit de la première et bord gauche de la seconde, bulle à gauche → l'inverse, bulle en haut → bord du bas de celle du haut et bord du haut de celle du bas, etc. ;
-   séparées sur un seul axe → cet axe ; en diagonale ou si elles se chevauchent → axe dans lequel les centres sont le plus éloignés (relativement à la taille des bulles) */
-function facing(a,b){var ax=a.x+a.w/2,ay=a.y+a.h/2,bx=b.x+b.w/2,by=b.y+b.h/2,hs=b.x>=a.x+a.w?1:(b.x+b.w<=a.x?-1:0),vs=b.y>=a.y+a.h?1:(b.y+b.h<=a.y?-1:0),h,n1;
- if(hs&&vs)h=Math.abs(bx-ax)/(a.w+b.w)>=Math.abs(by-ay)/(a.h+b.h)
- else if(hs)h=true;else if(vs)h=false;else h=Math.abs(bx-ax)/(a.w+b.w)>=Math.abs(by-ay)/(a.h+b.h);
- n1=h?[(hs||(bx>=ax?1:-1)),0]:[0,(vs||(by>=ay?1:-1))];return n1}
+/* côtés des deux bulles qui se font face, d'après leurs BORDS : bulle à droite (son bord gauche est au-delà du bord droit de l'autre) → bord droit de la première et bord gauche de la seconde ;
+   bulle à gauche → l'inverse ; bulle en haut → bord du bas de celle du haut et bord du haut de celle du bas ; bulle en bas → l'inverse.
+   Séparées sur un seul axe → cet axe ; séparées sur les deux (diagonale) → l'axe où l'écart entre les bords est le plus grand ;
+   bulles qui se chevauchent → l'axe où le recouvrement est le plus faible */
+function facing(a,b){var hs=b.x>=a.x+a.w?1:(b.x+b.w<=a.x?-1:0),vs=b.y>=a.y+a.h?1:(b.y+b.h<=a.y?-1:0),h;
+ if(hs&&vs){var hg=hs>0?b.x-(a.x+a.w):a.x-(b.x+b.w),vg=vs>0?b.y-(a.y+a.h):a.y-(b.y+b.h);h=hg>=vg}
+ else if(hs)h=true;else if(vs)h=false;
+ else{var ox=Math.min(a.x+a.w,b.x+b.w)-Math.max(a.x,b.x),oy=Math.min(a.y+a.h,b.y+b.h)-Math.max(a.y,b.y);h=ox<=oy}
+ return h?[hs||((b.x+b.x+b.w)>=(a.x+a.x+a.w)?1:-1),0]:[0,vs||((b.y+b.y+b.h)>=(a.y+a.y+a.h)?1:-1)]}
 function sidePt(n,d){return[n.x+n.w*(d[0]>0?1:d[0]<0?0:.5),n.y+n.h*(d[1]>0?1:d[1]<0?0:.5)]}
 /* retire les points confondus ou alignés (le tracé reste le même) */
 function simplifyPts(P){var o=[P[0]],i;for(i=1;i<P.length-1;i++){var a=o[o.length-1],b=P[i],c=P[i+1];if(Math.hypot(b[0]-a[0],b[1]-a[1])<.5)continue;
@@ -435,13 +438,22 @@ function lineLen(G){var c=lineCum(G);return Math.max(c[c.length-1],1)}
 function lineAt(G,t){var P=G.pts,c=lineCum(G),d=Math.max(0,Math.min(1,t))*c[c.length-1],k=1;while(k<P.length-1&&c[k]<d)k++;var sg=(c[k]-c[k-1])||1,u=(d-c[k-1])/sg;return[P[k-1][0]+(P[k][0]-P[k-1][0])*u,P[k-1][1]+(P[k][1]-P[k-1][1])*u]}
 /* taille du triangle de la pointe : 6 à 15 px, plus petit quand la place manque entre les deux bulles */
 function headLen(l,a){return a>0?Math.max(6,Math.min(15,a*(l.a===2?.3:.45))):15}
+/* tracé à segments droits dont les coins sont arrondis (rayon 14 px au plus, réduit si les segments sont courts) ; les tronçons du début et de la fin restent droits */
+function roundPath(P,R){var n=P.length,d="M"+P[0][0]+","+P[0][1],pts=[P[0]],i,k;
+ for(i=1;i<n-1;i++){var a=P[i-1],b=P[i],c=P[i+1],l1=Math.hypot(b[0]-a[0],b[1]-a[1]),l2=Math.hypot(c[0]-b[0],c[1]-b[1]);if(l1<1e-6||l2<1e-6)continue;
+  var rr=Math.min(R,i===1?l1:l1/2,i===n-2?l2:l2/2),A=[b[0]-(b[0]-a[0])/l1*rr,b[1]-(b[1]-a[1])/l1*rr],B=[b[0]+(c[0]-b[0])/l2*rr,b[1]+(c[1]-b[1])/l2*rr];
+  d+=" L"+A[0]+","+A[1]+" Q"+b[0]+","+b[1]+" "+B[0]+","+B[1];pts.push(A);
+  for(k=1;k<6;k++){var t=k/6,u=1-t;pts.push([u*u*A[0]+2*u*t*b[0]+t*t*B[0],u*u*A[1]+2*u*t*b[1]+t*t*B[1]])}
+  pts.push(B)}
+ var e=P[n-1];d+=" L"+e[0]+","+e[1];pts.push(e);return{d:d,pts:pts}}
 /* trait de la flèche : il s'arrête avant le(s) triangle(s) de pointe */
 function shaft(G,l){var P=G.pts.map(function(p){return p.slice()}),n=P.length,p1=P[0],p2=P[n-1];
  function seg(i,j){var x=P[j][0]-P[i][0],y=P[j][1]-P[i][1],L=Math.hypot(x,y);return{L:L,u:L<2?null:[x/L,y/L]}}
  function hl(L){return n===2?headLen(l,L):Math.max(5,Math.min(15,L*.6))}
  var f=seg(0,1),e=seg(n-2,n-1),d2=(l.a!==0&&e.u)?e.u:null,d1=(l.a===2&&f.u)?[-f.u[0],-f.u[1]]:null,H1=d1?hl(f.L):0,H2=d2?hl(e.L):0;
  if(d1)P[0]=[p1[0]+f.u[0]*H1,p1[1]+f.u[1]*H1];if(d2)P[n-1]=[p2[0]-e.u[0]*H2,p2[1]-e.u[1]*H2];
- return{h1:H1,h2:H2,g:{pts:P,p1:P[0],p2:P[n-1],mid:G.mid},d:"M"+P.map(function(q){return q[0]+","+q[1]}).join(" L"),d1:d1,d2:d2}}
+ var rp=roundPath(P,14);
+ return{h1:H1,h2:H2,g:{pts:rp.pts,p1:P[0],p2:P[n-1],mid:G.mid},d:rp.d,d1:d1,d2:d2}}
 /* ---------- effet d'électricité ----------
    Bulle sélectionnée : l'électricité remonte, dans le sens des flèches, depuis toutes les bulles
    qui l'alimentent (jusqu'aux bulles de départ) ; sur les flèches qui en partent, un seul cran.
