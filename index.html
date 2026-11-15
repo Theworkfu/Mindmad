@@ -891,11 +891,16 @@ function editGroupTitle(gid){closeCtx();if(!cur().nodes.some(function(n){return 
  $("ed").classList.add("on");t.focus();t.select()}
 $("edt").addEventListener("keydown",function(e){if(edGroup&&e.key==="Enter"){e.preventDefault();closeEd()}});
 function ungroupGroup(gid){var c=0;cur().nodes.forEach(function(n){if(n.grp===gid){delete n.grp;c++}});if(c){if(cur().gt)delete cur().gt[gid];save();draw();toast("Groupe défait.")}}
-function grpMenu(gid,pt){return[{icon:"✎",label:grpTitle(gid)?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(gid)}},{icon:"ungroup",label:"Dégrouper",fn:function(){ungroupGroup(gid)}},"-"].concat(bgMenu(pt))}
+function grpMenu(gid,pt){return[{icon:"✎",label:grpTitle(gid)?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(gid)}},{icon:"ungroup",label:"Dégrouper tout le groupe",fn:function(){ungroupGroup(gid)}},"-"].concat(bgMenu(pt))}
 function groupSel(){var ids=selIds().filter(function(i){return getN(i)});if(!ids.length){toast("Sélectionnez d’abord une ou plusieurs bulles.");return}
  var g=uid();ids.forEach(function(i){getN(i).grp=g});save();draw();toast(ids.length>1?ids.length+" bulles regroupées.":"Groupe créé.")}
-function ungroupSel(){var gs={};selIds().forEach(function(i){var n=getN(i);if(n&&n.grp)gs[n.grp]=1});var c=0;
- cur().nodes.forEach(function(n){if(n.grp&&gs[n.grp]){delete n.grp;c++}});if(c){Object.keys(gs).forEach(function(g){if(cur().gt)delete cur().gt[g]});save();draw();toast("Groupe défait.")}}
+/* fait sortir de leur groupe uniquement ces bulles ; les autres bulles du groupe restent ensemble (et gardent son titre).
+   Une bulle sortie qui se retrouverait à l'intérieur du cadre du groupe est repoussée juste à l'extérieur. */
+function ungroupNodes(list){var gs={},out=[],m=cur();list.forEach(function(n){if(n&&n.grp){gs[n.grp]=1;delete n.grp;out.push(n)}});if(!out.length)return;
+ out.forEach(function(n){if(inZone(n))unover(n)});
+ if(m.gt){Object.keys(gs).forEach(function(g){if(!m.nodes.some(function(n){return n.grp===g}))delete m.gt[g]});if(!Object.keys(m.gt).length)delete m.gt}
+ save();draw();syncPanel();toast(out.length>1?out.length+" bulles sorties du groupe.":"Bulle sortie du groupe.")}
+function ungroupSel(){ungroupNodes(selIds().map(getN))}
 function showTip(elm,txt){var tip=$("tip");tip.textContent=txt;tip.style.display="block";var r=elm.getBoundingClientRect(),w=tip.offsetWidth,h=tip.offsetHeight,x=r.left+r.width/2-w/2,y=r.top-h-8;if(y<8)y=r.bottom+8;x=Math.max(8,Math.min(x,window.innerWidth-w-8));tip.style.left=x+"px";tip.style.top=y+"px"}
 function hideTip(){$("tip").style.display="none"}
 function openNote(id){var n=getN(id);if(!n)return;ntId=id;hideTip();$("ntTitle").textContent="Note de « "+nodeName(id)+" »";var t=$("ntt");t.value=n.note||"";$("nt").classList.add("on");t.focus();t.setSelectionRange(t.value.length,t.value.length)}
@@ -984,8 +989,8 @@ function nodeMenu(n){var ids=selIds(),multi=ids.length>1&&ids.indexOf(n.id)>=0,a
  if(n.img||(multi&&ids.some(function(i){var x=getN(i);return x&&x.img})))it.splice(2,0,{icon:"🖼",label:multi?"Retirer les images":"Retirer l’image",fn:function(){var l=multi?ids.map(getN):[n];removeImgNodes(l)}});
  if(multi){var gs1={};ids.forEach(function(i){var x=getN(i);if(x&&x.grp)gs1[x.grp]=1});var g1=Object.keys(gs1);
   if(g1.length===1)it.push({icon:"✎",label:grpTitle(g1[0])?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(g1[0])}});
-  it.push({icon:"group",label:"Regrouper les bulles",fn:groupSel});if(anyG)it.push({icon:"ungroup",label:"Dégrouper",fn:ungroupSel})}
- else if(n.grp)it.push({icon:"✎",label:grpTitle(n.grp)?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(n.grp)}},{icon:"ungroup",label:"Dégrouper",fn:function(){ungroupGroup(n.grp)}});
+  it.push({icon:"group",label:"Regrouper les bulles",fn:groupSel});if(anyG)it.push({icon:"ungroup",label:"Dégrouper la sélection",fn:ungroupSel})}
+ else if(n.grp)it.push({icon:"✎",label:grpTitle(n.grp)?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(n.grp)}},{icon:"ungroup",label:"Dégrouper cette bulle",fn:function(){ungroupNodes([n])}},{icon:"ungroup",label:"Dégrouper tout le groupe",fn:function(){ungroupGroup(n.grp)}});
  else it.push({icon:"group",label:"Créer un groupe",fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}groupSel()}});
  it.push("-",{icon:"🗑",label:"Supprimer la bulle",danger:true,fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}rm()}});
  return it}
@@ -1016,7 +1021,7 @@ function endSelMode(){selMode=false;if(sg){clearTimeout(sg.t);sg=null}$("cv").cl
 function startMove(){if(!selIds().length)return;moveMode=true;$("cv").classList.add("movemode");toast("Faites glisser n’importe où pour déplacer les bulles sélectionnées.")}
 function selActionMenu(){var ids=selIds(),any=ids.some(function(i){var n=getN(i);return n&&n.grp});
  var it=[{icon:"⧉",label:"Copier",fn:copyAct},{icon:"✂",label:"Couper",fn:cutAct},{icon:"move",label:"Déplacer",fn:startMove},{icon:"group",label:"Regrouper",fn:groupSel}];
- if(any)it.push({icon:"ungroup",label:"Dégrouper",fn:ungroupSel});return it}
+ if(any)it.push({icon:"ungroup",label:"Dégrouper la sélection",fn:ungroupSel});return it}
 function pip(p,poly){var inside=false,i,j;for(i=0,j=poly.length-1;i<poly.length;j=i++){var xi=poly[i][0],yi=poly[i][1],xj=poly[j][0],yj=poly[j][1];
  if(((yi>p[1])!==(yj>p[1]))&&(p[0]<(xj-xi)*(p[1]-yi)/(yj-yi)+xi))inside=!inside}return inside}
 function drawSel(){var r=$("selrect"),p=$("selpath"),sr=$("stage").getBoundingClientRect();
