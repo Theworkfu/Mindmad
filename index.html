@@ -425,17 +425,22 @@ function sideRoute(a,b,n1,n2,O,strict){var q1=sidePt(a,n1),q2=sidePt(b,n2),opp=n
    if(path===undefined){path=detour(s1,s2,R);if(++LCN>500){LCACHE={};LCN=1}LCACHE[key]=path||false}
    if(path)mid=path;else{ok=false;if(strict)return null}}}
  var P=simplifyPts([q1,s1].concat(mid,[s2,q2]));return{pts:P,ok:ok,len:plen(P)}}
-function linkGeom(l,a,b){var f=facing(a,b),n2=[-f[0],-f[1]],O=[],G,x0=Math.min(a.x,b.x)-150,x1=Math.max(a.x+a.w,b.x+b.w)+150,y0=Math.min(a.y,b.y)-150,y1=Math.max(a.y+a.h,b.y+b.h)+150;
- cur().nodes.forEach(function(n){if(n===a||n===b||CI.hid[n.id])return;var r=padRect(n);if(r.x2<x0||r.x>x1||r.y2<y0||r.y>y1)return;O.push(r)});
- var r=sideRoute(a,b,f,n2,O,false),P=r.pts,dd=Math.hypot(P[P.length-1][0]-P[0][0],P[P.length-1][1]-P[0][1]);
- /* les côtés qui se font face sont le choix par défaut ; on essaie les autres côtés des deux bulles seulement si ce tracé touche une bulle
+function linkGeom(l,a,b){var f=facing(a,b),n2=[-f[0],-f[1]],Ob=[],Of=[],G,x0=Math.min(a.x,b.x)-150,x1=Math.max(a.x+a.w,b.x+b.w)+150,y0=Math.min(a.y,b.y)-150,y1=Math.max(a.y+a.h,b.y+b.h)+150;
+ /* obstacles : les autres bulles (Ob), et les cadres des groupes que la flèche ne relie pas (Of) — le cadre d'un groupe auquel appartient l'une des deux bulles reste franchissable */
+ cur().nodes.forEach(function(n){if(n===a||n===b||CI.hid[n.id])return;if(n.grp&&n.grp!==a.grp&&n.grp!==b.grp)return;var r=padRect(n);if(r.x2<x0||r.x>x1||r.y2<y0||r.y>y1)return;Ob.push(r)});
+ grpRects().forEach(function(q){if(q.g===a.grp||q.g===b.grp)return;var r={x:q.x-LPAD,y:q.y-LPAD,x2:q.x+q.w+LPAD,y2:q.y+q.h+LPAD};if(r.x2<x0||r.x>x1||r.y2<y0||r.y>y1)return;Of.push(r)});
+ /* les côtés qui se font face sont le choix par défaut ; on essaie les autres côtés des deux bulles seulement si ce tracé touche un obstacle
     ou s'il fait un grand détour (plus de 1,6 fois la distance directe), et on garde le plus court tracé dégagé (un changement de côté coûte 90 px par extrémité) */
- if(!r.ok||r.len>1.6*dd+40){
-  var key=[a.x,a.y,a.w,a.h,b.x,b.y,b.w,b.h].join(",")+"#"+O.map(function(o){return[o.x,o.y,o.x2,o.y2].join(",")}).join(";"),ch=SCACHE[key];
-  if(ch===undefined){var best=null;DIRS.forEach(function(d1){DIRS.forEach(function(d2){if(d1[0]===f[0]&&d1[1]===f[1]&&d2[0]===n2[0]&&d2[1]===n2[1])return;var c=sideRoute(a,b,d1,d2,O,true);if(c){c.sc=c.len+((d1[0]===f[0]&&d1[1]===f[1])?0:90)+((d2[0]===n2[0]&&d2[1]===n2[1])?0:90);if(!best||c.sc<best.sc)best=c}});});
-   ch=(best&&(!r.ok||best.sc<r.len))?best.pts:false;if(++SCN>500){SCACHE={};SCN=1}SCACHE[key]=ch}
-  if(ch)P=ch}
- G={pts:P};G.p1=P[0];G.p2=P[P.length-1];G.mid=lineAt(G,.5);return G}
+ function attempt(O){var r=sideRoute(a,b,f,n2,O,false),P=r.pts,okk=r.ok,dd=Math.hypot(P[P.length-1][0]-P[0][0],P[P.length-1][1]-P[0][1]);
+  if(!r.ok||r.len>1.6*dd+40){
+   var key=[a.x,a.y,a.w,a.h,b.x,b.y,b.w,b.h].join(",")+"#"+O.map(function(o){return[o.x,o.y,o.x2,o.y2].join(",")}).join(";"),ch=SCACHE[key];
+   if(ch===undefined){var best=null;DIRS.forEach(function(d1){DIRS.forEach(function(d2){if(d1[0]===f[0]&&d1[1]===f[1]&&d2[0]===n2[0]&&d2[1]===n2[1])return;var c=sideRoute(a,b,d1,d2,O,true);if(c){c.sc=c.len+((d1[0]===f[0]&&d1[1]===f[1])?0:90)+((d2[0]===n2[0]&&d2[1]===n2[1])?0:90);if(!best||c.sc<best.sc)best=c}});});
+    ch=(best&&(!r.ok||best.sc<r.len))?best.pts:false;if(++SCN>500){SCACHE={};SCN=1}SCACHE[key]=ch}
+   if(ch){P=ch;okk=true}}
+  return{P:P,ok:okk}}
+ /* éviter les cadres est prioritaire ; si aucun trajet ne les évite, on évite au moins les bulles */
+ var res=attempt(Ob.concat(Of));if(!res.ok&&Of.length)res=attempt(Ob);
+ var P=res.P;G={pts:P};G.p1=P[0];G.p2=P[P.length-1];G.mid=lineAt(G,.5);return G}
 function lineCum(G){if(!G.cum){var c=[0],P=G.pts,i;for(i=1;i<P.length;i++)c[i]=c[i-1]+Math.hypot(P[i][0]-P[i-1][0],P[i][1]-P[i-1][1]);G.cum=c}return G.cum}
 function lineLen(G){var c=lineCum(G);return Math.max(c[c.length-1],1)}
 /* point situé à la fraction t (0..1) de la longueur du tracé */
