@@ -891,7 +891,7 @@ function editGroupTitle(gid){closeCtx();if(!cur().nodes.some(function(n){return 
  $("ed").classList.add("on");t.focus();t.select()}
 $("edt").addEventListener("keydown",function(e){if(edGroup&&e.key==="Enter"){e.preventDefault();closeEd()}});
 function ungroupGroup(gid){var c=0;cur().nodes.forEach(function(n){if(n.grp===gid){delete n.grp;c++}});if(c){if(cur().gt)delete cur().gt[gid];save();draw();toast("Groupe défait.")}}
-function grpMenu(gid,pt){return[{icon:"✎",label:grpTitle(gid)?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(gid)}},{icon:"ungroup",label:"Dégrouper tout le groupe",fn:function(){ungroupGroup(gid)}},"-"].concat(bgMenu(pt))}
+function grpMenu(gid,pt){return[{icon:"✎",label:grpTitle(gid)?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(gid)}},{icon:"ungroup",label:"Dégrouper tout le groupe",fn:function(){ungroupGroup(gid)}},"-"].concat(bgMenu(pt,false))}
 function groupSel(){var ids=selIds().filter(function(i){return getN(i)});if(!ids.length){toast("Sélectionnez d’abord une ou plusieurs bulles.");return}
  var g=uid();ids.forEach(function(i){getN(i).grp=g});save();draw();toast(ids.length>1?ids.length+" bulles regroupées.":"Groupe créé.")}
 /* fait sortir de leur groupe uniquement ces bulles ; les autres bulles du groupe restent ensemble (et gardent son titre).
@@ -1005,12 +1005,13 @@ function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
  it.push("-");
  it.push({icon:"🗑",label:"Supprimer le lien",danger:true,fn:function(){removeLink(l.id)}});
  return it}
-function bgMenu(pt){var it=[{icon:"bulle",label:"Nouvelle bulle ici",fn:function(){addBubble(pt)}}];
+/* menu du fond ; withMap : entrées qui concernent la carte entière (recentrer, exporter, supprimer), seulement pour un clic droit dans le vide quand rien n'est sélectionné */
+function bgMenu(pt,withMap){var it=[{icon:"bulle",label:"Nouvelle bulle ici",fn:function(){addBubble(pt)}}];
  if(CLIP&&CLIP.nodes.length)it.push({icon:"📥",label:CLIP.nodes.length>1?"Coller les bulles ici":"Coller la bulle ici",fn:function(){pasteClip(pt)}});
  it.push({icon:"sel",label:"Sélectionner plusieurs bulles",fn:startSelMode});
  if(selIds().length>1)it.push({icon:"⧉",label:"Copier la sélection",fn:copyAct},{icon:"✂",label:"Couper la sélection",fn:cutAct},{icon:"group",label:"Regrouper la sélection",fn:groupSel});
  else if(selIds().length===1&&getN(selIds()[0]))it.push({icon:"group",label:"Créer un groupe avec la bulle sélectionnée",fn:groupSel});
- it.push("-",
+ if(withMap)it.push("-",
   {icon:"⌖",label:"Recentrer la vue",fn:fit},
   {icon:"⤓",label:"Exporter la carte",fn:exportAct},
   "-",
@@ -1056,7 +1057,7 @@ function openCtxFor(t,cx,cy){if(linkFrom)endLink();
  if(nd){var id=nd.getAttribute("data-id");if(sel!==id||selLink){sel=id;selLink=null;draw();syncPanel()}var n=getN(id);if(!n)return;items=nodeMenu(n)}
  else if(lk){var lid=lk.getAttribute("data-id"),l=(cur().links||[]).filter(function(x){return x.id===lid})[0];if(!l)return;if(selLink!==lid||sel){selLink=lid;sel=null;draw();syncPanel()}items=linkMenu(l)}
  else if(gp)items=grpMenu(gp.getAttribute("data-g"),toWorld({clientX:cx,clientY:cy}));
- else items=bgMenu(toWorld({clientX:cx,clientY:cy}));
+ else items=bgMenu(toWorld({clientX:cx,clientY:cy}),!selIds().length&&!selLink);
  lastCtxT=Date.now();showCtx(cx,cy,items)}
 cv.addEventListener("contextmenu",function(e){e.preventDefault();openCtxFor(e.target,e.clientX,e.clientY)});
 cv.addEventListener("pointermove",function(e){lastPt=toWorld(e)});cv.addEventListener("pointerleave",function(){lastPt=null});
