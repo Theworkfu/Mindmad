@@ -178,7 +178,7 @@ button:disabled{opacity:.4;cursor:default}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v40</div>
+    <div id="ver" title="Numéro de version de la page">v42</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -876,8 +876,8 @@ function sortedMaps(){return maps.map(function(m,i){return{m:m,i:i}}).sort(funct
  if(SORT==="mod")return((b.m.mod||0)-(a.m.mod||0))||(a.i-b.i);
  return((USED[b.m.id]||0)-(USED[a.m.id]||0))||(a.i-b.i)}).map(function(o){return o.m})}
 function mainMenu(){var it=[{icon:"＋",label:"Nouvelle carte…",fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
-  {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true,title:"Vos cartes · clic droit : dupliquer, supprimer"}];
- sortedMaps().forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
+  {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true}];
+ sortedMaps().forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
   rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;showSub(br?mr.right+6:x,br?br.top:y,[{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id)}},{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}}])}})});return it}
 /* la liste des cartes du menu principal est reconstruite si le menu est encore ouvert (après une suppression) */
 function refreshMainMenu(){if(!ctxOpen())return;var x=parseFloat(ctxEl.style.left)||6,y=parseFloat(ctxEl.style.top)||6,st=ctxEl.scrollTop;showCtx(x,y,mainMenu());ctxEl.scrollTop=st}
@@ -885,8 +885,9 @@ $("fabM").onclick=function(){if(ctxSkip==="fabM"&&Date.now()-ctxSkipT<700){ctxSk
 $("fabC").onclick=function(){$("side").classList.toggle("on");$("help").classList.remove("on")};
 $("fabH").onclick=function(){$("help").classList.toggle("on");$("side").classList.remove("on")};
 document.addEventListener("pointerdown",function(e){var t=e.target;if(!t||!t.closest)return;
- if($("side").classList.contains("on")&&!t.closest("#side,#fabC"))$("side").classList.remove("on");
- if($("help").classList.contains("on")&&!t.closest("#help,#fabH"))$("help").classList.remove("on")},true);
+ if(!t.closest("#cv"))return;/* le panneau de droite et l'aide ne se ferment que par un clic dans la carte */
+ if($("side").classList.contains("on"))$("side").classList.remove("on");
+ if($("help").classList.contains("on"))$("help").classList.remove("on")},true);
 function newMapAct(){var t=prompt("Titre de la carte :","Votre carte");if(!t)return;var m=newMap(t);leaveMap();maps.push(m);curId=m.id;sel=m.nodes[0].id;save();refreshMaps();draw();syncPanel();fit()}
 function delMapAct(){delMapById(curId)}
 /* met une carte (la carte courante ou une autre) à la corbeille, après confirmation */
@@ -1063,13 +1064,13 @@ function renderCtx(el,x,y,items,anc){var shut=el===ctxEl?closeCtx:closeSub;el.in
   if(it.colors){var row=document.createElement("div");row.className="cx-sw";
    COLORS.forEach(function(c,i){var b=document.createElement("button");b.className="cx-c"+(i===it.cur?" on":"");b.style.background=c;b.title="Couleur "+(i+1);b.setAttribute("role","menuitem");b.onclick=function(){shut();it.fn(i)};row.appendChild(b)});
    el.appendChild(row);return}
-  if(it.sortbar){var hd0=document.createElement("div");hd0.className="cx-h";hd0.textContent=it.title||"";el.appendChild(hd0);
+  if(it.sortbar){if(it.title){var hd0=document.createElement("div");hd0.className="cx-h";hd0.textContent=it.title;el.appendChild(hd0)}
    var sr=document.createElement("div");sr.className="cx-sort";
    [["use","Utilisation"],["mod","Modification"],["az","A → Z"]].forEach(function(o){var cb=document.createElement("button");cb.textContent=o[1];cb.title="Trier par "+SORTN[o[0]];cb.className=SORT===o[0]?"on":"";cb.setAttribute("role","menuitem");cb.onclick=function(){shut();setSort(o[0])};sr.appendChild(cb)});
    el.appendChild(sr);return}
   var b=document.createElement("button");b.setAttribute("role","menuitem");if(it.danger)b.className="danger";
   var ic=document.createElement("span");ic.className="cx-i";if(ICONS[it.icon])ic.innerHTML=ICONS[it.icon];else ic.textContent=it.icon||"";var tx=document.createElement("span");if(it.sk!=null)strikeHtml(tx,it.sk);else tx.textContent=it.label;
-  b.appendChild(ic);b.appendChild(tx);b.onclick=function(){shut();it.fn()};
+  b.appendChild(ic);b.appendChild(tx);b.onclick=function(){if(it.keep){it.fn();refreshMainMenu()}else{shut();it.fn()}};/* keep : le menu reste ouvert (il se referme par un clic dans la carte) */
   if(it.rc){b.addEventListener("contextmenu",function(e){e.preventDefault();e.stopPropagation();it.rc(e.clientX,e.clientY,b)})}
   if(it.mid){b.addEventListener("mousedown",function(e){if(e.button===1)e.preventDefault()});b.addEventListener("auxclick",function(e){if(e.button===1){e.preventDefault();shut();it.mid()}})}
   el.appendChild(b)});
@@ -1194,8 +1195,10 @@ ctxEl.addEventListener("keydown",function(e){var bs=[].slice.call(ctxEl.querySel
  if(e.key==="ArrowDown"){e.preventDefault();bs[(i+1)%bs.length].focus()}
  else if(e.key==="ArrowUp"){e.preventDefault();bs[(i<=0?bs.length:i)-1].focus()}
  else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();closeCtx()}});
-document.addEventListener("pointerdown",function(e){if(ctx2El.classList.contains("on")&&!e.target.closest("#ctx2"))closeSub();
- if(ctxOpen()&&!e.target.closest("#ctx,#ctx2")){var fb=e.target.closest&&e.target.closest("#fabM,#fabT");ctxSkip=fb?fb.id:null;ctxSkipT=Date.now();closeCtx()}},true);
+document.addEventListener("pointerdown",function(e){if(!e.target.closest)return;
+ /* les menus ne se ferment que par un clic dans la carte (fond, bulle, flèche, groupe) ; les boutons ☰ et ⋯ gardent leur rôle d'ouverture/fermeture */
+ if(ctx2El.classList.contains("on")&&!e.target.closest("#ctx2")&&e.target.closest("#cv,#fabM,#fabT,#ctx"))closeSub();
+ if(ctxOpen()&&!e.target.closest("#ctx,#ctx2")&&e.target.closest("#cv,#fabM,#fabT")){var fb=e.target.closest&&e.target.closest("#fabM,#fabT");ctxSkip=fb?fb.id:null;ctxSkipT=Date.now();closeCtx()}},true);
 var blurIgnoreUntil=0;/* la boîte de confirmation du navigateur fait perdre le focus à la fenêtre : on ne ferme pas les menus pour autant */
 window.addEventListener("blur",function(){if(Date.now()<blurIgnoreUntil)return;closeCtx()});window.addEventListener("resize",closeCtx);
 window.addEventListener("wheel",function(e){if(ctxOpen()&&!(e.target.closest&&e.target.closest("#ctx,#ctx2")))closeCtx()},{passive:true});
