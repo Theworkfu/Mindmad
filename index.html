@@ -155,7 +155,7 @@ button:disabled{opacity:.4;cursor:default}
 .tog{cursor:pointer}
 .node .tog circle{fill:var(--panel);stroke:var(--accent);stroke-width:1.8}
 .node .tog.col circle{fill:var(--accent)}
-.node .tog text{fill:var(--accent-ink);font-size:11px;font-weight:700;text-anchor:middle;pointer-events:none}
+.node .tog text{fill:var(--accent-ink);font-size:10px;font-weight:700;text-anchor:middle;pointer-events:none}
 .node .tog path{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;pointer-events:none}
 .node .tog.open{opacity:0}.node:hover .tog.open,.node.sel .tog.open{opacity:1}
 .ec{pointer-events:none}.ec.g{fill:#35c3ff;opacity:.3}.ec.t{fill:#35c3ff}.ec.c{fill:#fff;stroke:#35c3ff;stroke-width:1.4}
@@ -391,8 +391,8 @@ function draw(){
    nb.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;sel=n.id;selLink=null;draw();syncPanel();openNote(n.id)})}
   if(CI.out[n.id]){var tg=el("g",{"class":"tog "+(n.col?"col":"open"),transform:"translate("+(n.w/2)+","+n.h+")"},g);
    el("title",{},tg).textContent=n.col?"Déplier les bulles de destination":"Replier les bulles de destination";
-   el("circle",{r:n.col?11:8},tg);if(n.col)el("text",{y:4},tg).textContent=CI.cnt[n.id];else el("path",{d:"M-3.5,0 H3.5"},tg);
-   tg.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault()});tg.addEventListener("dblclick",function(e){e.stopPropagation()});
+   el("circle",{r:n.col?9.5:7},tg);if(n.col)el("text",{y:3.5},tg).textContent=CI.cnt[n.id];else el("path",{d:"M-3,0 H3"},tg);
+   tg.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault();if(e.button===1)toggleCol(n.id)});tg.addEventListener("dblclick",function(e){e.stopPropagation()});
    tg.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;toggleCol(n.id)})}
   if(n.id===sel&&!multi){var lh=el("g",{"class":"lhandle",transform:"translate("+(n.w+2)+","+(n.h/2)+")"},g);
    el("title",{},lh).textContent="Glisser vers une autre bulle pour les relier, ou vers le vide pour créer une bulle reliée";
@@ -1069,7 +1069,7 @@ function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
  it.push({icon:"🗑",label:"Supprimer le lien",danger:true,fn:function(){removeLink(l.id)}});
  return it}
 /* menu du fond ; withMap : entrées qui concernent la carte entière (recentrer, exporter, supprimer), seulement pour un clic droit dans le vide quand rien n'est sélectionné */
-function bgMenu(pt,withMap){var it=[{icon:"bulle",label:"Nouvelle bulle ici",fn:function(){addBubble(pt)}}];
+function bgMenu(pt,withMap){var it=[];if(!selIds().length&&!selLink)it.push({icon:"bulle",label:"Nouvelle bulle ici",fn:function(){addBubble(pt)}});
  if(CLIP&&CLIP.nodes.length)it.push({icon:"📥",label:CLIP.nodes.length>1?"Coller les bulles ici":"Coller la bulle ici",fn:function(){pasteClip(pt)}});
  it.push({icon:"sel",label:"Sélectionner plusieurs bulles",fn:startSelMode});
  if(selIds().length>1)it.push({icon:"⧉",label:"Copier la sélection",fn:copyAct},{icon:"✂",label:"Couper la sélection",fn:cutAct},{icon:"group",label:"Regrouper la sélection",fn:groupSel});
