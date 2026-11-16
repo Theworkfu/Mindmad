@@ -178,7 +178,7 @@ button:disabled{opacity:.4;cursor:default}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v39</div>
+    <div id="ver" title="Numéro de version de la page">v40</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -698,6 +698,12 @@ var lsOk=true;try{localStorage.setItem("mm_t","1");localStorage.removeItem("mm_t
 var remoteSha=null,pushTimer=null,dirty=false;
 /* état de chaque carte lors de la dernière synchronisation réussie : permet de distinguer « modifiée seulement ailleurs » de « modifiée des deux côtés » */
 var BASE=store.get("mm_base",null);
+/* dates d'ouverture des cartes (tri « utilisation ») : partagées entre appareils, la plus récente l'emporte */
+function usedNow(){var o={};if(USED)maps.forEach(function(m){if(USED[m.id])o[m.id]=USED[m.id]});return o}
+function mergeUsed(r){r=r||{};if(!USED)USED={};var ch=false,up=false;
+ Object.keys(r).forEach(function(id){var v=+r[id]||0;if(v>(USED[id]||0)){USED[id]=v;ch=true}});
+ Object.keys(USED).forEach(function(id){if((USED[id]||0)>(+r[id]||0)&&maps.some(function(m){return m.id===id}))up=true});
+ if(ch){try{localStorage.setItem("mm_used",JSON.stringify(USED))}catch(e){}refreshMainMenu()}return up}
 function curBase(){var b={};maps.forEach(function(m){b[m.id]=hashStr(snap(m))});return b}
 function setBase(b){BASE=b;store.set("mm_base",b)}
 var SYNCST="";
@@ -716,7 +722,7 @@ function utf8b64(str){var b=new TextEncoder().encode(str),bin="";for(var i=0;i<b
 function getMeta(){return api(mapsPath()).then(function(r){if(r.status===404){remoteSha=null;return null}if(!r.ok)throw new Error(r.status===401?"jeton refusé":"erreur "+r.status);return r.json().then(function(j){remoteSha=j.sha;return j})})}
 function pull(){return getMeta().then(function(meta){if(!meta)return null;return api(mapsPath(),{headers:{Accept:"application/vnd.github.raw+json"}}).then(function(r){if(!r.ok)throw new Error("lecture impossible");return r.json().then(function(j){if(j&&j.maps)normNames(j.maps);if(j&&j.trash)normNames(j.trash);return j})})})}
 function push(){
- function put(){var nb=curBase();var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps,trash:trash});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha;setBase(nb)})})}
+ function put(){var nb=curBase();var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps,trash:trash,used:usedNow()});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha;setBase(nb)})})}
  return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps)mergeSync(rem,rem.updated||0);return put()})}throw e})}
 function hasContent(){return maps.some(function(m){return m.nodes.length>1||m.links.length||m.nodes.some(function(n){return n.img||n.note||(n.t&&n.t!=="Ma carte"&&n.t!=="Votre carte"&&n.t!=="Idée centrale")})})}
 function useMaps(list,upd,msg,tr){normNames(list);maps=list;if(tr!==undefined){trash=tr||[];purgeTrash()}resetHist();curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",upd);setBase(curBase());refreshMaps();draw();syncPanel();fit();setSync(msg)}
@@ -724,7 +730,7 @@ function stamp(){return "à "+new Date().toLocaleTimeString("fr-FR")}
 function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHub…");
  enqueue(function(){return pull().then(function(rem){
   if(!rem||!rem.maps||!rem.maps.length){if(!+store.get("mm_upd",0))store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
-  if(!hasContent()){useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.",rem.trash);return}
+  if(!hasContent()){mergeUsed(rem.used),useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.",rem.trash);return}
   var r=mergeSync(rem,rem.updated||0);
   if(!r.rc)setBase(curBase());
   if(r.rc)return push().then(function(){setSync("Cartes synchronisées "+stamp()+".")});
@@ -735,6 +741,7 @@ function mergeSync(rem,ru){var lc=false,rc=false,cf=0,loc=+store.get("mm_upd",0)
  rt.forEach(function(t){var l=maps.filter(function(m){return m.id===t.id})[0];
   if(l&&(t.deletedAt||0)>(l.mod||0)){maps=maps.filter(function(m){return m!==l});if(!inTrash(t.id))trash.push(t);lc=true}});
  mergeTrash(rt);
+ var upU=mergeUsed(rem.used);
  maps.forEach(function(m){byId[m.id]=m});
  (rem.maps||[]).forEach(function(r){rid[r.id]=1;var l=byId[r.id];
   if(!l){if(!inTrash(r.id)){maps.push(r);lc=true}
@@ -748,12 +755,12 @@ function mergeSync(rem,ru){var lc=false,rc=false,cf=0,loc=+store.get("mm_upd",0)
     if(rw){maps[maps.indexOf(l)]=r;byId[r.id]=r;lc=true}else rc=true;
     if(BASE){var cp=JSON.parse(JSON.stringify(lo));delete cp._h;cp.id="c"+r.id+"_"+(hashStr(snap(lo))>>>0).toString(36);
      var ti=cp.title||"Votre carte";cp.title=/\(autre appareil\)\s*$/.test(ti)?ti:ti+" (autre appareil)";
-     if(!byId[cp.id]&&!inTrash(cp.id)){maps.splice(maps.indexOf(byId[r.id])+1,0,cp);byId[cp.id]=cp;lc=true;rc=true;cf++}}}}});
+     if(!byId[cp.id]&&!inTrash(cp.id)){maps.splice(maps.indexOf(byId[r.id])+1,0,cp);byId[cp.id]=cp;lc=true;rc=true;cf++}}}}else{var lm=l.mod||0,rm=r.mod||0;if(rm>lm){l.mod=rm;lc=true}else if(lm>rm)rc=true}});
  if(maps.some(function(m){return!rid[m.id]})||trash.some(function(t){return!rt.some(function(x){return x.id===t.id})}))rc=true;
  if(!maps.length)maps.push(newMap());
  if(cf)toast(cf>1?cf+" cartes ont été modifiées sur deux appareils : l’autre version de chacune est conservée avec la mention « (autre appareil) ».":"Une carte a été modifiée sur deux appareils : l’autre version est conservée avec la mention « (autre appareil) ».");
  if(lc){normNames(maps);if(!maps.some(function(m){return m.id===curId}))curId=maps[0].id;resetHist();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",Math.max(loc,ru||0));refreshMaps();draw();syncPanel()}
- return{lc:lc,rc:rc,cf:cf}}
+ return{lc:lc,rc:rc||upU,cf:cf}}
 function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".");if(gh.auto&&gh.sync)cleanImages(true)}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
 function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
 function recheck(){if(!document.hidden&&syncOn()&&!dirty)startSync()}
@@ -761,7 +768,7 @@ document.addEventListener("visibilitychange",recheck);window.addEventListener("f
 $("ghSync").onchange=function(){gh.sync=this.checked;store.set("mm_gh",gh);if(gh.sync){if(!ghReady())setSync("Renseignez d’abord le dépôt et le jeton.");else startSync()}else setSync("")};
 $("ghNow").onclick=function(){if(!syncOn()){setSync("Cochez la sauvegarde GitHub et renseignez le jeton.");return}clearTimeout(pushTimer);pushTimer=null;setSync("Envoi…");doPush()};
 $("ghLoad").onclick=function(){if(!ghReady()){setSync("Renseignez d’abord le dépôt et le jeton.");return}if(!confirm("Remplacer les cartes de cet appareil par celles de GitHub ?"))return;
- setSync("Chargement…");enqueue(pull).then(function(rem){if(!rem||!rem.maps||!rem.maps.length){setSync("Aucune sauvegarde trouvée sur GitHub.");return}useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.",rem.trash)}).catch(function(e){setSync("Chargement impossible ("+e.message+").")})};
+ setSync("Chargement…");enqueue(pull).then(function(rem){if(!rem||!rem.maps||!rem.maps.length){setSync("Aucune sauvegarde trouvée sur GitHub.");return}mergeUsed(rem.used),useMaps(rem.maps,rem.updated||Date.now(),"Cartes chargées depuis GitHub.",rem.trash)}).catch(function(e){setSync("Chargement impossible ("+e.message+").")})};
 
 /* ---------- nettoyage des images inutilisées ---------- */
 var IMGRE=/^images\/\d{4}-\d{2}\/[^\/]+\.(png|jpg|gif|webp)$/;
