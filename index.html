@@ -1289,11 +1289,16 @@ window.addEventListener("pointermove",function(e){
   P.setAttribute("d","M"+mk.path.map(function(q){return q[0]+","+q[1]}).join(" L")+" L"+p[0]+","+p[1]);
   var id=nodeAt(e);setHl(id&&id!==mk.from?id:null);return}
  if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
- if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;
+ if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;drag.orig={};cur().nodes.forEach(function(x){drag.orig[x.id]=[x.x,x.y]});
   if(!ms[drag.n.id]){if(drag.shift){var ids0=selIds();if(ids0.indexOf(drag.n.id)<0)ids0.push(drag.n.id);ms={};if(ids0.length>1)ids0.forEach(function(x){ms[x]=1});sel=drag.n.id;syncPanel()}else{ms={};if(drag.group)cur().nodes.forEach(function(x){if(x.grp===drag.group)ms[x.id]=1});if(sel!==drag.n.id){sel=drag.n.id;syncPanel()}}}}
  var grp=ms[drag.n.id]?Object.keys(ms).map(getN).filter(Boolean):[drag.n];
   grp.forEach(function(g){g.x+=ddx/tr.k;g.y+=ddy/tr.k});
+ /* aperçu en direct : les autres bulles s'écartent pendant le glisser. Elles sont recalculées depuis leur position d'origine : elles reviennent si on s'éloigne.
+    Une bulle libre au-dessus d'un cadre de groupe va rejoindre ce groupe au lâcher : pas de poussée dans ce cas. */
+ var mset={};grp.forEach(function(g){mset[g.id]=1});
+ cur().nodes.forEach(function(x){if(!mset[x.id]&&drag.orig&&drag.orig[x.id]){x.x=drag.orig[x.id][0];x.y=drag.orig[x.id][1]}});
  dropG={};grp.forEach(function(g){if(!g.grp){var z=zoneAt(g);if(z)dropG[z.g]=1}});
+ if(!Object.keys(dropG).length)settle(grp.map(function(g){return g.id}));
  drag.x=e.clientX;drag.y=e.clientY;draw()});
 function endDrag(e){
  if(mk){var o=mk;mk=null;var tp=$("tmpl");if(tp)tp.remove();clearHl();
