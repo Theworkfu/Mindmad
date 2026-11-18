@@ -58,6 +58,8 @@ input[type=text],input[type=url],input[type=password],textarea{width:100%;paddin
 .grp{fill:color-mix(in srgb,var(--accent) 7%,transparent);stroke:var(--muted);stroke-width:1.7;stroke-dasharray:7 6;pointer-events:all;cursor:move}
 .grpt{font-size:14px;font-weight:600;fill:var(--ink);opacity:.8;cursor:move;user-select:none;-webkit-user-select:none;pointer-events:all}
 .grp.sel{fill:color-mix(in srgb,var(--accent) 17%,transparent);stroke:var(--accent);stroke-width:3;filter:drop-shadow(0 0 7px var(--accent)) drop-shadow(0 0 2px var(--accent))}
+.ghost{fill:color-mix(in srgb,var(--accent) 14%,transparent);stroke:var(--accent);stroke-width:2;stroke-dasharray:6 5;pointer-events:none}
+.ghost.gf{fill:none;stroke-width:1.7}
 .grp.drop{fill:color-mix(in srgb,var(--accent) 20%,transparent);stroke:var(--accent);stroke-width:2.6}
 svg#cv.selmode,svg#cv.selmode .node{cursor:crosshair}svg#cv.movemode,svg#cv.movemode .node{cursor:move}
 #selov{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:18}
@@ -183,11 +185,11 @@ button:disabled{opacity:.4;cursor:default}
 <body>
 <main>
   <div id="stage">
-    <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="grps"></g><g id="edges"></g><g id="links"></g><g id="zap"></g><g id="nodes"></g><g id="lkh"></g><g id="guides"></g></g></svg>
+    <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="grps"></g><g id="edges"></g><g id="links"></g><g id="zap"></g><g id="ghost"></g><g id="nodes"></g><g id="lkh"></g><g id="guides"></g></g></svg>
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><g fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 31H6V23" stroke="#a02a78"/><path d="M40 14V8H49" stroke="#e8601f"/><path d="M55 30H59V39" stroke="#0e9a8c"/><path d="M24 43V49H9V56" stroke="#e0c81a"/></g><circle cx="6" cy="22" r="2" fill="#a02a78"/><circle cx="49.5" cy="8" r="2" fill="#e8601f"/><circle cx="59" cy="40" r="2" fill="#0e9a8c"/><circle cx="9" cy="57" r="2" fill="#e0c81a"/><g transform="translate(6 8) scale(.84)" stroke="#fff" stroke-opacity=".45" stroke-width=".7" stroke-linejoin="round"><polygon fill="#8a1a5c" points="10,18 20,9 33,6 34,18 22,22"/><polygon fill="#b02a80" points="6,30 10,18 22,22 20,34"/><polygon fill="#d878b8" points="6,30 20,34 18,43 9,40"/><polygon fill="#c8509c" points="22,22 34,18 30,32 20,34"/><polygon fill="#f07a30" points="33,6 46,9 46,22 34,18"/><polygon fill="#e8551e" points="46,9 57,17 46,22"/><polygon fill="#b4481e" points="34,18 46,22 42,33 30,32"/><polygon fill="#f4a384" points="30,32 42,33 36,42 28,44"/><polygon fill="#f8e032" points="20,34 30,32 28,44 18,43"/><polygon fill="#d8c41c" points="28,44 36,42 36,46"/><polygon fill="#a89a1c" points="36,42 48,46 44,56 38,57 36,46"/><polygon fill="#a6e8dc" points="42,33 46,22 52,30"/><polygon fill="#0e7c80" points="46,22 57,17 60,29 52,30"/><polygon fill="#16b2a2" points="42,33 52,30 60,29 56,40 48,46 36,42"/></g></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button><button class="rd" id="bLock" title="Verrouiller la carte" aria-label="Verrouiller la carte">🔓</button><button class="rd" id="bSnap" title="Magnétisme" aria-label="Magnétisme">🧲</button></div>
     <span id="mTitle" title="Double-clic pour renommer la carte"></span>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v53</div>
+    <div id="ver" title="Numéro de version de la page">v55</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -308,7 +310,7 @@ function colInfo(m){var adj={},radj={},out={},cnt={},hid={},cols={};
 function toggleCol(id){var n=getN(id);if(!n||!CI.out[id])return;var was=CI.hid;if(n.col)delete n.col;else n.col=true;
  /* des bulles réapparaissent : elles ne doivent pas recouvrir celles qui étaient déjà visibles, ce sont elles qui sont repoussées */
  var m=cur(),now=colInfo(m).hid,shown={},any=false;m.nodes.forEach(function(x){if(was[x.id]&&!now[x.id]){shown[x.id]=1;any=true}});
- if(any)settle(m.nodes.filter(function(x){return!shown[x.id]}).map(function(x){return x.id}));
+ if(any)placeFree(Object.keys(shown));
  save();draw()}
 var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps);
 var trash=store.get("mm_trash",[]);normNames(trash);
@@ -720,6 +722,19 @@ function updSnap(){var b=$("bSnap");b.classList.toggle("on",SNAP);b.title=SNAP?"
 $("bSnap").onclick=function(){SNAP=!SNAP;store.set("mm_snap",SNAP);updSnap();toast(SNAP?"Magnétisme activé.":"Magnétisme désactivé.")};
 updSnap();
 function clearGuides(){var G=$("guides");if(G)G.innerHTML=""}
+/* aperçu du point de chute : pendant le glisser, un contour en pointillés montre où ira ce que l'on tient une fois la souris relâchée (même calcul qu'au lâcher, sans rien modifier) */
+function ghostClear(){var G=$("ghost");if(G)G.innerHTML=""}
+function ghostShow(grp){ghostClear();var G=$("ghost");if(!G||!grp.length)return;
+ var m=cur(),o=grp.map(function(n){return{n:n,x:n.x,y:n.y,g:n.grp}}),jn=[],L=[],mv=false,fr={};
+ grp.forEach(function(n){if(!n.grp){var z=zoneAt(n);if(z){jn.push(n);n.grp=z.g}}});
+ placeFree(grp.map(function(n){return n.id}));
+ o.forEach(function(q){var n=q.n;L.push({n:n,x:n.x,y:n.y});if(Math.abs(n.x-q.x)>.5||Math.abs(n.y-q.y)>.5)mv=true;if(n.grp)fr[n.grp]=1});
+ var at={};L.forEach(function(l){at[l.n.id]=l});
+ var rf=Object.keys(fr).map(function(g){var a=m.nodes.filter(function(n){return n.grp===g&&!CI.hid[n.id]}).map(function(n){var l=at[n.id];return{x:l?l.x:n.x,y:l?l.y:n.y,w:n.w,h:n.h}});return a.length?frameRect(g,a):null}).filter(Boolean);
+ o.forEach(function(q){q.n.x=q.x;q.n.y=q.y});jn.forEach(function(n){delete n.grp});
+ if(!mv)return;
+ rf.forEach(function(f){el("rect",{"class":"ghost gf",x:f.x,y:f.y,width:f.w,height:f.h,rx:16},G)});
+ L.forEach(function(l){if(CI.hid[l.n.id])return;el("rect",{"class":"ghost",x:l.x,y:l.y,width:l.n.w,height:l.n.h,rx:10},G)})}
 function snapDelta(grp,mset,dr){var T=10/tr.k,x1=1e9,x2=-1e9,y1=1e9,y2=-1e9;
  grp.forEach(function(g){var o=dr.orig[g.id];if(!o)return;var x=o[0]+dr.rx,y=o[1]+dr.ry;x1=Math.min(x1,x);x2=Math.max(x2,x+g.w);y1=Math.min(y1,y);y2=Math.max(y2,y+g.h)});
  var mx=[x1,(x1+x2)/2,x2],my=[y1,(y1+y2)/2,y2],bx=null,by=null,others=cur().nodes.filter(function(n){return!mset[n.id]&&!CI.hid[n.id]});
@@ -999,8 +1014,8 @@ function zoneAt(n,skip){var best=null,cx=n.x+n.w/2,cy=n.y+n.h/2;grpRects(skip).f
 function inZone(n,skip){return grpRects(skip).some(function(r){return n.x<r.x+r.w&&r.x<n.x+n.w&&n.y<r.y+r.h&&r.y<n.y+n.h})}
 /* ---------- anti-chevauchement ----------
    Règle unique : deux bulles gardent toujours OVN px d'écart — même si l'une est masquée par un repli — et une bulle reste à OVF px des cadres de groupes qui ne sont pas les siens.
-   Toute bulle créée, déplacée, collée, agrandie (texte, image, titre de groupe), tout groupe ou sélection déplacés restent exactement où ils sont :
-   ce sont les autres bulles qui s'écartent, en cascade, du côté où elles se trouvent (settle). */
+   Les autres bulles ne bougent JAMAIS. Ce que l'on crée, déplace, colle, agrandit (texte, image) ou titre (groupe) est, une fois le geste ou la saisie validés,
+   décalé au minimum vers l'emplacement libre le plus proche (slide pour une bulle seule, placeFree pour plusieurs bulles / un groupe, déplacés d'un bloc). */
 var OVN=14,OVF=8,edOld={};/* edOld : taille de la bulle avant l'édition du texte */
 function ovr(a,b,M){return a.x<b.x+b.w+M&&b.x<a.x+a.w+M&&a.y<b.y+b.h+M&&b.y<a.y+a.h+M}
 /* seule exception : une bulle sortie d'un groupe est repoussée hors du cadre (slide), pour ne pas déplacer tout le groupe */
@@ -1032,42 +1047,40 @@ function slide(n){var m=cur(),i;m.nodes.forEach(measure);CI=colInfo(m);
  /* aucune place proche : sous tout le reste de la carte */
  var bot=-1e9;others.forEach(function(b){bot=Math.max(bot,b.y+b.h)});fr.forEach(function(f){bot=Math.max(bot,f.y+f.h)});
  n.y=Math.ceil(bot+OVN+(n.grp?16+OVF+GTH:0));return true}
-function unover(n){return settle([n.id])}
-/* repousse en cascade ce qui touche les éléments fixes. Éléments = bulles seules, ou groupes entiers (déplacés d'un bloc, cadre compris) */
-function cascade(arr,fixed){var moved=false,q=fixed.slice(),steps=0,k,P,T,s,g;
- function rects(B){if(B.r)return B.r;var r=[],vis;
-  if(!B.g){var n=B.nodes[0];r.push({x:n.x,y:n.y,w:n.w,h:n.h,k:0})}
-  else{vis=B.nodes.filter(function(n){return!CI.hid[n.id]});if(vis.length){var f=frameRect(B.g,vis);f.k=1;r.push(f)}
-   B.nodes.forEach(function(n){if(CI.hid[n.id])r.push({x:n.x,y:n.y,w:n.w,h:n.h,k:0})})}
-  B.r=r;return r}
- /* déplacement qui dégage B de A, ou null s'ils ne se touchent pas. B est poussée dans le sens où elle se trouve par rapport à A
-    (voisine de droite → vers la droite, voisine du dessous → vers le bas), en gardant l'axe où les deux sont le plus écartées */
- function bb(r){var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;r.forEach(function(a){x1=Math.min(x1,a.x);y1=Math.min(y1,a.y);x2=Math.max(x2,a.x+a.w);y2=Math.max(y2,a.y+a.h)});return{cx:(x1+x2)/2,cy:(y1+y2)/2,w:x2-x1,h:y2-y1}}
- function ex(A,B){var ra=rects(A),rb=rects(B),R=-1,L=-1,D=-1,U=-1,hit=false;
-  ra.forEach(function(a){rb.forEach(function(b){var M=(a.k||b.k)?OVF:OVN;if(ovr(a,b,M)){hit=true;R=Math.max(R,a.x+a.w+M-b.x);L=Math.max(L,b.x+b.w+M-a.x);D=Math.max(D,a.y+a.h+M-b.y);U=Math.max(U,b.y+b.h+M-a.y)}})});
-  if(!hit)return null;
-  var pa=bb(A.ref||ra),pb=bb(rb),dx=pb.cx-pa.cx,dy=pb.cy-pa.cy,horiz=Math.abs(dx)/(pa.w+pb.w)>=Math.abs(dy)/(pa.h+pb.h),d;
-  d=horiz?[dx>=0?R:-L,0]:[0,dy>=0?D:-U];
-  return[d[0]>0?Math.ceil(d[0]):Math.floor(d[0]),d[1]>0?Math.ceil(d[1]):Math.floor(d[1])]}
- function mv(B,d){B.nodes.forEach(function(n){n.x+=d[0];n.y+=d[1]});B.r=null;moved=true}
- while(q.length&&steps++<2000){P=q.shift();
-  for(k=0;k<arr.length;k++){T=arr[k];if(T===P)continue;g=0;
-   if(T.fx){if(!P.fx){while((s=ex(T,P))&&g++<4){mv(P,s);if(q.indexOf(P)<0)q.push(P)}}continue}
-   while((s=ex(P,T))&&g++<4){mv(T,s);if(q.indexOf(T)<0)q.push(T)}}}
- return moved}
-/* ids : bulles qui restent en place (celles que l'on vient d'agrandir, déplacer, créer…) ; old (facultatif) : leur taille avant agrandissement, {id:{w,h}}. Renvoie true si quelque chose a bougé. */
-function settle(ids,old){var m=cur(),A={},mvd=false,gs={};m.nodes.forEach(measure);CI=colInfo(m);
- ids.forEach(function(i){A[i]=1});
- function ref(n){var o=old&&old[n.id];return(A[n.id]&&o)?[{x:n.x,y:n.y,w:o.w,h:o.h,k:0}]:null}
- /* 1) à l'intérieur d'un groupe : les bulles du groupe ne se recouvrent pas entre elles */
- m.nodes.forEach(function(n){if(A[n.id]&&n.grp)gs[n.grp]=1});
- Object.keys(gs).forEach(function(g){var it=m.nodes.filter(function(n){return n.grp===g}).map(function(n){return{k:n.id,g:null,nodes:[n],r:null,fx:!!A[n.id],ref:ref(n)}}),fx=it.filter(function(b){return b.fx});
-  if(fx.length&&cascade(it,fx))mvd=true});
- /* 2) entre éléments : bulles seules et groupes entiers (cadre compris) */
- var by={},arr=[];
- m.nodes.forEach(function(n){var k=n.grp?"g"+n.grp:"n"+n.id,B=by[k];if(!B){B=by[k]={k:k,g:n.grp||null,nodes:[],r:null,fx:false,ref:n.grp?null:ref(n)};arr.push(B)}B.nodes.push(n);if(A[n.id])B.fx=true});
- var fx2=arr.filter(function(b){return b.fx});if(fx2.length&&cascade(arr,fx2))mvd=true;
- return mvd}
+function unover(n){return placeFree([n.id])}
+function settle(ids){return placeFree(ids)}
+/* ids : bulles que l'on vient de créer, déplacer, coller, agrandir… Elles seules bougent, d'un bloc, vers la place libre la plus proche. Renvoie true si elles ont bougé. */
+function placeFree(ids){var m=cur(),A={},S,R,gs={},gk,oth,base=0,i,j;m.nodes.forEach(measure);CI=colInfo(m);
+ ids.forEach(function(k){A[k]=1});S=m.nodes.filter(function(n){return A[n.id]});
+ if(!S.length)return false;
+ if(S.length===1)return slide(S[0]);
+ R=m.nodes.filter(function(n){return!A[n.id]});
+ S.forEach(function(n){if(n.grp)gs[n.grp]=1});gk=Object.keys(gs);
+ oth=grpRects().filter(function(f){return!gs[f.g]});
+ /* conflits si le bloc était décalé de (dx,dy) */
+ function cnt(dx,dy){var c=0,SR=S.map(function(n){return{x:n.x+dx,y:n.y+dy,w:n.w,h:n.h,g:n.grp,v:!CI.hid[n.id]}}),F,pts,k;
+  SR.forEach(function(r){for(k=0;k<R.length;k++)if(ovr(r,R[k],OVN))c++;if(!r.g)for(k=0;k<oth.length;k++)if(ovr(r,oth[k],OVF))c++});
+  gk.forEach(function(g){pts=SR.filter(function(r){return r.g===g&&r.v}).concat(R.filter(function(n){return n.grp===g&&!CI.hid[n.id]}));if(!pts.length)return;
+   F=frameRect(g,pts);for(k=0;k<R.length;k++)if(R[k].grp!==g&&ovr(F,R[k],OVF))c++;for(k=0;k<oth.length;k++)if(ovr(F,oth[k],OVF))c++});
+  return c}
+ /* conflits déjà présents sans le bloc (anciennes cartes, groupes en partie sélectionnés) : on n'exige pas de les corriger ici */
+ gk.forEach(function(g){var mem=R.filter(function(n){return n.grp===g&&!CI.hid[n.id]});if(!mem.length)return;var F0=frameRect(g,mem);
+  R.forEach(function(b){if(b.grp!==g&&ovr(F0,b,OVF))base++});oth.forEach(function(f){if(ovr(F0,f,OVF))base++})});
+ if(cnt(0,0)<=base)return false;
+ var x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;S.forEach(function(n){x1=Math.min(x1,n.x);y1=Math.min(y1,n.y);x2=Math.max(x2,n.x+n.w);y2=Math.max(y2,n.y+n.h)});
+ var cx=(x1+x2)/2,cy=(y1+y2)/2,obs=R.concat(oth).map(function(b){return{x:b.x,y:b.y,w:b.w,h:b.h,d:Math.hypot(b.x+b.w/2-cx,b.y+b.h/2-cy)}});
+ obs.sort(function(a,b){return a.d-b.d});obs=obs.slice(0,90);
+ var xs={0:1},ys={0:1};
+ obs.forEach(function(b){[OVN,OVF,16+OVF,16+OVF+GTH].forEach(function(M){xs[b.x-M-x2]=1;xs[b.x+b.w+M-x1]=1;ys[b.y-M-y2]=1;ys[b.y+b.h+M-y1]=1})});
+ function away(v){return v>0?Math.ceil(v):Math.floor(v)}
+ function near(o){var r={};Object.keys(o).forEach(function(k){r[away(+k)]=1});return Object.keys(r).map(Number).sort(function(a,b){return Math.abs(a)-Math.abs(b)}).slice(0,60)}
+ var X=near(xs),Y=near(ys),P=[];
+ X.forEach(function(dx){Y.forEach(function(dy){P.push([dx,dy,dx*dx+dy*dy])})});
+ P.sort(function(a,b){return a[2]-b[2]});
+ for(i=0;i<P.length;i++)if(cnt(P[i][0],P[i][1])<=base){j=P[i];S.forEach(function(n){n.x+=j[0];n.y+=j[1]});return true}
+ /* aucune place proche : sous tout le reste de la carte */
+ var bot=-1e9;R.forEach(function(b){bot=Math.max(bot,b.y+b.h)});oth.forEach(function(f){bot=Math.max(bot,f.y+f.h)});
+ var dy2=away(bot+OVN+(gk.length?16+OVF+GTH:0)-y1);S.forEach(function(n){n.y+=dy2});return true}
 /* un bloc de bulles qui vient d'être créé (collage) : si une bulle non groupée tombe dans un cadre existant, tout le bloc est décalé vers le bas */
 function shiftOutOfZones(list){var ids={},free=list.filter(function(n){return!n.grp}),k;list.forEach(function(n){ids[n.id]=1});if(!free.length)return;
  function hit(){var R=grpRects(ids);return free.some(function(n){return R.some(function(r){return n.x<r.x+r.w+8&&r.x<n.x+n.w+8&&n.y<r.y+r.h+8&&r.y<n.y+n.h+8})})}
@@ -1363,12 +1376,10 @@ window.addEventListener("pointermove",function(e){
   var sn=[0,0],mset0={};grp.forEach(function(g){mset0[g.id]=1});
   if(SNAP&&!e.altKey)sn=snapDelta(grp,mset0,drag);else clearGuides();
   grp.forEach(function(g){var o=drag.orig[g.id];if(o){g.x=o[0]+drag.rx+sn[0];g.y=o[1]+drag.ry+sn[1]}});
- /* aperçu en direct : les autres bulles s'écartent pendant le glisser. Elles sont recalculées depuis leur position d'origine : elles reviennent si on s'éloigne.
-    Une bulle libre au-dessus d'un cadre de groupe va rejoindre ce groupe au lâcher : pas de poussée dans ce cas. */
- var mset={};grp.forEach(function(g){mset[g.id]=1});
- cur().nodes.forEach(function(x){if(!mset[x.id]&&drag.orig&&drag.orig[x.id]){x.x=drag.orig[x.id][0];x.y=drag.orig[x.id][1]}});
+ /* les autres bulles ne bougent pas pendant le glisser ; au lâcher, ce qui est déplacé se décale vers la place libre la plus proche.
+    Une bulle libre au-dessus d'un cadre de groupe va rejoindre ce groupe au lâcher. */
  dropG={};grp.forEach(function(g){if(!g.grp){var z=zoneAt(g);if(z)dropG[z.g]=1}});
- if(!Object.keys(dropG).length)settle(grp.map(function(g){return g.id}));
+ ghostShow(grp);
  drag.x=e.clientX;drag.y=e.clientY;draw()});
 function endDrag(e){
  if(mk){var o=mk;mk=null;var tp=$("tmpl");if(tp)tp.remove();clearHl();
@@ -1386,7 +1397,7 @@ function endDrag(e){
   mv.forEach(function(n){if(!n.grp){var z=zoneAt(n);if(z)jn.push([n,z.g])}});
   jn.forEach(function(p){p[0].grp=p[1]});if(jn.length)toast(jn.length>1?jn.length+" bulles ajoutées au groupe.":"Bulle ajoutée au groupe.");
   dropG={};
-  if(Object.keys(ms).length<2)unover(drag.n);else settle(mv.map(function(x){return x.id}));save();draw();setTimeout(function(){dragged=false},0)}drag=null;clearGuides()}
+  if(Object.keys(ms).length<2)unover(drag.n);else settle(mv.map(function(x){return x.id}));save();draw();setTimeout(function(){dragged=false},0)}drag=null;clearGuides();ghostClear()}
 window.addEventListener("pointerup",endDrag);window.addEventListener("pointercancel",endDrag);
 cv.addEventListener("dblclick",function(e){if(e.target.closest&&e.target.closest(".node,.lk,.lkh,.lhandle,.tog"))return;if(linkFrom)return;addBubble(toWorld(e))});
 cv.addEventListener("wheel",function(e){if(e.target!==cv&&!(e.target.closest&&e.target.closest("#view")))return;e.preventDefault();var r=cv.getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top,k2=Math.max(.2,Math.min(3,tr.k*(e.deltaY<0?1.1:.9)));
