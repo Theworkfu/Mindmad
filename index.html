@@ -121,11 +121,13 @@ button:disabled{opacity:.4;cursor:default}
 .nbtn:hover circle{fill:var(--nc,var(--accent))}.nbtn:hover path{stroke:var(--panel)}
 .nbtn.cw:hover path{stroke:#1c1c1c}.nbtn.ck:hover path{stroke:#fff}
 .nbtn.cw circle,.nbtn.cw path{filter:drop-shadow(0 0 1.2px rgba(0,0,0,.75))}
+.nbtn.nsel circle{fill:var(--nc,var(--accent));stroke-width:3;filter:drop-shadow(0 0 5px var(--nc,var(--accent)))}.nbtn.nsel path{stroke:var(--panel)}.nbtn.nsel.cw path{stroke:#1c1c1c}.nbtn.nsel.ck path{stroke:#fff}
 @media (prefers-color-scheme:dark){.nbtn.ck circle,.nbtn.ck path{filter:drop-shadow(0 0 1.2px rgba(255,255,255,.85))}}
 #tip{position:fixed;z-index:35;display:none;max-width:300px;max-height:60vh;overflow:hidden;padding:8px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--accent);border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,.3);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.4;pointer-events:none}
 .lhandle{cursor:crosshair}
-.lhandle circle{fill:var(--accent);stroke:var(--panel);stroke-width:2}
-.lhandle path{fill:none;stroke:var(--accent-ink);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.lhandle circle{fill:var(--sc,var(--accent));stroke:var(--panel);stroke-width:2}
+.lhandle.cw circle{stroke:rgba(0,0,0,.5)}.lhandle.ck circle{stroke:rgba(255,255,255,.75)}
+.lhandle.cw path{stroke:#1c1c1c !important}.lhandle path{fill:none;stroke:#fff;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .tmpl{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:6 4;pointer-events:none}
 .zb{fill:none;stroke:#35c3ff;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .zb.w{stroke-width:6;opacity:.13}.zb.m{stroke-width:3;opacity:.38}.zb.c{stroke:#fff;stroke-width:1.3;opacity:.85}.zb.base{stroke-width:2}
@@ -192,7 +194,7 @@ body.notes #bSnap{display:none}
   <div id="stage">
     <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="grps"></g><g id="edges"></g><g id="links"></g><g id="zap"></g><g id="ghost"></g><g id="nodes"></g><g id="lkh"></g><g id="guides"></g></g></svg>
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><g fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 31H6V23" stroke="#a02a78"/><path d="M40 14V8H49" stroke="#e8601f"/><path d="M55 30H59V39" stroke="#0e9a8c"/><path d="M24 43V49H9V56" stroke="#e0c81a"/></g><circle cx="6" cy="22" r="2" fill="#a02a78"/><circle cx="49.5" cy="8" r="2" fill="#e8601f"/><circle cx="59" cy="40" r="2" fill="#0e9a8c"/><circle cx="9" cy="57" r="2" fill="#e0c81a"/><g transform="translate(6 8) scale(.84)" stroke="#fff" stroke-opacity=".45" stroke-width=".7" stroke-linejoin="round"><polygon fill="#8a1a5c" points="10,18 20,9 33,6 34,18 22,22"/><polygon fill="#b02a80" points="6,30 10,18 22,22 20,34"/><polygon fill="#d878b8" points="6,30 20,34 18,43 9,40"/><polygon fill="#c8509c" points="22,22 34,18 30,32 20,34"/><polygon fill="#f07a30" points="33,6 46,9 46,22 34,18"/><polygon fill="#e8551e" points="46,9 57,17 46,22"/><polygon fill="#b4481e" points="34,18 46,22 42,33 30,32"/><polygon fill="#f4a384" points="30,32 42,33 36,42 28,44"/><polygon fill="#f8e032" points="20,34 30,32 28,44 18,43"/><polygon fill="#d8c41c" points="28,44 36,42 36,46"/><polygon fill="#a89a1c" points="36,42 48,46 44,56 38,57 36,46"/><polygon fill="#a6e8dc" points="42,33 46,22 52,30"/><polygon fill="#0e7c80" points="46,22 57,17 60,29 52,30"/><polygon fill="#16b2a2" points="42,33 52,30 60,29 56,40 48,46 36,42"/></g></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button><button class="rd" id="bLock" title="Verrouiller la carte" aria-label="Verrouiller la carte">🔓</button><button class="rd" id="bSnap" title="Magnétisme" aria-label="Magnétisme">🧲</button></div>
-    <div id="tBar"><span id="mTitle" title="Clic droit pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
+    <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <div id="ver" title="Numéro de version de la page">v64</div>
     <input id="file" type="file" accept="application/json" hidden>
@@ -239,7 +241,7 @@ var $=function(i){return document.getElementById(i)};
 var store={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(!store.w){store.w=1;alert("Ce navigateur n’enregistre pas les cartes (stockage plein ou navigation privée). Exportez votre carte, ou activez la sauvegarde sur GitHub avec l’icône ☁.")}}}};
 var uid=function(){return Math.random().toString(36).slice(2,9)};
-var GAP=18,HGAP=64,IMGH=90,IMGMAX=180,imgDim={},migrated=false;
+var GAP=18,HGAP=64,NGAP=10,NHGAP=40,IMGH=90,IMGMAX=180,imgDim={},migrated=false;
 var newMap=function(t){var n={id:uid(),t:t||"Votre carte",c:0,img:"",x:0,y:0};return{id:uid(),title:t||"Votre carte",nodes:[n],links:[]}};
 function getNIn(m,id){var a=m.nodes;for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null}
 /* les anciens réglages de tracé (extrémités fixées, courbes) n'existent plus : on les oublie */
@@ -294,7 +296,7 @@ function migrate(m){
    m.nodes=nodes;m.links=links;delete m.root;migrated=true}
   else m.nodes=[]}
  m.links=m.links||[];
- m.nodes.forEach(function(n){n.x=+n.x||0;n.y=+n.y||0;n.t=n.t||"";n.c=n.c||0;delete n.ch;delete n.dx;delete n.dy});
+ m.nodes.forEach(function(n){n.x=+n.x||0;n.y=+n.y||0;n.t=n.t||"";n.c=n.c||0;delete n.ch;delete n.dx;delete n.dy;delete n.sx;delete n.sy});
  pruneLinks(m);if(!m.title)m.title="Votre carte";return m}
 function normNames(list){list.forEach(migrate)}
 /* ---------- repli des bulles de destination ----------
@@ -339,7 +341,24 @@ var sel=null,selImg=null,selImgI=0,ms={},selMode=false,moveMode=false,sg=null,ct
 function cur(){return maps.find(function(m){return m.id===curId})||maps[0]}
 /* date de modification de chaque carte : mise à jour seulement quand son contenu change réellement (pas quand on l'ouvre) */
 function hashStr(t){var h=5381,i;for(i=0;i<t.length;i++)h=((h<<5)+h+t.charCodeAt(i))|0;return h}
-function touchMods(){maps.forEach(function(m){var h=hashStr(snap(m));if(m._h!==h){if(m._h!==undefined)m.mod=Date.now();m._h=h}})}
+/* ---------- empreintes pour la synchronisation ----------
+   Seul le contenu réel compte. Sont ignorés : tailles mesurées, date de modification, côté de flèche mémorisé (sd) et, en mode Notes,
+   les positions (recalculées automatiquement sur chaque appareil, selon sa police : elles différaient d'un PC à l'autre). */
+var VOLK={w:1,h:1,th:1,iw:1,ih:1,mod:1,_h:1,_g:1};
+function pvl(k,v){if((k==="img"||k==="bg")&&typeof v==="string"&&v.indexOf("data:")===0){var id=pool[v];if(id===undefined){id=poolN++;pool[v]=id;poolR[id]=v}return"\u0001"+id}
+ if(k==="more"&&Array.isArray(v))return v.map(function(x){if(typeof x==="string"&&x.indexOf("data:")===0){var j=pool[x];if(j===undefined){j=poolN++;pool[x]=j;poolR[j]=x}return"\u0001"+j}return x});return v}
+function ssig(o,drop){return JSON.stringify(o,function(k,v){if(VOLK[k]===1||(drop&&drop[k]===1&&this===o))return undefined;return pvl(k,v)})}
+function hs(t){return hashStr(t).toString(36)+"."+t.length.toString(36)}
+function restVals(m){var f={};Object.keys(m).forEach(function(k){if(k==="nodes"||k==="links"||k==="id"||VOLK[k]===1)return;
+ if(k==="gt"&&m.gt&&typeof m.gt==="object")Object.keys(m.gt).forEach(function(g){f["gt:"+g]=m.gt[g]});else f[k]=m[k]});return f}
+/* empreinte d'une carte : un petit code par champ, par bulle et par flèche (sert à comparer et à fusionner élément par élément) */
+function fp(m){var notes=m.mode==="notes",rv=restVals(m),o={r:{},n:{},l:{}};
+ Object.keys(rv).forEach(function(k){var h={};h[k]=rv[k];o.r[k]=hs(ssig(h))});
+ (m.nodes||[]).forEach(function(n){o.n[n.id]=hs(ssig(n,notes?{x:1,y:1}:null))});
+ (m.links||[]).forEach(function(l){o.l[l.id]=hs(ssig(l,{sd:1}))});return o}
+function fpStr(f){function d(o){return Object.keys(o).sort().map(function(k){return k+"="+o[k]}).join(",")}return d(f.r)+"|"+d(f.n)+"|"+d(f.l)}
+function mapSig(m){return fpStr(fp(m))}
+function touchMods(){maps.forEach(function(m){var h=hashStr(mapSig(m));if(m._g!==h){if(m._g!==undefined)m.mod=Date.now();m._g=h}})}
 function persist(){touchMap();touchMods();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
 function save(key){if(cur().mode==="notes")autoLayout(cur());record(key);persist()}
 /* ---------- corbeille : 30 jours ---------- */
@@ -352,7 +371,7 @@ function updTrash(){}
 function closeTrash(){$("trashbox").classList.remove("on")}
 function btn(txt,cls,fn){var b=document.createElement("button");b.textContent=txt;if(cls)b.className=cls;b.onclick=fn;return b}
 function restoreMap(id){var t=trash.filter(function(x){return x.id===id})[0];if(!t)return;trash=trash.filter(function(x){return x.id!==id});
- var m=JSON.parse(JSON.stringify(t));delete m.deletedAt;if(maps.some(function(x){return x.id===m.id}))m.id=uid();leaveMap();delete H[m.id];m.mod=Date.now();maps.push(m);normNames([m]);
+ var m=JSON.parse(JSON.stringify(t));delete m.deletedAt;delete m._g;if(maps.some(function(x){return x.id===m.id}))m.id=uid();leaveMap();delete H[m.id];m.mod=Date.now();maps.push(m);normNames([m]);
  curId=m.id;sel=null;selLink=null;ensureHist(m);persist();refreshMaps();draw();syncPanel();fit();closeTrash();toast("Carte « "+flat(m.title)+" » restaurée.")}
 function renderTrash(){var box=$("trashlist");box.innerHTML="";purgeTrash();updTrash();
  if(!trash.length){var e=document.createElement("div");e.className="hint";e.textContent="La corbeille est vide.";box.appendChild(e);$("trashclear").style.display="none";return}
@@ -368,7 +387,7 @@ function renderTrash(){var box=$("trashlist");box.innerHTML="";purgeTrash();updT
 function openTrash(){renderTrash();$("trashbox").classList.add("on")}
 /* historique annuler / rétablir : un instantané de la carte à chaque modification (les images intégrées ne sont stockées qu'une fois) */
 var H={},pool={},poolR=[],poolN=0;
-function snap(m){return JSON.stringify(m,function(k,v){if(k==="w"||k==="h"||k==="th"||k==="iw"||k==="ih"||k==="mod"||k==="_h"||k==="locked")return undefined;
+function snap(m){return JSON.stringify(m,function(k,v){if(k==="w"||k==="h"||k==="th"||k==="iw"||k==="ih"||k==="mod"||k==="_h"||k==="_g"||k==="locked")return undefined;
  if((k==="img"||k==="bg")&&typeof v==="string"&&v.indexOf("data:")===0){var id=pool[v];if(id===undefined){id=poolN++;pool[v]=id;poolR[id]=v}return"\u0001"+id}if(k==="more"&&Array.isArray(v))return v.map(function(x){if(typeof x==="string"&&x.indexOf("data:")===0){var j=pool[x];if(j===undefined){j=poolN++;pool[x]=j;poolR[j]=x}return"\u0001"+j}return x});return v})}
 function unsnap(t){return JSON.parse(t,function(k,v){if(k==="more"&&Array.isArray(v))return v.map(function(x){return typeof x==="string"&&x.charCodeAt(0)===1?poolR[+x.slice(1)]:x});return((k==="img"||k==="bg")&&typeof v==="string"&&v.charCodeAt(0)===1)?poolR[+v.slice(1)]:v})}
 function ensureHist(m){if(!H[m.id])H[m.id]={s:[snap(m)],i:0,k:null,t:0}}
@@ -398,6 +417,7 @@ function draw(){modeBtn();
  hideTip();var m=cur();m.nodes.forEach(measure);CI=colInfo(m);applyBg(m);updLock();
  Object.keys(ms).forEach(function(k){if(!getNIn(m,k)||CI.hid[k])delete ms[k]});if(!sel||!ms[sel]||Object.keys(ms).length<2)ms={};
  if(sel&&CI.hid[sel])sel=null;if(selLink){var sl=(m.links||[]).filter(function(l){return l.id===selLink})[0];if(!sl||CI.hid[sl.from]||CI.hid[sl.to])selLink=null}
+ if(selNote){var sn=getNIn(m,selNote);if(!sn||!sn.note||selNote!==sel||Object.keys(ms).length>1||selLink||selImg)selNote=null}
  {var si=selImg&&getNIn(m,selImg);if(!si||selImgI>=imgsOf(si).length||selImg!==sel||Object.keys(ms).length>1||selLink)selImg=null}
  var ng=$("nodes");ng.innerHTML="";$("edges").innerHTML="";drawGroups(m);
  m.nodes.forEach(function(n){if(CI.hid[n.id])return;
@@ -405,8 +425,8 @@ function draw(){modeBtn();
   var isS=(n.id===sel||!!ms[n.id])&&selImg!==n.id,multi=Object.keys(ms).length>1;
   var g=el("g",{"data-id":n.id,"class":"node"+(isS?" sel":"")+(selImg===n.id?" isel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+n.x+","+n.y+")"},ng);if(isS||selImg===n.id)g.style.setProperty("--sc",color);
   g.addEventListener("pointerdown",function(e){if(e.button===1){e.preventDefault();e.stopPropagation();toggleCol(n.id);return}startDrag(e,n)});
-  g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;if(linkFrom){var from=linkFrom;endLink();if(from!==n.id)addLink(from,n.id,toWorld(e));return}selLink=null;selImg=null;if(e.shiftKey){toggleSel(n.id);return}ms={};var t=Date.now(),second=lastNode.id===n.id&&t-lastNode.t<500;lastNode=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openEd(n.id)});
-  g.addEventListener("dblclick",function(e){e.stopPropagation();selImg=null;ms={};sel=n.id;draw();syncPanel();openEd(n.id)});
+  g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;if(linkFrom){var from=linkFrom;endLink();if(from!==n.id)addLink(from,n.id,toWorld(e));return}selLink=null;selImg=null;selNote=null;if(e.shiftKey){toggleSel(n.id);return}ms={};var t=Date.now(),second=lastNode.id===n.id&&t-lastNode.t<500;lastNode=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openEd(n.id)});
+  g.addEventListener("dblclick",function(e){e.stopPropagation();selImg=null;selNote=null;ms={};sel=n.id;draw();syncPanel();openEd(n.id)});
   el("rect",{"class":"box",width:n.w,height:n.h,rx:10,stroke:color},g);
   var t=el("text",{x:n.w/2,y:20,"text-anchor":"middle"},g);
   addStrikeLines(t,strikeLines(dispText(n.t)||" "),n.w/2,18);
@@ -422,19 +442,20 @@ function draw(){modeBtn();
      im.addEventListener("dblclick",function(e){e.stopPropagation()});
      im.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;var t=Date.now(),second=lastImg.id===n.id&&lastImg.k===k&&t-lastImg.t<450;lastImg=second?{id:null,t:0}:{id:n.id,k:k,t:t};if(e.shiftKey){toggleSel(n.id);return}
       /* 1er clic : la bulle ; clic suivant sur une image : cette image seule (elle le reste si on re-clique) ; double clic rapide : agrandir */
-      var already=sel===n.id&&Object.keys(ms).length<2&&!selLink;ms={};selLink=null;sel=n.id;if(!second){selImg=already?n.id:null;selImgI=k}draw();syncPanel();if(second)openLb(imgUrl(v))})});
+      var already=sel===n.id&&Object.keys(ms).length<2&&!selLink;ms={};selLink=null;selNote=null;sel=n.id;if(!second){selImg=already?n.id:null;selImgI=k}draw();syncPanel();if(second)openLb(imgUrl(v))})});
    }
-  if(n.note){var nb=el("g",{"class":"nbtn"+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w-2)+",2)"},g);el("circle",{r:10},nb);el("path",{d:"M-4,-5 H2.5 L5,-2.5 V5 H-4 Z M2.5,-5 V-2.5 H5 M-2,0 H3 M-2,2.5 H3"},nb);
+  if(n.note){var nb=el("g",{"class":"nbtn"+(selNote===n.id?" nsel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w-2)+",2)"},g);el("circle",{r:10},nb);el("path",{d:"M-4,-5 H2.5 L5,-2.5 V5 H-4 Z M2.5,-5 V-2.5 H5 M-2,0 H3 M-2,2.5 H3"},nb);
    nb.style.setProperty("--nc",color);nb.addEventListener("pointerdown",function(e){e.stopPropagation();hideTip()});
    nb.addEventListener("pointerenter",function(){showTip(nb,n.note)});nb.addEventListener("pointerleave",hideTip);
-   nb.addEventListener("dblclick",function(e){e.stopPropagation()});
-   nb.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;sel=n.id;selLink=null;draw();syncPanel();openNote(n.id)})}
+   /* un clic sélectionne la note, un double-clic la modifie ; clic droit sur la note sélectionnée : menu de suppression */
+   nb.addEventListener("dblclick",function(e){e.stopPropagation();selLink=null;selImg=null;ms={};sel=n.id;selNote=n.id;draw();syncPanel();openNote(n.id)});
+   nb.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;var t=Date.now(),second=lastNote.id===n.id&&t-lastNote.t<500;lastNote=second?{id:null,t:0}:{id:n.id,t:t};selLink=null;selImg=null;ms={};sel=n.id;selNote=n.id;draw();syncPanel();if(second)openNote(n.id)})}
   if(CI.out[n.id]){var tg=el("g",{"class":"tog "+(n.col?"col":"open"),transform:"translate("+(n.w/2)+","+n.h+")"},g);
    el("title",{},tg).textContent=n.col?"Déplier les bulles de destination":"Replier les bulles de destination";
    el("circle",{r:n.col?9.5:7},tg);if(n.col)el("text",{y:3.5},tg).textContent=CI.cnt[n.id];else el("path",{d:"M-3,0 H3"},tg);
    tg.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault();if(e.button===1)toggleCol(n.id)});tg.addEventListener("dblclick",function(e){e.stopPropagation()});
    tg.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;toggleCol(n.id)})}
-  if(n.id===sel&&!multi&&selImg!==n.id&&!m.locked){var lh=el("g",{"class":"lhandle",transform:"translate("+(n.w+2)+","+(n.h/2)+")"},g);
+  if(n.id===sel&&!multi&&selImg!==n.id&&!m.locked){var lh=el("g",{"class":"lhandle"+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w+2)+","+(n.h/2)+")"},g);
    el("title",{},lh).textContent="Glisser vers une autre bulle pour les relier, ou vers le vide pour créer une bulle reliée";
    el("circle",{r:9},lh);el("path",{d:"M-3.5,0 H3.5 M0.5,-3.5 L4,0 L0.5,3.5"},lh);
    lh.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault();if(e.button)return;mk={from:n.id,on:false,x0:e.clientX,y0:e.clientY,path:[]}});
@@ -443,7 +464,7 @@ function draw(){modeBtn();
  var sg=ng.querySelector(".node.sel,.node.isel");if(sg)ng.appendChild(sg);
  drawLinks();updHist();updTrash();applyT();
 }
-var selLink=null,linkFrom=null;
+var selLink=null,linkFrom=null,selNote=null;
 function edgePt(n,tx,ty){var cx=n.x+n.w/2,cy=n.y+n.h/2,dx=tx-cx,dy=ty-cy,sx=dx?(n.w/2)/Math.abs(dx):1e9,sy=dy?(n.h/2)/Math.abs(dy):1e9,t=Math.min(sx,sy);return[cx+dx*t,cy+dy*t]}
 function arrowHead(tip,from,g,L){L=L||15;var dx=tip[0]-from[0],dy=tip[1]-from[1],l=Math.hypot(dx,dy)||1;dx/=l;dy/=l;var bx=tip[0]-dx*L,by=tip[1]-dy*L,px=-dy*L/2,py=dx*L/2;
  el("path",{"class":"lkarrow",d:"M"+tip[0]+","+tip[1]+" L"+(bx+px)+","+(by+py)+" L"+(bx-px)+","+(by-py)+" Z"},g)}
@@ -627,7 +648,7 @@ function applyT(){$("view").setAttribute("transform","translate("+tr.x+","+tr.y+
 /* ---------- modes Schéma / Notes ----------
    Schéma : placement libre, vos positions ne bougent jamais d'elles-mêmes.
    Notes : arborescence rangée automatiquement (mère à gauche, filles à droite) à partir des flèches mère → fille.
-   Passer en Notes met les positions du schéma de côté (n.sx, n.sy) ; revenir en Schéma les rétablit, rien n'est perdu. */
+   Revenir en Schéma garde la carte telle quelle (l'ancien schéma n'est plus rétabli : pour cela, le retour arrière). */
 function autoLayout(m){var ch={},hp={},by={},o={},seen={},top=0;
  m.nodes.forEach(function(n,k){by[n.id]=n;o[n.id]=n.ord!==undefined?n.ord:1e9+k;measure(n)});
  CI=colInfo(m);
@@ -636,11 +657,11 @@ function autoLayout(m){var ch={},hp={},by={},o={},seen={},top=0;
  function lay(id,x,t){var n=by[id],kids,yy=t,f=null,l=null,h;seen[id]=1;n.x=x;
   kids=(ch[id]||[]).filter(function(c){return!seen[c]&&hp[c]===id&&!CI.hid[c]}).sort(srt);
   if(!kids.length){n.y=t;return n.h}
-  kids.forEach(function(c){h=lay(c,x+n.w+HGAP,yy);if(!f)f=by[c];l=by[c];yy+=h+GAP});
-  yy-=GAP;n.y=Math.max(t,Math.round((f.y+f.h/2+l.y+l.h/2)/2-n.h/2));return Math.max(yy-t,n.y+n.h-t)}
+  kids.forEach(function(c){h=lay(c,x+n.w+NHGAP,yy);if(!f)f=by[c];l=by[c];yy+=h+NGAP});
+  yy-=NGAP;n.y=Math.max(t,Math.round((f.y+f.h/2+l.y+l.h/2)/2-n.h/2));return Math.max(yy-t,n.y+n.h-t)}
  var R=m.nodes.filter(function(n){return hp[n.id]===undefined&&!CI.hid[n.id]}).map(function(n){return n.id}).sort(srt);
- R.filter(function(i){return(ch[i]||[]).length}).concat(R.filter(function(i){return!(ch[i]||[]).length})).forEach(function(id){var h=lay(id,0,top);top+=h+GAP*2});
- m.nodes.forEach(function(n){if(!seen[n.id]&&!CI.hid[n.id]){var h=lay(n.id,0,top);top+=h+GAP*2}})}
+ R.filter(function(i){return(ch[i]||[]).length}).concat(R.filter(function(i){return!(ch[i]||[]).length})).forEach(function(id){var h=lay(id,0,top);top+=h+NGAP*2});
+ m.nodes.forEach(function(n){if(!seen[n.id]&&!CI.hid[n.id]){var h=lay(n.id,0,top);top+=h+NGAP*2}})}
 function firstParents(m){var hp={};(m.links||[]).forEach(function(l){if(l.from===l.to||!(l.a===undefined||l.a===1))return;if(hp[l.to]===undefined)hp[l.to]=l.from});return hp}
 /* mode Notes : bulle cible = celle qui est sous le curseur (sinon celle qui contient le centre de la bulle tenue), hors de ce qui est déplacé */
 function noteTarget(mv){var m=cur(),d=drag&&drag.n,M={};if(!d)return null;mv.forEach(function(n){M[n.id]=1});
@@ -666,13 +687,12 @@ function reparent(roots,T){var m=cur(),adj={},seen={},q=roots.slice(),k=0;
 function reorderNote(d){var m=cur(),hp=firstParents(m),p=hp[d.id],cy=d.y+d.h/2,i=0,S=m.nodes.filter(function(n){return n!==d&&hp[n.id]===p&&!CI.hid[n.id]}).sort(function(a,b){return a.y-b.y});
  while(i<S.length&&S[i].y+S[i].h/2<cy)i++;S.splice(i,0,d);S.forEach(function(n,k){n.ord=k})}
 function setMode(mode){var m=cur();if(LK()||(m.mode||"schema")===mode)return;
- if(mode==="notes"){m.nodes.forEach(function(n){n.sx=n.x;n.sy=n.y});m.mode="notes";autoLayout(m)}
- else{m.mode="schema";var by={},hp=firstParents(m),late=[];m.nodes.forEach(function(n){by[n.id]=n;if(n.sx!==undefined){n.x=n.sx;n.y=n.sy;delete n.sx;delete n.sy}else late.push(n)});
-  /* bulles créées en mode Notes : placées à côté de leur mère, dans un emplacement libre */
-  late.forEach(function(n){var q=by[hp[n.id]];if(q){n.x=q.x+q.w+HGAP;n.y=q.y}placeFree([n.id])})}
- save();fit();draw();toast(mode==="notes"?"Mode Notes : rangement automatique. Votre schéma est conservé.":"Mode Schéma : placement libre, vos positions sont rétablies.")}
+ m.nodes.forEach(function(n){delete n.sx;delete n.sy});
+ /* Notes : rangement automatique à partir des flèches mère → fille ; Schéma : on garde la carte telle qu'elle est, seul le comportement change (Ctrl+Z pour revenir en arrière) */
+ if(mode==="notes"){m.mode="notes";autoLayout(m)}else m.mode="schema";
+ save();fit();draw();toast(mode==="notes"?"Mode Notes : rangement automatique. Ctrl+Z pour revenir en arrière.":"Mode Schéma : placement libre, la carte reste telle quelle.")}
 function modeBtn(){var b=$("fabV");if(!b)return;var nt=cur().mode==="notes";b.textContent=nt?"📝":"🧩";
- document.body.classList.toggle("notes",nt);b.title=nt?"Mode Notes (rangement automatique) — cliquer pour revenir au mode Schéma":"Mode Schéma (placement libre) — cliquer pour passer en mode Notes";b.setAttribute("aria-label",b.title)}
+ document.body.classList.toggle("notes",nt);b.title=nt?"Mode Notes (rangement automatique) — cliquer pour passer en mode Schéma (la carte reste telle quelle)":"Mode Schéma (placement libre) — cliquer pour passer en mode Notes";b.setAttribute("aria-label",b.title)}
 function fit(){var cv=$("cv"),W=cv.clientWidth,H=cv.clientHeight,N=cur().nodes.filter(function(n){return !CI.hid[n.id]});
  if(!N.length){tr.k=1;tr.x=W/2;tr.y=H/2;applyT();return}
  N.forEach(measure);var minx=1e9,maxx=-1e9,miny=1e9,maxy=-1e9;
@@ -847,15 +867,15 @@ ghState();
 var lsOk=true;try{localStorage.setItem("mm_t","1");localStorage.removeItem("mm_t")}catch(e){lsOk=false}
 var remoteSha=null,pushTimer=null,dirty=false;
 /* état de chaque carte lors de la dernière synchronisation réussie : permet de distinguer « modifiée seulement ailleurs » de « modifiée des deux côtés » */
-var BASE=store.get("mm_base",null);
+var BASE=store.get("mm_base2",null);
 /* dates d'ouverture des cartes (tri « utilisation ») : partagées entre appareils, la plus récente l'emporte */
 function usedNow(){var o={};if(USED)maps.forEach(function(m){if(USED[m.id])o[m.id]=USED[m.id]});return o}
 function mergeUsed(r){r=r||{};if(!USED)USED={};var ch=false,up=false;
  Object.keys(r).forEach(function(id){var v=+r[id]||0;if(v>(USED[id]||0)){USED[id]=v;ch=true}});
  Object.keys(USED).forEach(function(id){if((USED[id]||0)>(+r[id]||0)&&maps.some(function(m){return m.id===id}))up=true});
  if(ch){try{localStorage.setItem("mm_used",JSON.stringify(USED))}catch(e){}refreshMainMenu()}return up}
-function curBase(){var b={};maps.forEach(function(m){b[m.id]=hashStr(snap(m))});return b}
-function setBase(b){BASE=b;store.set("mm_base",b)}
+function curBase(){var b={};maps.forEach(function(m){b[m.id]=fp(m)});return b}
+function setBase(b){BASE=b;store.set("mm_base2",b)}
 var SYNCST="";
 function setSync(m){$("ghSyncState").textContent=m||"";
  if(!m)SYNCST="";else if(/impossible|Attention|Renseignez|Cochez/.test(m))SYNCST="bad";else if(/^Cartes (enregistrées|synchronisées|à jour|mises à jour|chargées)/.test(m))SYNCST="ok";else if(/^(Vérification|Envoi|Chargement|Modifications en attente)/.test(m))SYNCST="busy";
@@ -875,8 +895,10 @@ function push(){
  function put(){var nb=curBase();var body=JSON.stringify({updated:+store.get("mm_upd",0)||Date.now(),maps:maps,trash:trash,used:usedNow()});return api("/contents/maps/maps.json",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({message:"Sauvegarde des cartes",content:utf8b64(body),branch:gh.branch||"main",sha:remoteSha||undefined})}).then(function(r){return r.json().catch(function(){return{}}).then(function(j){if(!r.ok){var e=new Error(r.status===401?"jeton refusé":(j.message||"erreur "+r.status));e.status=r.status;throw e}remoteSha=j.content.sha;setBase(nb)})})}
  return put().catch(function(e){if(e.status===409||e.status===422){return pull().then(function(rem){if(rem&&rem.maps)mergeSync(rem,rem.updated||0);return put()})}throw e})}
 function hasContent(){return maps.some(function(m){return m.nodes.length>1||m.links.length||m.nodes.some(function(n){return n.img||n.note||(n.t&&n.t!=="Ma carte"&&n.t!=="Votre carte"&&n.t!=="Idée centrale")})})}
-function useMaps(list,upd,msg,tr){normNames(list);maps=list;if(tr!==undefined){trash=tr||[];purgeTrash()}resetHist();curId=maps[0].id;sel=null;store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",upd);setBase(curBase());refreshMaps();draw();syncPanel();fit();setSync(msg)}
+function useMaps(list,upd,msg,tr){normNames(list);maps=list;if(tr!==undefined){trash=tr||[];purgeTrash()}resetHist();curId=maps[0].id;sel=null;relayoutCur();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",upd);setBase(curBase());refreshMaps();draw();syncPanel();fit();setSync(msg)}
 function stamp(){return "à "+new Date().toLocaleTimeString("fr-FR")}
+/* mode Notes : les positions se recalculent localement (sans compter comme une modification) */
+function relayoutCur(){try{var m=cur();if(m&&m.mode==="notes")autoLayout(m)}catch(e){}}
 function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHub…");
  enqueue(function(){return pull().then(function(rem){
   if(!rem||!rem.maps||!rem.maps.length){if(!+store.get("mm_upd",0))store.set("mm_upd",Date.now());return push().then(function(){setSync("Cartes enregistrées sur GitHub "+stamp()+".")})}
@@ -887,6 +909,27 @@ function startSync(){if(!syncOn()||dirty)return;setSync("Vérification sur GitHu
   setSync(r.lc?"Cartes mises à jour depuis GitHub "+stamp()+".":"Cartes à jour.")})}).catch(function(e){setSync("Synchronisation impossible ("+e.message+").")})}
 function sig(m){return JSON.stringify((m.nodes||[]).map(function(n){return[n.id,n.t,n.c||0,n.img||"",n.note||"",Math.round(n.x||0),Math.round(n.y||0)]}))}
 /* fusion avec la sauvegarde GitHub, carte par carte : pour une même carte, la version modifiée en dernier l'emporte ; les cartes qui n'existent que d'un côté sont conservées ; la corbeille est partagée */
+/* choix d'un élément (champ, bulle ou flèche) : lh, rh, bh = empreintes locale, distante et de la dernière synchronisation (undefined = absent) ; nw = côté le plus récent */
+function pick3(lh,rh,bh,nw){if(lh===rh)return lh===undefined?null:"l";
+ if(bh!==undefined){if(lh===bh)return rh===undefined?null:"r";if(rh===bh)return lh===undefined?null:"l"}
+ if(lh===undefined)return"r";if(rh===undefined)return"l";return nw}
+function cl(v){return v===undefined?v:JSON.parse(JSON.stringify(v))}
+/* fusion de deux versions d'une même carte : ce qui n'a changé que d'un côté est repris tel quel, y compris les suppressions ;
+   si le même élément a changé des deux côtés, la version la plus récente l'emporte pour cet élément seulement. Rien n'est dupliqué. */
+function mergeMaps(l,r,b,nw){var lf=fp(l),rf=fp(r),lv=restVals(l),rv=restVals(r),bn=(b&&b.n)||{},bl=(b&&b.l)||{},br=(b&&b.r)||{},both=false,M={id:l.id},keys={};
+ function p3(lh,rh,bh){if(lh!==undefined&&rh!==undefined&&lh!==rh&&(bh===undefined||(lh!==bh&&rh!==bh)))both=true;return pick3(lh,rh,bh,nw)}
+ function put(k,v){if(k.indexOf("gt:")===0){M.gt=M.gt||{};M.gt[k.slice(3)]=cl(v)}else M[k]=cl(v)}
+ Object.keys(lv).concat(Object.keys(rv)).forEach(function(k){keys[k]=1});
+ Object.keys(keys).forEach(function(k){var p=p3(lf.r[k],rf.r[k],br[k]);if(p==="l")put(k,lv[k]);else if(p==="r")put(k,rv[k])});
+ if(!M.title)M.title=l.title||r.title||"Votre carte";
+ function arr(la,ra,lh,rh,bh){var li={},out=[];la.forEach(function(x){li[x.id]=1;var p=p3(lh[x.id],rh[x.id],bh[x.id]);if(p==="l")out.push(cl(x));else if(p==="r")out.push(cl(ra.filter(function(y){return y.id===x.id})[0]))});
+  ra.forEach(function(x){if(li[x.id])return;if(p3(undefined,rh[x.id],bh[x.id])==="r")out.push(cl(x))});return out}
+ M.nodes=arr(l.nodes||[],r.nodes||[],lf.n,rf.n,bn);
+ M.links=arr(l.links||[],r.links||[],lf.l,rf.l,bl);
+ var seen={};M.links=M.links.filter(function(k){var key=k.from+">"+k.to+">"+(k.a===undefined?1:k.a);if(seen[key])return false;seen[key]=1;return true});
+ M.mod=Math.max(l.mod||0,r.mod||0);
+ return{m:M,both:both}}
+/* fusion avec la sauvegarde GitHub, carte par carte puis élément par élément ; les cartes qui n'existent que d'un côté sont conservées ; la corbeille est partagée */
 function mergeSync(rem,ru){var lc=false,rc=false,cf=0,loc=+store.get("mm_upd",0)||0,byId={},rid={},rt=rem.trash||[];
  rt.forEach(function(t){var l=maps.filter(function(m){return m.id===t.id})[0];
   if(l&&(t.deletedAt||0)>(l.mod||0)){maps=maps.filter(function(m){return m!==l});if(!inTrash(t.id))trash.push(t);lc=true}});
@@ -896,20 +939,16 @@ function mergeSync(rem,ru){var lc=false,rc=false,cf=0,loc=+store.get("mm_upd",0)
  (rem.maps||[]).forEach(function(r){rid[r.id]=1;var l=byId[r.id];
   if(!l){if(!inTrash(r.id)){maps.push(r);lc=true}
    else{var tt=trash.filter(function(x){return x.id===r.id})[0];if(tt&&(r.mod||0)>(tt.deletedAt||0)){trash=trash.filter(function(x){return x!==tt});maps.push(r);lc=true}else rc=true}}
-  else if(snap(l)!==snap(r)){var lh=hashStr(snap(l)),rh=hashStr(snap(r)),bh=BASE?BASE[r.id]:undefined;
-   if(bh!==undefined&&lh===bh){maps[maps.indexOf(l)]=r;byId[r.id]=r;lc=true}/* modifiée seulement sur l'autre appareil */
-   else if(bh!==undefined&&rh===bh){rc=true}/* modifiée seulement ici */
-   else{/* modifiée des deux côtés : la plus récente garde le nom, l'autre est conservée en copie « (autre appareil) » */
-    var a=l.mod||0,b=r.mod||0;if(a===b){a=0;b=ru>loc?1:0}
-    var rw=b>a,lo=rw?l:r;
-    if(rw){maps[maps.indexOf(l)]=r;byId[r.id]=r;lc=true}else rc=true;
-    if(BASE){var cp=JSON.parse(JSON.stringify(lo));delete cp._h;cp.id="c"+r.id+"_"+(hashStr(snap(lo))>>>0).toString(36);
-     var ti=cp.title||"Votre carte";cp.title=/\(autre appareil\)\s*$/.test(ti)?ti:ti+" (autre appareil)";
-     if(!byId[cp.id]&&!inTrash(cp.id)){maps.splice(maps.indexOf(byId[r.id])+1,0,cp);byId[cp.id]=cp;lc=true;rc=true;cf++}}}}else{var lm=l.mod||0,rm=r.mod||0;if(rm>lm){l.mod=rm;lc=true}else if(lm>rm)rc=true}});
+  else{var sl=mapSig(l),sr=mapSig(r);
+   if(sl!==sr){var b=BASE&&typeof BASE[r.id]==="object"?BASE[r.id]:null,a=l.mod||0,c=r.mod||0,nw=c>a?"r":(c===a&&ru>loc?"r":"l"),mg=mergeMaps(l,r,b,nw),sm=mapSig(mg.m);
+    if(mg.both)cf++;
+    if(sm!==sl){maps[maps.indexOf(l)]=mg.m;byId[r.id]=mg.m;lc=true}
+    if(sm!==sr)rc=true}
+   else{var lm=l.mod||0,rm=r.mod||0;if(rm>lm){l.mod=rm;lc=true}else if(lm>rm)rc=true}}});
  if(maps.some(function(m){return!rid[m.id]})||trash.some(function(t){return!rt.some(function(x){return x.id===t.id})}))rc=true;
  if(!maps.length)maps.push(newMap());
- if(cf)toast(cf>1?cf+" cartes ont été modifiées sur deux appareils : l’autre version de chacune est conservée avec la mention « (autre appareil) ».":"Une carte a été modifiée sur deux appareils : l’autre version est conservée avec la mention « (autre appareil) ».");
- if(lc){normNames(maps);if(!maps.some(function(m){return m.id===curId}))curId=maps[0].id;resetHist();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",Math.max(loc,ru||0));refreshMaps();draw();syncPanel()}
+ if(cf)toast(cf>1?cf+" cartes avaient été modifiées en même temps sur deux appareils : les modifications ont été fusionnées.":"Une carte avait été modifiée en même temps sur deux appareils : les modifications ont été fusionnées.");
+ if(lc){normNames(maps);if(!maps.some(function(m){return m.id===curId}))curId=maps[0].id;resetHist();relayoutCur();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",curId);store.set("mm_upd",Math.max(loc,ru||0));refreshMaps();draw();syncPanel()}
  return{lc:lc,rc:rc||upU,cf:cf}}
 function doPush(){if(!syncOn())return Promise.resolve();return enqueue(push).then(function(){if(!pushTimer)dirty=false;setSync("Cartes enregistrées sur GitHub "+stamp()+".");if(gh.auto&&gh.sync)cleanImages(true)}).catch(function(e){setSync("Sauvegarde GitHub impossible ("+e.message+"). Vos cartes restent dans ce navigateur.")})}
 function schedulePush(){if(!syncOn())return;dirty=true;clearTimeout(pushTimer);setSync("Modifications en attente d’envoi…");pushTimer=setTimeout(function(){pushTimer=null;doPush()},6000)}
@@ -1012,8 +1051,8 @@ function renameMapById(id){var m=maps.filter(function(x){return x.id===id})[0];i
 function renameMap(){var m=cur(),t=$("mTitle");if(t.querySelector("input"))return;var inp=document.createElement("input"),done=false;inp.type="text";inp.value=m.title||"";t.textContent="";t.appendChild(inp);inp.focus();inp.select();
  function fin(ok){if(done)return;done=true;var v=inp.value.trim();t.textContent="";if(ok&&v&&v!==m.title){m.title=v;save()}refreshMaps()}
  inp.onkeydown=function(e){e.stopPropagation();if((e.ctrlKey||e.metaKey)&&e.shiftKey&&!e.altKey&&(e.key||"").toLowerCase()==="x"){e.preventDefault();strikeEd(inp);return}if(e.key==="Enter")fin(true);else if(e.key==="Escape")fin(false)};inp.onblur=function(){fin(true)}}
-$("mTitle").addEventListener("contextmenu",function(e){if(e.target.tagName==="INPUT")return;e.preventDefault();e.stopPropagation();showCtx(e.clientX,e.clientY,[{icon:"✏️",label:"Renommer la carte",fn:function(){renameMap()}}])});
-function dupMapById(id){var o=maps.filter(function(x){return x.id===id})[0];if(!o)return;var c=JSON.parse(JSON.stringify(o));delete c._h;c.mod=Date.now();c.id=uid();c.title=(o.title||"Votre carte")+" (copie)";leaveMap();maps.splice(maps.indexOf(o)+1,0,c);curId=c.id;sel=null;selLink=null;ensureHist(c);save();refreshMaps();draw();syncPanel();fit();toast("Carte dupliquée.")}
+$("mTitle").addEventListener("dblclick",function(e){if(e.target.tagName==="INPUT")return;e.preventDefault();e.stopPropagation();if(cur().locked){toast("Carte verrouillée : déverrouillez-la avant de la renommer.");return}renameMap()});
+function dupMapById(id){var o=maps.filter(function(x){return x.id===id})[0];if(!o)return;var c=JSON.parse(JSON.stringify(o));delete c._h;delete c._g;c.mod=Date.now();c.id=uid();c.title=(o.title||"Votre carte")+" (copie)";leaveMap();maps.splice(maps.indexOf(o)+1,0,c);curId=c.id;sel=null;selLink=null;ensureHist(c);save();refreshMaps();draw();syncPanel();fit();toast("Carte dupliquée.")}
 /* replier / déplier toutes les bulles : "fold" tout replier, "one" déplier d'un niveau (les bulles repliées visibles), "all" tout déplier */
 function foldTree(mode){var m=cur(),ci=colInfo(m),c=0;
  m.nodes.forEach(function(n){if(mode==="fold"){if(ci.out[n.id]&&!n.col){n.col=true;c++}}
@@ -1257,7 +1296,7 @@ function editLabel(l){closeCtx();showEdImg(null);edGroup=null;if(selLink!==l.id|
 $("edt").addEventListener("input",function(){if(edGroup){var m0=cur();m0.gt=m0.gt||{};m0.gt[edGroup]=this.value.replace(/\s*\n\s*/g," ").slice(0,80);save("g"+edGroup);draw();return}if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(!l)return;l.label=this.value;save("l"+l.id);draw();renderEdLinks();return}var n=getN(edId);if(!n)return;n.t=this.value;save("t"+n.id);draw();renderEdLinks()});
 $("ed").addEventListener("pointerdown",function(e){edDown=e.target===this});
 $("ed").addEventListener("click",function(e){if(e.target===this&&edDown)closeEd()});
-var lastImg={id:null,t:0},lastNode={id:null,t:0};
+var lastImg={id:null,t:0},lastNode={id:null,t:0},lastNote={id:null,t:0};
 function openLb(url){$("lbi").src=url;$("lb").classList.add("on")}
 function closeLb(){$("lb").classList.remove("on");$("lbi").removeAttribute("src")}
 $("lb").addEventListener("click",function(e){if(e.target!==$("lbi"))closeLb()});
@@ -1323,6 +1362,8 @@ function nodeMenu(n){var ids=selIds(),multi=ids.length>1&&ids.indexOf(n.id)>=0,a
  return it}
 /* menu de l'image, quand elle est sélectionnée seule */
 function imgMenu(n,k){return[{icon:"🖼",label:"Retirer l’image",fn:function(){removeImgAt(n,k)}}]}
+/* menu de la note, quand elle est sélectionnée */
+function noteMenu(n){return[{icon:"📝",label:"Modifier la note",fn:function(){openNote(n.id)}},"-",{icon:"🗑",label:"Supprimer la note",danger:true,fn:function(){delete n.note;selNote=null;save();draw();syncPanel()}}]}
 function linkMenu(l){var it=[],a=l.a===undefined?1:l.a;
  function setA(v){return function(){l.a=v;delete l.rv;save();draw();syncPanel()}}
  if(a===1)it.push({icon:"⇄",label:"Inverser le sens",fn:function(){invLink(l)}});
@@ -1384,7 +1425,7 @@ $("selcancel").onclick=endSelMode;
 function openCtxFor(t,cx,cy){if(linkFrom)endLink();
  var nd=t.closest&&t.closest(".node"),lk=t.closest&&t.closest(".lk"),gp=t.closest&&t.closest(".grp"),items;
  if(!lk&&!nd&&selLink&&t.closest&&t.closest(".lkh"))lk={getAttribute:function(){return selLink}};
- if(nd){var id=nd.getAttribute("data-id"),onImg=!!(t.classList&&t.classList.contains("nimg"))&&selImg===id&&+t.getAttribute("data-i")===selImgI;if(sel!==id||selLink||(selImg&&!onImg)){sel=id;selLink=null;if(!onImg)selImg=null;draw();syncPanel()}var n=getN(id);if(!n)return;items=onImg?imgMenu(n,selImgI):nodeMenu(n)}
+ if(nd){var id=nd.getAttribute("data-id"),onImg=!!(t.classList&&t.classList.contains("nimg"))&&selImg===id&&+t.getAttribute("data-i")===selImgI;if(sel!==id||selLink||(selImg&&!onImg)){sel=id;selLink=null;if(!onImg)selImg=null;draw();syncPanel()}var n=getN(id);if(!n)return;var onNote=!!(t.closest&&t.closest(".nbtn"))&&selNote===id&&!!n.note;if(!onNote&&selNote){selNote=null;draw()}items=onNote?noteMenu(n):onImg?imgMenu(n,selImgI):nodeMenu(n)}
  else if(lk){var lid=lk.getAttribute("data-id"),l=(cur().links||[]).filter(function(x){return x.id===lid})[0];if(!l)return;if(selLink!==lid||sel){selLink=lid;sel=null;draw();syncPanel()}items=linkMenu(l)}
  else if(gp)items=grpMenu(gp.getAttribute("data-g"),toWorld({clientX:cx,clientY:cy}));
  else items=bgMenu(toWorld({clientX:cx,clientY:cy}),!selIds().length&&!selLink);
@@ -1501,10 +1542,10 @@ document.addEventListener("keydown",function(e){
   if(kc==="x"&&selIds().length){e.preventDefault();cutAct();return}}
  if(e.key==="Tab"&&sel&&!inField){e.preventDefault();addLinked()}
  else if(e.key==="Enter"&&sel&&!inField&&!e.ctrlKey&&!e.metaKey&&!e.altKey&&!e.shiftKey&&!(ae&&ae.tagName==="BUTTON")){e.preventDefault();addSibling()}
- else if((e.key==="Delete")&&!inField){if(selLink)removeLink(selLink);else if(selImg&&getN(selImg))removeImgAt(getN(selImg),selImgI);else rm()}
+ else if((e.key==="Delete")&&!inField){if(selLink)removeLink(selLink);else if(selNote&&getN(selNote)){if(!LK()){delete getN(selNote).note;selNote=null;save();draw();syncPanel()}}else if(selImg&&getN(selImg))removeImgAt(getN(selImg),selImgI);else rm()}
 });
 
-purgeTrash();resetHist();refreshMaps();sel=(cur().nodes[0]||{}).id||null;draw();syncPanel();fit();updBadge();
+purgeTrash();resetHist();refreshMaps();sel=(cur().nodes[0]||{}).id||null;relayoutCur();draw();syncPanel();fit();updBadge();
 window.addEventListener("resize",fit);
 })();
 </script>
