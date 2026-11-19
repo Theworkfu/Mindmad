@@ -194,7 +194,7 @@ body.notes #bSnap{display:none}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><g fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 31H6V23" stroke="#a02a78"/><path d="M40 14V8H49" stroke="#e8601f"/><path d="M55 30H59V39" stroke="#0e9a8c"/><path d="M24 43V49H9V56" stroke="#e0c81a"/></g><circle cx="6" cy="22" r="2" fill="#a02a78"/><circle cx="49.5" cy="8" r="2" fill="#e8601f"/><circle cx="59" cy="40" r="2" fill="#0e9a8c"/><circle cx="9" cy="57" r="2" fill="#e0c81a"/><g transform="translate(6 8) scale(.84)" stroke="#fff" stroke-opacity=".45" stroke-width=".7" stroke-linejoin="round"><polygon fill="#8a1a5c" points="10,18 20,9 33,6 34,18 22,22"/><polygon fill="#b02a80" points="6,30 10,18 22,22 20,34"/><polygon fill="#d878b8" points="6,30 20,34 18,43 9,40"/><polygon fill="#c8509c" points="22,22 34,18 30,32 20,34"/><polygon fill="#f07a30" points="33,6 46,9 46,22 34,18"/><polygon fill="#e8551e" points="46,9 57,17 46,22"/><polygon fill="#b4481e" points="34,18 46,22 42,33 30,32"/><polygon fill="#f4a384" points="30,32 42,33 36,42 28,44"/><polygon fill="#f8e032" points="20,34 30,32 28,44 18,43"/><polygon fill="#d8c41c" points="28,44 36,42 36,46"/><polygon fill="#a89a1c" points="36,42 48,46 44,56 38,57 36,46"/><polygon fill="#a6e8dc" points="42,33 46,22 52,30"/><polygon fill="#0e7c80" points="46,22 57,17 60,29 52,30"/><polygon fill="#16b2a2" points="42,33 52,30 60,29 56,40 48,46 36,42"/></g></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button><button class="rd" id="bLock" title="Verrouiller la carte" aria-label="Verrouiller la carte">🔓</button><button class="rd" id="bSnap" title="Magnétisme" aria-label="Magnétisme">🧲</button></div>
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v60</div>
+    <div id="ver" title="Numéro de version de la page">v62</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -642,6 +642,25 @@ function autoLayout(m){var ch={},hp={},by={},o={},seen={},top=0;
  R.filter(function(i){return(ch[i]||[]).length}).concat(R.filter(function(i){return!(ch[i]||[]).length})).forEach(function(id){var h=lay(id,0,top);top+=h+GAP*2});
  m.nodes.forEach(function(n){if(!seen[n.id]&&!CI.hid[n.id]){var h=lay(n.id,0,top);top+=h+GAP*2}})}
 function firstParents(m){var hp={};(m.links||[]).forEach(function(l){if(l.from===l.to||!(l.a===undefined||l.a===1))return;if(hp[l.to]===undefined)hp[l.to]=l.from});return hp}
+/* mode Notes : bulle sous la bulle tenue (son centre est dans la bulle), hors de ce qui est déplacé */
+function noteTarget(mv){var m=cur(),d=drag&&drag.n,M={},t=null;if(!d)return null;mv.forEach(function(n){M[n.id]=1});
+ var cx=d.x+d.w/2,cy=d.y+d.h/2;m.nodes.forEach(function(n){if(!M[n.id]&&!CI.hid[n.id]&&cx>=n.x&&cx<=n.x+n.w&&cy>=n.y&&cy<=n.y+n.h)t=n});return t}
+/* mode Notes : les bulles lâchées dans la bulle T deviennent ses filles (elles quittent leur ancienne mère). Renvoie "cycle" si T descend d'elles. */
+function reparent(roots,T){var m=cur(),adj={},seen={},q=roots.slice(),k=0;
+ function hier(l){return l.from!==l.to&&(l.a===undefined||l.a===1)}
+ m.links.forEach(function(l){if(hier(l))(adj[l.from]=adj[l.from]||[]).push(l.to)});
+ roots.forEach(function(r){seen[r]=1});
+ while(q.length){var x=q.pop();(adj[x]||[]).forEach(function(v){if(!seen[v]){seen[v]=1;q.push(v)}})}
+ if(seen[T.id])return"cycle";
+ roots.forEach(function(r){var n=getN(r);if(!n)return;var has=m.links.some(function(l){return hier(l)&&l.from===T.id&&l.to===r});
+  m.links=m.links.filter(function(l){return!(hier(l)&&l.to===r&&l.from!==T.id)});
+  if(!has)m.links.push({id:uid(),from:T.id,to:r,label:"",a:1,sd:[1,0]});k++});
+ /* les bulles rattachées passent après les filles déjà présentes (dans l'ordre où elles étaient affichées) */
+ var hp=firstParents(m),R={},kids,moved;roots.forEach(function(r){R[r]=1});
+ function byY(a,b){return(CI.hid[a.id]?1:0)-(CI.hid[b.id]?1:0)||a.y-b.y}
+ kids=m.nodes.filter(function(n){return hp[n.id]===T.id&&!R[n.id]}).sort(byY);moved=roots.map(getN).filter(Boolean).sort(byY);
+ kids.concat(moved).forEach(function(n,i){n.ord=i});
+ delete T.col;return k}
 /* mode Notes : une bulle lâchée plus haut ou plus bas passe avant ou après ses sœurs */
 function reorderNote(d){var m=cur(),hp=firstParents(m),p=hp[d.id],cy=d.y+d.h/2,i=0,S=m.nodes.filter(function(n){return n!==d&&hp[n.id]===p&&!CI.hid[n.id]}).sort(function(a,b){return a.y-b.y});
  while(i<S.length&&S[i].y+S[i].h/2<cy)i++;S.splice(i,0,d);S.forEach(function(n,k){n.ord=k})}
@@ -778,6 +797,7 @@ function dropPlan(grp,roots){var m=cur(),o=grp.map(function(n){return{n:n,x:n.x,
 /* aperçu du point de chute : contour en pointillés (rouge si le déplacement sera refusé) */
 function ghostClear(){var G=$("ghost");if(G)G.innerHTML=""}
 function ghostShow(grp,roots){ghostClear();var G=$("ghost");if(!G||!grp.length)return;
+ if(cur().mode==="notes"){var tg=noteTarget(grp);if(tg)el("rect",{"class":"ghost",x:tg.x-5,y:tg.y-5,width:tg.w+10,height:tg.h+10,rx:14},G);return}
  var pl=dropPlan(grp,roots||grp.map(function(n){return n.id}));
  if(pl.far){grp.forEach(function(n){if(!CI.hid[n.id])el("rect",{"class":"ghost far",x:n.x,y:n.y,width:n.w,height:n.h,rx:10},G)});return}
  if(!pl.mv)return;
@@ -1409,7 +1429,7 @@ cv.addEventListener("mousedown",function(e){if(e.button===1)e.preventDefault()})
 var dragged=false,drag=null,mk=null;
 function setHl(id){clearHl();if(!id)return;hlId=id;var g=document.querySelector('.node[data-id="'+id+'"]');if(g)g.classList.add("dropt")}
 function nodeAt(e){var t=document.elementFromPoint(e.clientX,e.clientY),nd=t&&t.closest&&t.closest(".node");return nd?nd.getAttribute("data-id"):null}
-function startDrag(e,n){e.stopPropagation();if(e.button)return;if(cur().locked)return;moveMode=false;cv.classList.remove("movemode");drag={n:n,x:e.clientX,y:e.clientY,on:false,shift:e.shiftKey,alone:e.ctrlKey||e.metaKey}}
+function startDrag(e,n){e.stopPropagation();if(e.button)return;if(cur().locked)return;moveMode=false;cv.classList.remove("movemode");drag={n:n,x:e.clientX,y:e.clientY,on:false,shift:e.shiftKey}}
 window.addEventListener("pointermove",function(e){
  if(mk){var a=getN(mk.from);if(!a){mk=null;return}
   if(!mk.on){if(Math.abs(e.clientX-mk.x0)+Math.abs(e.clientY-mk.y0)<5)return;mk.on=true;dragged=true;mk.path=[toWorld({clientX:mk.x0,clientY:mk.y0})]}
@@ -1420,7 +1440,7 @@ window.addEventListener("pointermove",function(e){
  if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
  if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;drag.orig={};cur().nodes.forEach(function(x){drag.orig[x.id]=[x.x,x.y]});drag.rx=0;drag.ry=0;
   if(!ms[drag.n.id]){if(drag.shift){var ids0=selIds();if(ids0.indexOf(drag.n.id)<0)ids0.push(drag.n.id);ms={};if(ids0.length>1)ids0.forEach(function(x){ms[x]=1});sel=drag.n.id;syncPanel()}else{ms={};if(drag.group)cur().nodes.forEach(function(x){if(x.grp===drag.group)ms[x.id]=1});if(sel!==drag.n.id){sel=drag.n.id;syncPanel()}}}}
- if(!drag.mv){drag.roots=ms[drag.n.id]?Object.keys(ms):[drag.n.id];drag.mv=(drag.group||drag.alone||cur().mode!=="notes")?drag.roots:subtree(drag.roots)}
+ if(!drag.mv){drag.roots=ms[drag.n.id]?Object.keys(ms):[drag.n.id];drag.mv=(drag.group||cur().mode!=="notes")?drag.roots:subtree(drag.roots)}
  var grp=drag.mv.map(getN).filter(Boolean);
   drag.rx+=ddx/tr.k;drag.ry+=ddy/tr.k;
   var sn=[0,0],mset0={};grp.forEach(function(g){mset0[g.id]=1});
@@ -1442,7 +1462,10 @@ function endDrag(e){
  if(hd){if(hd.on){var tp1=$("tmpl");if(tp1)tp1.remove();clearHl();
   if(hd.tgt){var l1=(cur().links||[]).filter(function(x){return x.id===hd.id})[0];if(l1)reattach(l1,hd.kind,hd.tgt)}
   save();draw();syncPanel();setTimeout(function(){dragged=false},0)}hd=null}
- if(drag&&drag.on&&cur().mode==="notes"){reorderNote(drag.n);dropG={};save();draw();setTimeout(function(){dragged=false},0)}
+ if(drag&&drag.on&&cur().mode==="notes"){var mvN=(drag.mv||[drag.n.id]).map(getN).filter(Boolean),tg=noteTarget(mvN);
+  if(tg){var rp=reparent(drag.roots||[drag.n.id],tg);if(rp==="cycle")toast("Impossible : une bulle ne peut pas devenir fille d'une de ses propres descendantes.");
+   else if(rp){var tl=(tg.t||"").replace(/\s*\n+\s*/g," ").slice(0,30);toast(rp>1?rp+" bulles rattachées à « "+tl+" »":"Bulle rattachée à « "+tl+" »")}}
+  else reorderNote(drag.n);dropG={};save();draw();setTimeout(function(){dragged=false},0)}
  else if(drag&&drag.on){var mv=(drag.mv||[drag.n.id]).map(getN).filter(Boolean),pl=dropPlan(mv,drag.roots||[drag.n.id]);dropG={};
   if(pl.far){mv.forEach(function(n){var o=drag.orig&&drag.orig[n.id];if(o){n.x=o[0];n.y=o[1]}});toast("Pas de place libre ici : déplacement annulé.")}
   else{/* une bulle non groupée déposée dans un cadre rejoint le groupe de ce cadre */
