@@ -198,7 +198,8 @@ body.notes #bSnap{display:none}
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><g fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 31H6V23" stroke="#a02a78"/><path d="M40 14V8H49" stroke="#e8601f"/><path d="M55 30H59V39" stroke="#0e9a8c"/><path d="M24 43V49H9V56" stroke="#e0c81a"/></g><circle cx="6" cy="22" r="2" fill="#a02a78"/><circle cx="49.5" cy="8" r="2" fill="#e8601f"/><circle cx="59" cy="40" r="2" fill="#0e9a8c"/><circle cx="9" cy="57" r="2" fill="#e0c81a"/><g transform="translate(6 8) scale(.84)" stroke="#fff" stroke-opacity=".45" stroke-width=".7" stroke-linejoin="round"><polygon fill="#8a1a5c" points="10,18 20,9 33,6 34,18 22,22"/><polygon fill="#b02a80" points="6,30 10,18 22,22 20,34"/><polygon fill="#d878b8" points="6,30 20,34 18,43 9,40"/><polygon fill="#c8509c" points="22,22 34,18 30,32 20,34"/><polygon fill="#f07a30" points="33,6 46,9 46,22 34,18"/><polygon fill="#e8551e" points="46,9 57,17 46,22"/><polygon fill="#b4481e" points="34,18 46,22 42,33 30,32"/><polygon fill="#f4a384" points="30,32 42,33 36,42 28,44"/><polygon fill="#f8e032" points="20,34 30,32 28,44 18,43"/><polygon fill="#d8c41c" points="28,44 36,42 36,46"/><polygon fill="#a89a1c" points="36,42 48,46 44,56 38,57 36,46"/><polygon fill="#a6e8dc" points="42,33 46,22 52,30"/><polygon fill="#0e7c80" points="46,22 57,17 60,29 52,30"/><polygon fill="#16b2a2" points="42,33 52,30 60,29 56,40 48,46 36,42"/></g></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button><button class="rd" id="bLock" title="Verrouiller la carte" aria-label="Verrouiller la carte">🔓</button><button class="rd" id="bSnap" title="Magnétisme" aria-label="Magnétisme">🧲</button></div>
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
-    <div id="ver" title="Numéro de version de la page">v64</div>
+    <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
+    <div id="ver" title="Numéro de version de la page">v68</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -317,11 +318,24 @@ function colInfo(m){var adj={},radj={},out={},cnt={},hid={},cols={};
  Object.keys(cols).forEach(function(c){var seen={},q=[],k=0;(adj[c]||[]).forEach(function(v){if(hid[v]&&!seen[v]){seen[v]=1;q.push(v);k++}});
   while(q.length){var x=q.pop();(adj[x]||[]).forEach(function(v){if(hid[v]&&!seen[v]){seen[v]=1;q.push(v);k++}})}cnt[c]=k});
  return{hid:hid,out:out,cnt:cnt}}
-function toggleCol(id){var n=getN(id);if(!n||!CI.out[id])return;var was=CI.hid;if(n.col)delete n.col;else n.col=true;
+/* déplacement doux des bulles (ex. replier / déplier) : elles glissent vers leur nouvelle place et la bulle cliquée reste au même endroit à l'écran */
+var animCancel=null;
+function animMove(old,anchorId){if(animCancel)animCancel();var m=cur(),fin={},a=anchorId?getNIn(m,anchorId):null,o0=a&&old[anchorId]?old[anchorId]:null,k=tr.k,sx=0,sy=0,t0=null,rid=0,done=false;
+ m.nodes.forEach(function(n){fin[n.id]=[n.x,n.y]});
+ if(o0){sx=tr.x+o0[0]*k;sy=tr.y+o0[1]*k}
+ function put(e){m.nodes.forEach(function(n){var f=fin[n.id],o=old[n.id]||o0||f;n.x=o[0]+(f[0]-o[0])*e;n.y=o[1]+(f[1]-o[1])*e});if(o0&&a){tr.x=sx-a.x*k;tr.y=sy-a.y*k}draw()}
+ var moved=m.nodes.some(function(n){var o=old[n.id];return o&&(o[0]!==fin[n.id][0]||o[1]!==fin[n.id][1])});
+ if(!moved||!window.requestAnimationFrame||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){put(1);return}
+ function end(){if(done)return;done=true;cancelAnimationFrame(rid);animCancel=null;put(1)}
+ animCancel=end;
+ function step(ts){if(done)return;if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/240);if(p>=1){end();return}put(1-Math.pow(1-p,3));rid=requestAnimationFrame(step)}
+ put(0);rid=requestAnimationFrame(step)}
+window.addEventListener("pointerdown",function(){if(animCancel)animCancel()},true);
+function toggleCol(id){var n=getN(id);if(!n||!CI.out[id])return;var was=CI.hid,old={};cur().nodes.forEach(function(x){old[x.id]=[x.x,x.y]});if(n.col)delete n.col;else n.col=true;
  /* des bulles réapparaissent : elles ne doivent pas recouvrir celles qui étaient déjà visibles, ce sont elles qui sont repoussées */
  var m=cur(),now=colInfo(m).hid,shown={},any=false;m.nodes.forEach(function(x){if(was[x.id]&&!now[x.id]){shown[x.id]=1;any=true}});
  if(any)placeFree(Object.keys(shown));
- save();draw()}
+ save();animMove(old,id)}
 var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps);
 var trash=store.get("mm_trash",[]);normNames(trash);
 if(migrated){store.set("mm_maps",maps);store.set("mm_trash",trash)}
