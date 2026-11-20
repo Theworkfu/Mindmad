@@ -199,7 +199,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v74</div>
+    <div id="ver" title="Numéro de version de la page">v75</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -718,24 +718,12 @@ function reparent(roots,T){var m=cur(),adj={},seen={},q=roots.slice(),k=0;
    Pour ne pas faire bouger la carte pendant qu'on vise, le réarrangement n'a lieu qu'une fois le curseur resté un instant (DWELL) sur la même cible ;
    d'ici là, la cible visée est seulement entourée. La cible est celle que l'on voit, et elle reste « collée » tant que le curseur est dessus. */
 var DWELL=0,INS=5;
-function noteWant(M){var m=cur(),d=drag.n,b=drag.base,pw=drag.pw,tg=null,mode="none",par=null,idx=0,anc=null,pad=NGAP;
- function inR(n,p){return pw[0]>=n.x-p&&pw[0]<=n.x+n.w+p&&pw[1]>=n.y-p&&pw[1]<=n.y+n.h+p}
- function at(px,py){var t=null,bd=1e9;m.nodes.forEach(function(n){if(M[n.id]||CI.hid[n.id])return;if(px>=n.x&&px<=n.x+n.w&&py>=n.y-pad&&py<=n.y+n.h+pad){var dd=Math.abs(py-(n.y+n.h/2));if(dd<bd){bd=dd;t=n}}});return t}
- function sibs(p,ex){return m.nodes.filter(function(n){return b.hp[n.id]===p&&!b.hid[n.id]&&!M[n.id]&&n!==ex}).sort(function(x,y){return drag.orig[x.id][1]-drag.orig[y.id][1]})}
- var H=(pw&&at(pw[0],pw[1]))||at(d.x+d.w/2,d.y+d.h/2);
- if(H){var pp=b.hp[H.id],py=pw?pw[1]:d.y+d.h/2,eg=py<H.y+INS||py>H.y+H.h-INS;
-  /* sur une bulle : elle devient sa fille ; dans l'espace entre deux sœurs (et à peine sur leurs bords) : on s'insère entre elles */
-  if(pp!==undefined&&!M[pp]&&eg){var L=sibs(pp,null),k=L.indexOf(H);mode="slot";par=pp;idx=k+(py>H.y+H.h/2?1:0);anc=(L[idx-1]||L[idx]||H).id}
-  else{tg=H;mode="child"}}
- if(mode==="child")anc=tg.id;
- if(mode==="none"){var p=b.hp[d.id],cy=d.y+d.h/2,S=sibs(p,d);while(idx<S.length&&S[idx].y+S[idx].h/2<cy)idx++;par=p===undefined?null:p;anc=(S[idx-1]||S[idx]||{}).id||null}
- return{mode:mode,tg:tg?tg.id:null,par:par,idx:idx,anc:anc,sig:mode==="child"?"T"+tg.id:mode==="slot"?"S"+par+"@"+idx:"R"+idx}}
-/* rattache les bulles à la mère par (au rang idx parmi ses filles) */
-function noteApplySlot(roots,par,idx){var m=cur(),rp=reparent(roots,getN(par));if(rp==="cycle")return rp;
- var hp=firstParents(m),R={};roots.forEach(function(r){R[r]=1});
- var kids=m.nodes.filter(function(n){return hp[n.id]===par&&!R[n.id]}).sort(function(x,y){return(x.ord||0)-(y.ord||0)}),mv=roots.map(getN).filter(Boolean).sort(function(x,y){return(x.ord||0)-(y.ord||0)});
- kids.splice.apply(kids,[Math.min(idx,kids.length),0].concat(mv));kids.forEach(function(n,k){n.ord=k});return rp}
-function noteApply(W,d){if(W.mode==="child")return reparent(drag.roots,getN(W.tg));if(W.mode==="slot")return noteApplySlot(drag.roots,W.par,W.idx);noteApplyIdx(d,W.idx);return null}
+function noteWant(M){var m=cur(),d=drag.n,pw=drag.pw,tg=null;
+ function at(px,py){var t=null;m.nodes.forEach(function(n){if(M[n.id]||CI.hid[n.id])return;if(px>=n.x&&px<=n.x+n.w&&py>=n.y&&py<=n.y+n.h)t=n});return t}
+ /* seule possibilité : déposer la bulle sur une autre, qui devient sa mère (la bulle passe en dernière fille). Ailleurs, rien ne change. */
+ tg=(pw&&at(pw[0],pw[1]))||at(d.x+d.w/2,d.y+d.h/2);
+ return tg?{mode:"child",tg:tg.id,anc:tg.id,sig:"T"+tg.id}:{mode:"none",tg:null,anc:null,sig:"N"}}
+function noteApply(W,d){if(W.mode==="child")return reparent(drag.roots,getN(W.tg));return null}
 /* changement de rang parmi les sœurs (d'après les positions de départ) */
 function noteApplyIdx(d,i){var m=cur(),b=drag.base,p=b.hp[d.id],S=m.nodes.filter(function(n){return n!==d&&b.hp[n.id]===p&&!b.hid[n.id]}).sort(function(x,y){return drag.orig[x.id][1]-drag.orig[y.id][1]});S.splice(i,0,d);S.forEach(function(n,k){n.ord=k})}
 function noteRestore(){var m=cur(),b=drag&&drag.base;if(!b)return;
@@ -1604,7 +1592,7 @@ function endDrag(e){
   save();draw();syncPanel();setTimeout(function(){dragged=false},0)}hd=null}
  if(drag&&drag.on&&cur().mode==="notes"){var oldP={};cur().nodes.forEach(function(x){oldP[x.id]=[x.x,x.y]});noteReset();
   var W=drag.want,ancId=W&&W.anc,rp=null;
-  if(W)rp=noteApply(W,drag.n);else{var mvN=(drag.mv||[drag.n.id]).map(getN).filter(Boolean),tg0=noteTarget(mvN);if(tg0)rp=reparent(drag.roots||[drag.n.id],tg0);else reorderNote(drag.n)}
+  if(W)rp=noteApply(W,drag.n);else{var mvN=(drag.mv||[drag.n.id]).map(getN).filter(Boolean),tg0=noteTarget(mvN);if(tg0)rp=reparent(drag.roots||[drag.n.id],tg0)}
   if(rp==="cycle")toast("Impossible : une bulle ne peut pas devenir fille d'une de ses propres descendantes.");
   else if(rp&&W&&W.mode==="child"){var tl=(getN(W.tg).t||"").replace(/\s*\n+\s*/g," ").slice(0,30);toast(rp>1?rp+" bulles rattachées à « "+tl+" »":"Bulle rattachée à « "+tl+" »")}
   dropG={};save(undefined,true);animMove(oldP,ancId);setTimeout(function(){dragged=false},0)}
