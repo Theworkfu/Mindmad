@@ -199,7 +199,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v68</div>
+    <div id="ver" title="Numéro de version de la page">v74</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -320,22 +320,23 @@ function colInfo(m){var adj={},radj={},out={},cnt={},hid={},cols={};
  return{hid:hid,out:out,cnt:cnt}}
 /* déplacement doux des bulles (ex. replier / déplier) : elles glissent vers leur nouvelle place et la bulle cliquée reste au même endroit à l'écran */
 var animCancel=null;
-function animMove(old,anchorId){if(animCancel)animCancel();var m=cur(),fin={},a=anchorId?getNIn(m,anchorId):null,o0=a&&old[anchorId]?old[anchorId]:null,k=tr.k,sx=0,sy=0,t0=null,rid=0,done=false;
- m.nodes.forEach(function(n){fin[n.id]=[n.x,n.y]});
+function animMove(old,anchorId){var m=cur(),fin={};m.nodes.forEach(function(n){fin[n.id]=[n.x,n.y]});if(animCancel)animCancel();var a=anchorId?getNIn(m,anchorId):null,o0=a&&old[anchorId]?old[anchorId]:null,k=tr.k,sx=0,sy=0,t0=null,rid=0,done=false;
  if(o0){sx=tr.x+o0[0]*k;sy=tr.y+o0[1]*k}
  function put(e){m.nodes.forEach(function(n){var f=fin[n.id],o=old[n.id]||o0||f;n.x=o[0]+(f[0]-o[0])*e;n.y=o[1]+(f[1]-o[1])*e});if(o0&&a){tr.x=sx-a.x*k;tr.y=sy-a.y*k}draw()}
  var moved=m.nodes.some(function(n){var o=old[n.id];return o&&(o[0]!==fin[n.id][0]||o[1]!==fin[n.id][1])});
  if(!moved||!window.requestAnimationFrame||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){put(1);return}
  function end(){if(done)return;done=true;cancelAnimationFrame(rid);animCancel=null;put(1)}
  animCancel=end;
- function step(ts){if(done)return;if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/240);if(p>=1){end();return}put(1-Math.pow(1-p,3));rid=requestAnimationFrame(step)}
+ function step(ts){if(done)return;if(t0===null)t0=ts;var p=Math.min(1,(ts-t0)/320);if(p>=1){end();return}put(p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2);rid=requestAnimationFrame(step)}
  put(0);rid=requestAnimationFrame(step)}
-window.addEventListener("pointerdown",function(){if(animCancel)animCancel()},true);
+/* bouton du milieu : on déplace la carte tant qu'il est enfoncé ; replier / déplier ne se fait qu'au relâchement, si le curseur est sur la bulle visée et que la carte n'a pas bougé */
+var midDown=null;
+window.addEventListener("pointerdown",function(){midDown=null;if(animCancel)animCancel()},true);
 function toggleCol(id){var n=getN(id);if(!n||!CI.out[id])return;var was=CI.hid,old={};cur().nodes.forEach(function(x){old[x.id]=[x.x,x.y]});if(n.col)delete n.col;else n.col=true;
  /* des bulles réapparaissent : elles ne doivent pas recouvrir celles qui étaient déjà visibles, ce sont elles qui sont repoussées */
  var m=cur(),now=colInfo(m).hid,shown={},any=false;m.nodes.forEach(function(x){if(was[x.id]&&!now[x.id]){shown[x.id]=1;any=true}});
  if(any)placeFree(Object.keys(shown));
- save();animMove(old,id)}
+ save(undefined,true);animMove(old,id)}
 var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps);
 var trash=store.get("mm_trash",[]);normNames(trash);
 if(migrated){store.set("mm_maps",maps);store.set("mm_trash",trash)}
@@ -377,7 +378,13 @@ function fpStr(f){function d(o){return Object.keys(o).sort().map(function(k){ret
 function mapSig(m){return fpStr(fp(m))}
 function touchMods(){maps.forEach(function(m){var h=hashStr(mapSig(m));if(m._g!==h){if(m._g!==undefined)m.mod=Date.now();m._g=h}})}
 function persist(){touchMap();touchMods();store.set("mm_maps",maps);store.set("mm_trash",trash);store.set("mm_cur",cur().id);store.set("mm_upd",Date.now());schedulePush()}
-function save(key){if(cur().mode==="notes")autoLayout(cur());record(key);persist()}
+function save(key,na){var m=cur(),old=null;
+ if(m.mode==="notes"){if(!na&&!(drag&&drag.on)){old={};m.nodes.forEach(function(n){old[n.id]=[n.x,n.y]})}
+  autoLayout(m);
+  if(old&&!m.nodes.some(function(n){var o=old[n.id];return o&&(o[0]!==n.x||o[1]!==n.y)}))old=null}
+ record(key);persist();
+ /* les bulles glissent vers leur nouvelle place (après le code appelant, qui travaille sur les positions finales) */
+ if(old){var mid=m.id;Promise.resolve().then(function(){if(cur().id===mid)animMove(old,null)})}}
 /* ---------- corbeille : 30 jours ---------- */
 var DAY=86400000,KEEP=30*DAY,trDown=false;
 function flat(t){return(t||"").replace(/~~([\s\S]+?)~~/g,"$1").replace(/\s*\n+\s*/g," ")||"Sans titre"}
@@ -441,7 +448,7 @@ function draw(){modeBtn();
   var color=COLORS[(n.c||0)%COLORS.length];
   var isS=(n.id===sel||!!ms[n.id])&&selImg!==n.id,multi=Object.keys(ms).length>1;
   var g=el("g",{"data-id":n.id,"class":"node"+(isS?" sel":"")+(selImg===n.id?" isel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+n.x+","+n.y+")"},ng);if(isS||selImg===n.id)g.style.setProperty("--sc",color);
-  g.addEventListener("pointerdown",function(e){if(e.button===1){e.preventDefault();e.stopPropagation();toggleCol(n.id);return}startDrag(e,n)});
+  g.addEventListener("pointerdown",function(e){if(e.button===1){e.preventDefault();midDown={id:n.id};return}startDrag(e,n)});
   g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;if(linkFrom){var from=linkFrom;endLink();if(from!==n.id)addLink(from,n.id,toWorld(e));return}selLink=null;selImg=null;selNote=null;if(e.shiftKey){toggleSel(n.id);return}ms={};var t=Date.now(),second=lastNode.id===n.id&&t-lastNode.t<500;lastNode=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openEd(n.id)});
   g.addEventListener("dblclick",function(e){e.stopPropagation();selImg=null;selNote=null;ms={};sel=n.id;draw();syncPanel();openEd(n.id)});
   el("rect",{"class":"box",width:n.w,height:n.h,rx:10,stroke:color},g);
@@ -462,7 +469,7 @@ function draw(){modeBtn();
       var already=sel===n.id&&Object.keys(ms).length<2&&!selLink;ms={};selLink=null;selNote=null;sel=n.id;if(!second){selImg=already?n.id:null;selImgI=k}draw();syncPanel();if(second)openLb(imgUrl(v))})});
    }
   if(n.note){var nb=el("g",{"class":"nbtn"+(selNote===n.id?" nsel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w-2)+",2)"},g);el("circle",{r:7},nb);el("path",{d:"M-4,-5 H2.5 L5,-2.5 V5 H-4 Z M2.5,-5 V-2.5 H5 M-2,0 H3 M-2,2.5 H3",transform:"scale(.68)"},nb);
-   nb.style.setProperty("--nc",color);nb.addEventListener("pointerdown",function(e){e.stopPropagation();hideTip()});
+   nb.style.setProperty("--nc",color);nb.addEventListener("pointerdown",function(e){if(e.button===1)return;e.stopPropagation();hideTip()});
    nb.addEventListener("pointerenter",function(){showTip(nb,n.note)});nb.addEventListener("pointerleave",hideTip);
    /* un clic sélectionne la note, un double-clic la modifie ; clic droit sur la note sélectionnée : menu de suppression */
    nb.addEventListener("dblclick",function(e){e.stopPropagation();selLink=null;selImg=null;ms={};sel=n.id;selNote=n.id;draw();syncPanel();openNote(n.id)});
@@ -470,12 +477,12 @@ function draw(){modeBtn();
   if(CI.out[n.id]){var tg=el("g",{"class":"tog "+(n.col?"col":"open")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w/2)+","+n.h+")"},g);
    tg.style.setProperty("--nc",color);el("title",{},tg).textContent=n.col?"Déplier les bulles de destination":"Replier les bulles de destination";
    el("circle",{r:n.col?7:5.5},tg);if(n.col)el("text",{y:2.8},tg).textContent=CI.cnt[n.id];else el("path",{d:"M-2.4,0 H2.4"},tg);
-   tg.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault();if(e.button===1)toggleCol(n.id)});tg.addEventListener("dblclick",function(e){e.stopPropagation()});
+   tg.addEventListener("pointerdown",function(e){if(e.button===1){e.preventDefault();return}e.stopPropagation();e.preventDefault()});tg.addEventListener("dblclick",function(e){e.stopPropagation()});
    tg.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;toggleCol(n.id)})}
   if(n.id===sel&&!multi&&selImg!==n.id&&!m.locked){var lh=el("g",{"class":"lhandle"+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w+2)+","+(n.h/2)+")"},g);
    el("title",{},lh).textContent="Glisser vers une autre bulle pour les relier, ou vers le vide pour créer une bulle reliée";
    el("circle",{r:9},lh);el("path",{d:"M-3.5,0 H3.5 M0.5,-3.5 L4,0 L0.5,3.5"},lh);
-   lh.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault();if(e.button)return;mk={from:n.id,on:false,x0:e.clientX,y0:e.clientY,path:[]}});
+   lh.addEventListener("pointerdown",function(e){if(e.button===1)return;e.stopPropagation();e.preventDefault();if(e.button)return;mk={from:n.id,on:false,x0:e.clientX,y0:e.clientY,path:[]}});
    lh.addEventListener("click",function(e){e.stopPropagation()});lh.addEventListener("dblclick",function(e){e.stopPropagation()})}
  });
  var sg=ng.querySelector(".node.sel,.node.isel");if(sg)ng.appendChild(sg);
@@ -541,7 +548,9 @@ function offIn(a,b,d){var dx=(b.x+b.w/2)-(a.x+a.w/2),dy=(b.y+b.h/2)-(a.y+a.h/2);
 function linkDir(l,a,b){if(cur().mode==="notes"){if(b.x>=a.x+a.w)return[1,0];var f0=facing(a,b);return[f0[0],f0[1]]}var s=l.sd;if(s&&s.length===2&&Math.abs(s[0])+Math.abs(s[1])===1&&offIn(a,b,s))return s;var f=facing(a,b);l.sd=[f[0],f[1]];return l.sd}
 function linkGeom(l,a,b){var f=linkDir(l,a,b),n2=[-f[0],-f[1]],Ob=[],OfN=[],OfW=[],G,x0=Math.min(a.x,b.x)-150,x1=Math.max(a.x+a.w,b.x+b.w)+150,y0=Math.min(a.y,b.y)-150,y1=Math.max(a.y+a.h,b.y+b.h)+150;
  /* obstacles : les autres bulles (Ob), et les cadres des groupes que la flèche ne relie pas (Of) — le cadre d'un groupe auquel appartient l'une des deux bulles reste franchissable */
- cur().nodes.forEach(function(n){if(n===a||n===b||CI.hid[n.id])return;if(n.grp&&n.grp!==a.grp&&n.grp!==b.grp)return;var r=padRect(n);if(r.x2<x0||r.x>x1||r.y2<y0||r.y>y1)return;Ob.push(r)});
+ var NT=cur().mode==="notes";
+ cur().nodes.forEach(function(n){if(n===a||n===b||CI.hid[n.id])return;if(NT&&drag&&drag.on&&drag.mvset&&drag.mvset[n.id])return;if(n.grp&&n.grp!==a.grp&&n.grp!==b.grp)return;var r=padRect(n);if(r.x2<x0||r.x>x1||r.y2<y0||r.y>y1)return;Ob.push(r)});
+ if(NT&&(l.a===undefined||l.a===1)&&b.x>=a.x+a.w)Ob=[];
  grpRects().forEach(function(q){if(q.g===a.grp||q.g===b.grp)return;[[LPAD,OfN],[GPAD,OfW]].forEach(function(o){var d=o[0],r={x:q.x-d,y:q.y-d,x2:q.x+q.w+d,y2:q.y+q.h+d};if(r.x2<x0||r.x>x1||r.y2<y0||r.y>y1)return;o[1].push(r)})});
  /* les côtés mémorisés (départ sur a, arrivée sur le côté opposé de b) sont le choix par défaut ; on essaie les autres côtés des deux bulles seulement si ce tracé touche une AUTRE bulle ou un cadre
     (pas quand il est gêné par les deux bulles reliées elles-mêmes, ni pour un simple détour : les côtés ne changent alors que selon la règle des centres), et on garde le plus court tracé dégagé (un changement de côté coûte 90 px par extrémité) */
@@ -619,9 +628,12 @@ function zapSet(z,ts,fresh){if(z.e){elecSet(z,ts);return}var dbl=z.f&&z.b,fw=dbl
  z.els[0].style.opacity=(dbl?.2*bl:.14+Math.random()*.18).toFixed(2)}
 function zapFrame(ts){if(!zapItems.length){zapRAF=0;return}zapRAF=requestAnimationFrame(zapFrame);
  var fresh=ts-zapLast>70;if(fresh)zapLast=ts;zapItems.forEach(function(z){zapSet(z,ts,fresh)})}
-function zapBuild(){var g=$("zap");g.innerHTML="";zapItems=[];var m=cur(),pos={};m.nodes.forEach(function(n){pos[n.id]=n});
+/* tracé d'une flèche ; pendant le glisser en mode Notes, une flèche qui arrive sur une bulle tenue va vers sa place finale (celle qu'elle aura au lâcher) */
+function lkAt(l,a,b){var sv=null;if(drag&&drag.on&&drag.slot&&drag.mvset&&drag.slot[l.to]&&!drag.mvset[l.from]){sv=[b.x,b.y];b.x=drag.slot[l.to][0];b.y=drag.slot[l.to][1]}
+ var G=linkGeom(l,a,b),SH=shaft(G,l);if(sv){b.x=sv[0];b.y=sv[1]}return{G:G,SH:SH}}
+function zapBuild(){var g=$("zap");g.innerHTML="";zapItems=[];if(drag&&drag.on&&cur().mode==="notes")return;var m=cur(),pos={};m.nodes.forEach(function(n){pos[n.id]=n});
  zapPlan().forEach(function(r){var a=pos[r.l.from],b=pos[r.l.to];if(!a||!b||CI.hid[r.l.from]||CI.hid[r.l.to])return;
-  var G0=shaft(linkGeom(r.l,a,b),r.l).g;
+  var G0=lkAt(r.l,a,b).SH.g;
   if(r.f&&r.b){var ze={e:1,G:G0,len:lineLen(G0),els:[]},k;ze.els.push(el("circle",{"class":"ec g",r:7},g));for(k=0;k<5;k++)ze.els.push(el("circle",{"class":"ec t",r:1.5},g));ze.els.push(el("circle",{"class":"ec c",r:3},g));
    zapItems.push(ze);zapSet(ze,performance.now(),true);return}
   var z={f:r.f,b:r.b,G:G0,els:[]};
@@ -631,12 +643,12 @@ function zapBuild(){var g=$("zap");g.innerHTML="";zapItems=[];var m=cur(),pos={}
 var hd=null;
 function sizeHandles(){var hs=document.querySelectorAll("#lkh circle");for(var i=0;i<hs.length;i++){hs[i].setAttribute("r",7/tr.k);hs[i].setAttribute("stroke-width",2/tr.k)}}
 function handle(g,pt,kind,l){var c=el("circle",{cx:pt[0],cy:pt[1],r:7/tr.k,"stroke-width":2/tr.k,"class":"lkh"},g);
- c.addEventListener("pointerdown",function(e){e.stopPropagation();e.preventDefault();if(cur().locked)return;hd={id:l.id,kind:kind,on:false}});
+ c.addEventListener("pointerdown",function(e){if(e.button===1)return;e.stopPropagation();e.preventDefault();if(cur().locked)return;hd={id:l.id,kind:kind,on:false}});
  c.addEventListener("click",function(e){e.stopPropagation()});c.addEventListener("dblclick",function(e){e.stopPropagation()})}
 var lastLk={id:null,t:0};
 function drawLinks(){zapBuild();var lg=$("links"),hg=$("lkh");lg.innerHTML="";hg.innerHTML="";var m=cur(),L=m.links||[];if(!L.length)return;var pos={};m.nodes.forEach(function(n){pos[n.id]=n});
  L.forEach(function(l){var a=pos[l.from],b=pos[l.to];if(!a||!b||CI.hid[l.from]||CI.hid[l.to])return;
-  var G=linkGeom(l,a,b),p1=G.p1,p2=G.p2,SH=shaft(G,l),d=SH.d;
+  var LA=lkAt(l,a,b),G=LA.G,p1=G.p1,p2=G.p2,SH=LA.SH,d=SH.d;
   var g=el("g",{"class":"lk"+(l.id===selLink?" sel":""),"data-id":l.id},lg);if(l.k!==undefined)g.style.setProperty("--lc",COLORS[l.k%COLORS.length]+"cc");
   function pick(e){e.stopPropagation();var t0=Date.now(),second=lastLk.id===l.id&&t0-lastLk.t<500;lastLk=second?{id:null,t:0}:{id:l.id,t:t0};selLink=l.id;sel=null;draw();syncPanel();if(second)editLabel(l)}
   var hit=el("path",{"class":"lkhit",d:d},g);el("path",{"class":"lkline",d:d},g);
@@ -644,8 +656,8 @@ function drawLinks(){zapBuild();var lg=$("links"),hg=$("lkh");lg.innerHTML="";hg
   if(l.a===2){var v1=SH.d1;if(v1)arrowHead(p1,[p1[0]-v1[0],p1[1]-v1[1]],g,SH.h1)}
   if(l.label){var LN=strikeLines(String(l.label)),t=el("text",{"class":"lktext",x:G.mid[0],y:G.mid[1]+4-(LN.length-1)*7.5},g);
    addStrikeLines(t,LN,G.mid[0],15);
-   t.addEventListener("pointerdown",function(e){e.stopPropagation()});t.addEventListener("click",pick);t.addEventListener("dblclick",function(e){e.stopPropagation();editLabel(l)})}
-  hit.addEventListener("pointerdown",function(e){e.stopPropagation()});hit.addEventListener("dblclick",function(e){e.stopPropagation();editLabel(l)});
+   t.addEventListener("pointerdown",function(e){if(e.button!==1)e.stopPropagation()});t.addEventListener("click",pick);t.addEventListener("dblclick",function(e){e.stopPropagation();editLabel(l)})}
+  hit.addEventListener("pointerdown",function(e){if(e.button!==1)e.stopPropagation()});hit.addEventListener("dblclick",function(e){e.stopPropagation();editLabel(l)});
   hit.addEventListener("click",pick);
   if(l.id===selLink){
    handle(hg,p1,"a",l);handle(hg,p2,"b",l)}})}
@@ -700,6 +712,59 @@ function reparent(roots,T){var m=cur(),adj={},seen={},q=roots.slice(),k=0;
  kids=m.nodes.filter(function(n){return hp[n.id]===T.id&&!R[n.id]}).sort(byY);moved=roots.map(getN).filter(Boolean).sort(byY);
  kids.concat(moved).forEach(function(n,i){n.ord=i});
  delete T.col;return k}
+/* ---------- mode Notes : aperçu en direct du résultat du lâcher ----------
+   Pendant qu'on tient une bulle, on rejoue exactement ce qui se passera au lâcher (rattachement en dernière fille, ou changement de rang)
+   et le rangement automatique : les autres bulles glissent vers leur future place, les flèches sont tracées comme après le lâcher.
+   Pour ne pas faire bouger la carte pendant qu'on vise, le réarrangement n'a lieu qu'une fois le curseur resté un instant (DWELL) sur la même cible ;
+   d'ici là, la cible visée est seulement entourée. La cible est celle que l'on voit, et elle reste « collée » tant que le curseur est dessus. */
+var DWELL=0,INS=5;
+function noteWant(M){var m=cur(),d=drag.n,b=drag.base,pw=drag.pw,tg=null,mode="none",par=null,idx=0,anc=null,pad=NGAP;
+ function inR(n,p){return pw[0]>=n.x-p&&pw[0]<=n.x+n.w+p&&pw[1]>=n.y-p&&pw[1]<=n.y+n.h+p}
+ function at(px,py){var t=null,bd=1e9;m.nodes.forEach(function(n){if(M[n.id]||CI.hid[n.id])return;if(px>=n.x&&px<=n.x+n.w&&py>=n.y-pad&&py<=n.y+n.h+pad){var dd=Math.abs(py-(n.y+n.h/2));if(dd<bd){bd=dd;t=n}}});return t}
+ function sibs(p,ex){return m.nodes.filter(function(n){return b.hp[n.id]===p&&!b.hid[n.id]&&!M[n.id]&&n!==ex}).sort(function(x,y){return drag.orig[x.id][1]-drag.orig[y.id][1]})}
+ var H=(pw&&at(pw[0],pw[1]))||at(d.x+d.w/2,d.y+d.h/2);
+ if(H){var pp=b.hp[H.id],py=pw?pw[1]:d.y+d.h/2,eg=py<H.y+INS||py>H.y+H.h-INS;
+  /* sur une bulle : elle devient sa fille ; dans l'espace entre deux sœurs (et à peine sur leurs bords) : on s'insère entre elles */
+  if(pp!==undefined&&!M[pp]&&eg){var L=sibs(pp,null),k=L.indexOf(H);mode="slot";par=pp;idx=k+(py>H.y+H.h/2?1:0);anc=(L[idx-1]||L[idx]||H).id}
+  else{tg=H;mode="child"}}
+ if(mode==="child")anc=tg.id;
+ if(mode==="none"){var p=b.hp[d.id],cy=d.y+d.h/2,S=sibs(p,d);while(idx<S.length&&S[idx].y+S[idx].h/2<cy)idx++;par=p===undefined?null:p;anc=(S[idx-1]||S[idx]||{}).id||null}
+ return{mode:mode,tg:tg?tg.id:null,par:par,idx:idx,anc:anc,sig:mode==="child"?"T"+tg.id:mode==="slot"?"S"+par+"@"+idx:"R"+idx}}
+/* rattache les bulles à la mère par (au rang idx parmi ses filles) */
+function noteApplySlot(roots,par,idx){var m=cur(),rp=reparent(roots,getN(par));if(rp==="cycle")return rp;
+ var hp=firstParents(m),R={};roots.forEach(function(r){R[r]=1});
+ var kids=m.nodes.filter(function(n){return hp[n.id]===par&&!R[n.id]}).sort(function(x,y){return(x.ord||0)-(y.ord||0)}),mv=roots.map(getN).filter(Boolean).sort(function(x,y){return(x.ord||0)-(y.ord||0)});
+ kids.splice.apply(kids,[Math.min(idx,kids.length),0].concat(mv));kids.forEach(function(n,k){n.ord=k});return rp}
+function noteApply(W,d){if(W.mode==="child")return reparent(drag.roots,getN(W.tg));if(W.mode==="slot")return noteApplySlot(drag.roots,W.par,W.idx);noteApplyIdx(d,W.idx);return null}
+/* changement de rang parmi les sœurs (d'après les positions de départ) */
+function noteApplyIdx(d,i){var m=cur(),b=drag.base,p=b.hp[d.id],S=m.nodes.filter(function(n){return n!==d&&b.hp[n.id]===p&&!b.hid[n.id]}).sort(function(x,y){return drag.orig[x.id][1]-drag.orig[y.id][1]});S.splice(i,0,d);S.forEach(function(n,k){n.ord=k})}
+function noteRestore(){var m=cur(),b=drag&&drag.base;if(!b)return;
+ m.links=b.links.slice();m.nodes.forEach(function(n){var o=b.ord[n.id];if(o===undefined)delete n.ord;else n.ord=o;if(b.col[n.id])n.col=true;else delete n.col;if(!drag.mvset[n.id]){var q=drag.orig[n.id];if(q){n.x=q[0];n.y=q[1]}}});CI=colInfo(m)}
+/* abandon de l'aperçu : retour à l'état de départ (les bulles tenues restent sous le curseur) */
+function noteReset(){if(drag&&drag.base&&drag.on){clearTimeout(drag.tmr);noteRestore();drag.tpos=null;drag.slot=null;drag.sig=null;drag.pend=null}}
+function noteGlide(){if(drag.gl)return;drag.gl=true;var tl=performance.now();
+ (function step(ts){if(!drag||!drag.on||!drag.tpos){if(drag)drag.gl=false;return}var m=cur(),mv=drag.mvset,mov=false,dt=Math.min(50,Math.max(1,(ts||performance.now())-tl)),f=1-Math.exp(-dt/85);tl=ts||performance.now();
+  m.nodes.forEach(function(n){if(mv[n.id])return;var t=drag.tpos[n.id];if(!t)return;var dx=t[0]-n.x,dy=t[1]-n.y;if(Math.abs(dx)<.4&&Math.abs(dy)<.4){n.x=t[0];n.y=t[1]}else{n.x+=dx*f;n.y+=dy*f;mov=true}});
+  draw();if(mov)requestAnimationFrame(step);else drag.gl=false})(tl)}
+function notePreview(grp){var m=cur(),b=drag.base,d=drag.n,M={};if(!b)return;grp.forEach(function(n){M[n.id]=1});drag.mvset=M;
+ var W=noteWant(M);drag.want=W;
+ if(W.sig===drag.sig){drag.pend=null;clearTimeout(drag.tmr);return}
+ if(DWELL>0){var now=Date.now();
+  if(!drag.pend||drag.pend.sig!==W.sig){drag.pend={sig:W.sig,t:now};clearTimeout(drag.tmr);
+   drag.tmr=setTimeout(function(){if(drag&&drag.on&&drag.base){var g2=drag.mv.map(getN).filter(Boolean);notePreview(g2);ghostShow(g2,drag.roots)}},DWELL+30);return}
+  if(now-drag.pend.t<DWELL)return}
+ drag.pend=null;drag.sig=W.sig;
+ var cp={};grp.forEach(function(n){cp[n.id]=[n.x,n.y]});
+ var shown={};m.nodes.forEach(function(n){shown[n.id]=[n.x,n.y]});
+ noteRestore();grp.forEach(function(n){n.x=cp[n.id][0];n.y=cp[n.id][1]});
+ var rp=noteApply(W,d);
+ if(rp==="cycle"){noteRestore();grp.forEach(function(n){n.x=cp[n.id][0];n.y=cp[n.id][1]})}
+ autoLayout(m);var tpos={};m.nodes.forEach(function(n){tpos[n.id]=[n.x,n.y]});CI=colInfo(m);
+ /* la bulle repère (la cible, ou la sœur voisine) reste où elle est : tout le reste se place autour d'elle, la mère visée ne saute donc plus */
+ var ao=W.anc&&drag.orig[W.anc],at0=W.anc&&tpos[W.anc];if(ao&&at0){var ddx=at0[0]-ao[0],ddy=at0[1]-ao[1];Object.keys(tpos).forEach(function(k){tpos[k]=[tpos[k][0]-ddx,tpos[k][1]-ddy]})}
+ m.nodes.forEach(function(n){if(M[n.id]){n.x=cp[n.id][0];n.y=cp[n.id][1]}else{var q=(b.hid[n.id]||!shown[n.id])?tpos[n.id]:shown[n.id];n.x=q[0];n.y=q[1]}});
+ drag.tpos=tpos;drag.slot={};drag.bad=rp==="cycle";drag.roots.forEach(function(r){if(tpos[r])drag.slot[r]=tpos[r]});
+ if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){m.nodes.forEach(function(n){if(!M[n.id]){n.x=tpos[n.id][0];n.y=tpos[n.id][1]}});draw()}else noteGlide()}
 /* mode Notes : une bulle lâchée plus haut ou plus bas passe avant ou après ses sœurs */
 function reorderNote(d){var m=cur(),hp=firstParents(m),p=hp[d.id],cy=d.y+d.h/2,i=0,S=m.nodes.filter(function(n){return n!==d&&hp[n.id]===p&&!CI.hid[n.id]}).sort(function(a,b){return a.y-b.y});
  while(i<S.length&&S[i].y+S[i].h/2<cy)i++;S.splice(i,0,d);S.forEach(function(n,k){n.ord=k})}
@@ -837,7 +902,9 @@ function dropPlan(grp,roots){var m=cur(),o=grp.map(function(n){return{n:n,x:n.x,
 /* aperçu du point de chute : contour en pointillés (rouge si le déplacement sera refusé) */
 function ghostClear(){var G=$("ghost");if(G)G.innerHTML=""}
 function ghostShow(grp,roots){ghostClear();var G=$("ghost");if(!G||!grp.length)return;
- if(cur().mode==="notes"){var tg=noteTarget(grp);if(tg)el("rect",{"class":"ghost",x:tg.x-5,y:tg.y-5,width:tg.w+10,height:tg.h+10,rx:14},G);return}
+ if(cur().mode==="notes"){if(!drag||!drag.want)return;var wt=drag.want.tg&&getN(drag.want.tg);if(drag.bad&&drag.sig===drag.want.sig){grp.forEach(function(n){el("rect",{"class":"ghost far",x:n.x,y:n.y,width:n.w,height:n.h,rx:10},G)});return}
+  if(wt)el("rect",{"class":"ghost",x:wt.x-5,y:wt.y-5,width:wt.w+10,height:wt.h+10,rx:14},G);
+  if(drag.slot&&drag.sig===drag.want.sig)(roots||[]).forEach(function(r){var q=drag.slot[r],n=getN(r);if(q&&n)el("rect",{"class":"ghost",x:q[0],y:q[1],width:n.w,height:n.h,rx:10},G)});return}
  var pl=dropPlan(grp,roots||grp.map(function(n){return n.id}));
  if(pl.far){grp.forEach(function(n){if(!CI.hid[n.id])el("rect",{"class":"ghost far",x:n.x,y:n.y,width:n.w,height:n.h,rx:10},G)});return}
  if(!pl.mv)return;
@@ -1133,8 +1200,10 @@ var cv=$("cv"),pan=null,panMoved=false;
 cv.addEventListener("pointerdown",function(e){if(e.button===2)return;
  if(moveMode&&selIds().length&&getN(selIds()[0])){moveMode=false;cv.classList.remove("movemode");drag={n:getN(selIds()[0]),x:e.clientX,y:e.clientY,on:false,shift:false};cv.setPointerCapture(e.pointerId);return}
  panMoved=false;pan={x:e.clientX-tr.x,y:e.clientY-tr.y,sx:e.clientX,sy:e.clientY,moved:false};cv.classList.add("drag");cv.setPointerCapture(e.pointerId)});
+cv.addEventListener("pointercancel",function(){midDown=null});
 cv.addEventListener("pointermove",function(e){if(pan){if(!pan.moved&&Math.abs(e.clientX-pan.sx)+Math.abs(e.clientY-pan.sy)>4)pan.moved=true;tr.x=e.clientX-pan.x;tr.y=e.clientY-pan.y;applyT()}});
-cv.addEventListener("pointerup",function(){if(pan&&pan.moved){panMoved=true;setTimeout(function(){panMoved=false},0)}pan=null;cv.classList.remove("drag")});
+cv.addEventListener("pointerup",function(e){if(e.button===1&&midDown){var md=midDown;midDown=null;if(!(pan&&pan.moved)){var el=document.elementFromPoint(e.clientX,e.clientY),nd=el&&el.closest&&el.closest(".node");if(nd&&nd.getAttribute("data-id")===md.id)toggleCol(md.id)}}
+if(pan&&pan.moved){panMoved=true;setTimeout(function(){panMoved=false},0)}pan=null;cv.classList.remove("drag")});
 cv.addEventListener("click",function(){if(dragged||panMoved){panMoved=false;return}if(linkFrom){endLink();return}selLink=null;sel=null;draw();syncPanel()});
 /* cadres des groupes (mêmes dimensions que le contour dessiné) ; skip : ids de bulles à ignorer */
 var GTH=24;/* hauteur ajoutée en haut du cadre d'un groupe qui a un titre */
@@ -1460,7 +1529,7 @@ window.addEventListener("pointerdown",function(e){if(lp){clearTimeout(lp.h);lp=n
  if(e.pointerType!=="touch"||selMode||!e.target.closest||!e.target.closest("#cv"))return;
  lp={x:e.clientX,y:e.clientY,t:e.target,h:setTimeout(function(){var q=lp;lp=null;
   if(!q||(drag&&drag.on)||(mk&&mk.on)||(hd&&hd.on)||(pan&&pan.moved)||Date.now()-lastCtxT<800)return;
-  drag=null;mk=null;hd=null;pan=null;cv.classList.remove("drag");dragged=true;openCtxFor(q.t,q.x,q.y)},520)}},true);
+  noteReset();drag=null;mk=null;hd=null;pan=null;cv.classList.remove("drag");dragged=true;openCtxFor(q.t,q.x,q.y)},520)}},true);
 window.addEventListener("pointermove",function(e){if(lp&&Math.abs(e.clientX-lp.x)+Math.abs(e.clientY-lp.y)>8){clearTimeout(lp.h);lp=null}});
 function lpStop(){if(lp){clearTimeout(lp.h);lp=null}}
 window.addEventListener("pointerup",lpStop);window.addEventListener("pointercancel",lpStop);
@@ -1469,7 +1538,7 @@ var tp={},pinch=null;
 function pinchState(){var k=Object.keys(tp);if(k.length<2)return null;var a=tp[k[0]],b=tp[k[1]];return{d:Math.hypot(a.x-b.x,a.y-b.y)||1,cx:(a.x+b.x)/2,cy:(a.y+b.y)/2}}
 window.addEventListener("pointerdown",function(e){if(e.pointerType!=="touch"||!e.target.closest||!e.target.closest("#cv"))return;
  tp[e.pointerId]={x:e.clientX,y:e.clientY};
- if(Object.keys(tp).length===2){e.stopPropagation();lpStop();drag=null;mk=null;hd=null;pan=null;cv.classList.remove("drag");dragged=true;
+ if(Object.keys(tp).length===2){e.stopPropagation();lpStop();noteReset();drag=null;mk=null;hd=null;pan=null;cv.classList.remove("drag");dragged=true;
   var st=pinchState(),r=cv.getBoundingClientRect();pinch={d0:st.d,k0:tr.k,wx:(st.cx-r.left-tr.x)/tr.k,wy:(st.cy-r.top-tr.y)/tr.k}}},true);
 window.addEventListener("pointermove",function(e){var p=tp[e.pointerId];if(!p)return;p.x=e.clientX;p.y=e.clientY;
  if(pinch){var st=pinchState();if(!st)return;var r=cv.getBoundingClientRect(),k=Math.max(.2,Math.min(3,pinch.k0*st.d/pinch.d0));tr.k=k;tr.x=st.cx-r.left-pinch.wx*k;tr.y=st.cy-r.top-pinch.wy*k;applyT()}});
@@ -1509,6 +1578,7 @@ window.addEventListener("pointermove",function(e){
   var id=nodeAt(e);setHl(id&&id!==mk.from?id:null);return}
  if(!drag)return;var ddx=e.clientX-drag.x,ddy=e.clientY-drag.y;
  if(!drag.on){if(Math.abs(ddx)+Math.abs(ddy)<5)return;drag.on=true;dragged=true;drag.orig={};cur().nodes.forEach(function(x){drag.orig[x.id]=[x.x,x.y]});drag.rx=0;drag.ry=0;
+  if(cur().mode==="notes"){var mb=cur(),bo={},bc={},bh={};mb.nodes.forEach(function(x){bo[x.id]=x.ord;bc[x.id]=!!x.col});Object.keys(CI.hid).forEach(function(k){if(CI.hid[k])bh[k]=1});drag.base={links:mb.links.slice(),ord:bo,col:bc,hid:bh,hp:firstParents(mb)};drag.mvset={}}
   if(!ms[drag.n.id]){if(drag.shift){var ids0=selIds();if(ids0.indexOf(drag.n.id)<0)ids0.push(drag.n.id);ms={};if(ids0.length>1)ids0.forEach(function(x){ms[x]=1});sel=drag.n.id;syncPanel()}else{ms={};if(drag.group)cur().nodes.forEach(function(x){if(x.grp===drag.group)ms[x.id]=1});if(sel!==drag.n.id){sel=drag.n.id;syncPanel()}}}}
  if(!drag.mv){drag.roots=ms[drag.n.id]?Object.keys(ms):[drag.n.id];drag.mv=(drag.group||cur().mode!=="notes")?drag.roots:subtree(drag.roots)}
  var grp=drag.mv.map(getN).filter(Boolean);
@@ -1519,7 +1589,7 @@ window.addEventListener("pointermove",function(e){
  /* les autres bulles ne bougent pas pendant le glisser ; au lâcher, ce qui est déplacé se décale vers la place libre la plus proche.
     Une bulle libre au-dessus d'un cadre de groupe va rejoindre ce groupe au lâcher. */
  dropG={};grp.forEach(function(g){if(!g.grp){var z=zoneAt(g);if(z)dropG[z.g]=1}});
- drag.pw=toWorld(e);ghostShow(grp,drag.roots);
+ drag.pw=toWorld(e);if(cur().mode==="notes")notePreview(grp);ghostShow(grp,drag.roots);
  drag.x=e.clientX;drag.y=e.clientY;draw()});
 function endDrag(e){
  if(mk){var o=mk;mk=null;var tp=$("tmpl");if(tp)tp.remove();clearHl();
@@ -1532,10 +1602,12 @@ function endDrag(e){
  if(hd){if(hd.on){var tp1=$("tmpl");if(tp1)tp1.remove();clearHl();
   if(hd.tgt){var l1=(cur().links||[]).filter(function(x){return x.id===hd.id})[0];if(l1)reattach(l1,hd.kind,hd.tgt)}
   save();draw();syncPanel();setTimeout(function(){dragged=false},0)}hd=null}
- if(drag&&drag.on&&cur().mode==="notes"){var mvN=(drag.mv||[drag.n.id]).map(getN).filter(Boolean),tg=noteTarget(mvN);
-  if(tg){var rp=reparent(drag.roots||[drag.n.id],tg);if(rp==="cycle")toast("Impossible : une bulle ne peut pas devenir fille d'une de ses propres descendantes.");
-   else if(rp){var tl=(tg.t||"").replace(/\s*\n+\s*/g," ").slice(0,30);toast(rp>1?rp+" bulles rattachées à « "+tl+" »":"Bulle rattachée à « "+tl+" »")}}
-  else reorderNote(drag.n);dropG={};save();draw();setTimeout(function(){dragged=false},0)}
+ if(drag&&drag.on&&cur().mode==="notes"){var oldP={};cur().nodes.forEach(function(x){oldP[x.id]=[x.x,x.y]});noteReset();
+  var W=drag.want,ancId=W&&W.anc,rp=null;
+  if(W)rp=noteApply(W,drag.n);else{var mvN=(drag.mv||[drag.n.id]).map(getN).filter(Boolean),tg0=noteTarget(mvN);if(tg0)rp=reparent(drag.roots||[drag.n.id],tg0);else reorderNote(drag.n)}
+  if(rp==="cycle")toast("Impossible : une bulle ne peut pas devenir fille d'une de ses propres descendantes.");
+  else if(rp&&W&&W.mode==="child"){var tl=(getN(W.tg).t||"").replace(/\s*\n+\s*/g," ").slice(0,30);toast(rp>1?rp+" bulles rattachées à « "+tl+" »":"Bulle rattachée à « "+tl+" »")}
+  dropG={};save(undefined,true);animMove(oldP,ancId);setTimeout(function(){dragged=false},0)}
  else if(drag&&drag.on){var mv=(drag.mv||[drag.n.id]).map(getN).filter(Boolean),pl=dropPlan(mv,drag.roots||[drag.n.id]);dropG={};
   if(pl.far){mv.forEach(function(n){var o=drag.orig&&drag.orig[n.id];if(o){n.x=o[0];n.y=o[1]}});toast("Pas de place libre ici : déplacement annulé.")}
   else{/* une bulle non groupée déposée dans un cadre rejoint le groupe de ce cadre */
