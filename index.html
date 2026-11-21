@@ -199,7 +199,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v77</div>
+    <div id="ver" title="Numéro de version de la page">v78</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -765,7 +765,8 @@ function setMode(mode){var m=cur();if(LK()||(m.mode||"schema")===mode)return;
  if(mode==="notes"){m.nodes.forEach(function(n){n.sx=n.x;n.sy=n.y});m.mode="notes";autoLayout(m)}
  else{m.mode="schema";var by={},hp=firstParents(m),late=[];m.nodes.forEach(function(n){by[n.id]=n;if(n.sx!==undefined){n.x=n.sx;n.y=n.sy;delete n.sx;delete n.sy}else late.push(n)});
   /* bulles créées en mode Notes : placées à côté de leur mère, dans un emplacement libre */
-  late.forEach(function(n){var q=by[hp[n.id]];if(q){n.x=q.x+q.w+HGAP;n.y=q.y}placeFree([n.id])})}
+  /* carte née en mode Notes (aucune position de schéma mémorisée) : on garde l'arbre tel qu'il est, rien ne bouge */
+  if(late.length<m.nodes.length)late.forEach(function(n){var q=by[hp[n.id]];if(q){n.x=q.x+q.w+HGAP;n.y=q.y}placeFree([n.id])})}
  save();fit();draw();toast(mode==="notes"?"Mode Notes : rangement automatique. Votre schéma est conservé.":"Mode Schéma : placement libre, vos positions sont rétablies.")}
 function modeBtn(){var b=$("fabV");if(!b)return;var nt=cur().mode==="notes";b.textContent=nt?"📝":"🧩";
  document.body.classList.toggle("notes",nt);b.title=nt?"Mode Notes (rangement automatique) — cliquer pour revenir au mode Schéma":"Mode Schéma (placement libre) — cliquer pour passer en mode Notes";b.setAttribute("aria-label",b.title)}
