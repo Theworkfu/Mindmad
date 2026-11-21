@@ -199,7 +199,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v75</div>
+    <div id="ver" title="Numéro de version de la page">v76</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -245,7 +245,7 @@ var store={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.par
  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){if(!store.w){store.w=1;alert("Ce navigateur n’enregistre pas les cartes (stockage plein ou navigation privée). Exportez votre carte, ou activez la sauvegarde sur GitHub avec l’icône ☁.")}}}};
 var uid=function(){return Math.random().toString(36).slice(2,9)};
 var GAP=18,HGAP=64,NGAP=10,NHGAP=40,IMGH=90,IMGMAX=180,imgDim={},migrated=false;
-var newMap=function(t){var n={id:uid(),t:t||"Votre carte",c:0,img:"",x:0,y:0};return{id:uid(),title:t||"Votre carte",nodes:[n],links:[]}};
+var newMap=function(t){var n={id:uid(),t:t||"Votre carte",c:0,img:"",x:0,y:0};return{id:uid(),title:t||"Votre carte",mode:"notes",nodes:[n],links:[]}};
 function getNIn(m,id){var a=m.nodes;for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i];return null}
 /* les anciens réglages de tracé (extrémités fixées, courbes) n'existent plus : on les oublie */
 function pruneLinks(m){if(m.gt){var live={};(m.nodes||[]).forEach(function(n){if(n.grp)live[n.grp]=1});Object.keys(m.gt).forEach(function(g){if(!live[g])delete m.gt[g]});if(!Object.keys(m.gt).length)delete m.gt}m.links=(m.links||[]).filter(function(l){return getNIn(m,l.from)&&getNIn(m,l.to)});m.links.forEach(function(l){delete l.fa;delete l.ta;delete l.cv;delete l.c1;delete l.c2})}
@@ -681,16 +681,17 @@ function applyT(){$("view").setAttribute("transform","translate("+tr.x+","+tr.y+
 function autoLayout(m){var ch={},hp={},by={},o={},seen={},top=0;
  m.nodes.forEach(function(n,k){by[n.id]=n;o[n.id]=n.ord!==undefined?n.ord:1e9+k;measure(n)});
  CI=colInfo(m);
- (m.links||[]).forEach(function(l){if(l.from===l.to||!(l.a===undefined||l.a===1)||!by[l.from]||!by[l.to])return;(ch[l.from]=ch[l.from]||[]).push(l.to);if(hp[l.to]===undefined)hp[l.to]=l.from});
+ var inT={}; /* bulles qui font partie d'un arbre (au moins une flèche mère → fille) ; les autres sont libres et gardent leur place */
+ (m.links||[]).forEach(function(l){if(l.from===l.to||!(l.a===undefined||l.a===1)||!by[l.from]||!by[l.to])return;inT[l.from]=1;inT[l.to]=1;(ch[l.from]=ch[l.from]||[]).push(l.to);if(hp[l.to]===undefined)hp[l.to]=l.from});
  function srt(a,b){return o[a]-o[b]}
  function lay(id,x,t){var n=by[id],kids,yy=t,f=null,l=null,h;seen[id]=1;n.x=x;
   kids=(ch[id]||[]).filter(function(c){return!seen[c]&&hp[c]===id&&!CI.hid[c]}).sort(srt);
   if(!kids.length){n.y=t;return n.h}
   kids.forEach(function(c){h=lay(c,x+n.w+NHGAP,yy);if(!f)f=by[c];l=by[c];yy+=h+NGAP});
   yy-=NGAP;n.y=Math.max(t,Math.round((f.y+f.h/2+l.y+l.h/2)/2-n.h/2));return Math.max(yy-t,n.y+n.h-t)}
- var R=m.nodes.filter(function(n){return hp[n.id]===undefined&&!CI.hid[n.id]}).map(function(n){return n.id}).sort(srt);
+ var R=m.nodes.filter(function(n){return hp[n.id]===undefined&&!CI.hid[n.id]&&inT[n.id]}).map(function(n){return n.id}).sort(srt);
  R.filter(function(i){return(ch[i]||[]).length}).concat(R.filter(function(i){return!(ch[i]||[]).length})).forEach(function(id){var h=lay(id,0,top);top+=h+NGAP*2});
- m.nodes.forEach(function(n){if(!seen[n.id]&&!CI.hid[n.id]){var h=lay(n.id,0,top);top+=h+NGAP*2}})}
+ m.nodes.forEach(function(n){if(!seen[n.id]&&!CI.hid[n.id]&&inT[n.id]){var h=lay(n.id,0,top);top+=h+NGAP*2}})}
 function firstParents(m){var hp={};(m.links||[]).forEach(function(l){if(l.from===l.to||!(l.a===undefined||l.a===1))return;if(hp[l.to]===undefined)hp[l.to]=l.from});return hp}
 /* mode Notes : bulle cible = celle qui est sous le curseur (sinon celle qui contient le centre de la bulle tenue), hors de ce qui est déplacé */
 function noteTarget(mv){var m=cur(),d=drag&&drag.n,M={};if(!d)return null;mv.forEach(function(n){M[n.id]=1});
