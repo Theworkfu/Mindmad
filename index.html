@@ -189,6 +189,18 @@ button:disabled{opacity:.4;cursor:default}
 body.notes #bSnap{display:none}
 #tBar #fabV{width:44px;height:44px;font-size:22px;flex:none}
 @media(max-width:700px){#tBar{top:80px;max-width:calc(100% - 24px)}}
+/* accueil */
+#home{position:absolute;inset:0;z-index:24;background:var(--bg);color:var(--ink);display:none;overflow:auto}#home.on{display:block}#toast{z-index:25}
+.hm-in{width:min(1100px,100%);margin:0 auto;padding:22px 20px 40px;box-sizing:border-box}
+.hm-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.hm-top h1{font-size:22px;margin:0 auto 0 0}
+#hmQ{flex:1 1 240px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit;font-size:14px}
+.hm-b{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;font-size:13px}.hm-b:hover,.hm-b.on,.hm-b.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.hm-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}.hm-row .hm-sp{margin-left:auto;display:flex;gap:8px;align-items:center}
+#hmGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:16px}
+.hm-c{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}.hm-c:hover,.hm-c:focus-visible{border-color:var(--accent);outline:none;box-shadow:0 4px 14px rgba(0,0,0,.14)}.hm-c.cur{border-color:var(--accent)}
+.hm-t{display:block;width:100%;height:120px;background:var(--bg)}.hm-m{padding:9px 12px 11px}.hm-n{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hm-s{font-size:12px;color:var(--muted);margin-top:3px}.hm-h{font-size:12px;color:var(--accent);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-d{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
+#hmEmpty{margin-top:30px;text-align:center;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -196,13 +208,17 @@ body.notes #bSnap{display:none}
   <div id="stage">
     <svg id="cv" role="img" aria-label="Carte mentale"><g id="view"><g id="grps"></g><g id="edges"></g><g id="links"></g><g id="zap"></g><g id="ghost"></g><g id="nodes"></g><g id="lkh"></g><g id="guides"></g></g></svg>
     <div id="tl"><button class="fab" id="fabM" title="Menu" aria-label="Menu"><svg viewBox="0 0 64 64" width="34" height="34" aria-hidden="true"><g fill="none" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 31H6V23" stroke="#a02a78"/><path d="M40 14V8H49" stroke="#e8601f"/><path d="M55 30H59V39" stroke="#0e9a8c"/><path d="M24 43V49H9V56" stroke="#e0c81a"/></g><circle cx="6" cy="22" r="2" fill="#a02a78"/><circle cx="49.5" cy="8" r="2" fill="#e8601f"/><circle cx="59" cy="40" r="2" fill="#0e9a8c"/><circle cx="9" cy="57" r="2" fill="#e0c81a"/><g transform="translate(6 8) scale(.84)" stroke="#fff" stroke-opacity=".45" stroke-width=".7" stroke-linejoin="round"><polygon fill="#8a1a5c" points="10,18 20,9 33,6 34,18 22,22"/><polygon fill="#b02a80" points="6,30 10,18 22,22 20,34"/><polygon fill="#d878b8" points="6,30 20,34 18,43 9,40"/><polygon fill="#c8509c" points="22,22 34,18 30,32 20,34"/><polygon fill="#f07a30" points="33,6 46,9 46,22 34,18"/><polygon fill="#e8551e" points="46,9 57,17 46,22"/><polygon fill="#b4481e" points="34,18 46,22 42,33 30,32"/><polygon fill="#f4a384" points="30,32 42,33 36,42 28,44"/><polygon fill="#f8e032" points="20,34 30,32 28,44 18,43"/><polygon fill="#d8c41c" points="28,44 36,42 36,46"/><polygon fill="#a89a1c" points="36,42 48,46 44,56 38,57 36,46"/><polygon fill="#a6e8dc" points="42,33 46,22 52,30"/><polygon fill="#0e7c80" points="46,22 57,17 60,29 52,30"/><polygon fill="#16b2a2" points="42,33 52,30 60,29 56,40 48,46 36,42"/></g></svg></button><button class="rd" id="bUndo" title="Annuler (Ctrl+Z)" aria-label="Annuler">↶</button><button class="rd" id="bRedo" title="Rétablir (Ctrl+Y)" aria-label="Rétablir">↷</button><button class="rd" id="bLock" title="Verrouiller la carte" aria-label="Verrouiller la carte">🔓</button><button class="rd" id="bSnap" title="Magnétisme" aria-label="Magnétisme">🧲</button></div>
-    <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
+    <button class="fab" id="fabHome" title="Accueil (toutes les cartes)" aria-label="Accueil">⌂</button><div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v78</div>
+    <div id="ver" title="Numéro de version de la page">v79</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
+    <div id="home" role="dialog" aria-label="Accueil"><div class="hm-in">
+      <div class="hm-top"><h1>Mes cartes</h1><input id="hmQ" type="search" placeholder="Rechercher une carte ou un texte dans les bulles…" autocomplete="off"><button class="hm-b pri" id="hmNew">＋ Nouvelle carte</button><button class="hm-b" id="hmImp">📂 Importer</button><button class="hm-b" id="hmBack">← Retour à la carte</button></div>
+      <div class="hm-row"><span>Trier par</span><button class="hm-b" data-s="use">Utilisation</button><button class="hm-b" data-s="mod">Modification</button><button class="hm-b" data-s="az">A → Z</button><span class="hm-sp"><label class="chk"><input type="checkbox" id="hmAuto"> Rouvrir la dernière carte au démarrage</label></span></div>
+      <div id="hmGrid"></div><div id="hmEmpty"></div></div></div>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
     <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div>↵ Entrée : bulle sœur (mêmes bulles parentes que la bulle sélectionnée)</div><div>Groupe : double-clic sur le cadre pour lui donner un titre · Image : clic sur la bulle puis sur l’image pour la sélectionner seule, clic droit → Retirer l’image · clic droit sur une bulle → Ajouter des images…</div><div>Menu du fond → Sélectionner plusieurs bulles : rectangle (glisser) ou forme libre (maintenir puis glisser), puis clic droit : copier, couper ou regrouper (glisser une bulle sélectionnée les déplace toutes)</div><div><i class="m" data-m="M"></i> sur une carte du menu ☰ : l’ouvrir dans un nouvel onglet</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div>🔒 : verrouiller la carte (plus aucune modification, lecture seule) · 🧲 : magnétisme, les bulles s’alignent sur les autres pendant le déplacement (Alt : l’ignorer)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle pour la rattacher</div><div><i class="m" data-m="R"></i> sur le titre ou sur une carte du menu de gauche : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
@@ -345,7 +361,9 @@ var curId=store.get("mm_cur",maps[0].id);
 try{var hmm=/[#&]carte=([^&]+)/.exec(location.hash);if(hmm){var hid=decodeURIComponent(hmm[1]);if(maps.some(function(x){return x.id===hid}))curId=hid}}catch(e){}
 function openMapTab(id){try{window.open(location.href.split("#")[0]+"#carte="+encodeURIComponent(id),"_blank")}catch(e){}}
 /* l'adresse (#carte=identifiant) suit toujours la carte affichée dans cet onglet : un rafraîchissement, ou une adresse copiée, retombe sur la bonne carte */
-function syncUrl(){try{var h="#carte="+encodeURIComponent(curId);if(location.hash!==h)history.replaceState(null,"",location.pathname+location.search+h)}catch(e){}}
+var HOME=false,START_HOME=!/[#&]carte=/.test(location.hash)&&(function(){try{return localStorage.getItem("mm_home_off")!=="1"}catch(e){return true}})();
+function syncUrl(){try{if(HOME){if(location.hash)history.replaceState(null,"",location.pathname+location.search);return}var h="#carte="+encodeURIComponent(curId);if(location.hash!==h)history.replaceState(null,"",location.pathname+location.search+h)}catch(e){}}
+window.addEventListener("hashchange",function(){if(HOME&&/[#&]carte=/.test(location.hash))hideHome()});
 window.addEventListener("hashchange",function(){var mm=/[#&]carte=([^&]+)/.exec(location.hash);if(!mm)return;var id;try{id=decodeURIComponent(mm[1])}catch(e){return}if(id!==curId&&maps.some(function(x){return x.id===id}))switchMap(id)});
 /* plusieurs onglets : si une autre fenêtre enregistre une carte plus récente, on la reprend */
 window.addEventListener("storage",function(e){if(e.key!=="mm_maps"||!e.newValue)return;var list;try{list=JSON.parse(e.newValue)}catch(x){return}
@@ -778,7 +796,7 @@ function fit(){var cv=$("cv"),W=cv.clientWidth,H=cv.clientHeight,N=cur().nodes.f
 
 /* ---------- panneau ---------- */
 function syncPanel(){}
-function refreshMaps(){syncUrl();var t=$("mTitle");if(t.querySelector("input"))return;strikeHtml(t,(cur().title||"").replace(/\s*\n+\s*/g," ")||"Sans titre")}
+function refreshMaps(){syncUrl();if(HOME)renderHome();var t=$("mTitle");if(t.querySelector("input"))return;strikeHtml(t,(cur().title||"").replace(/\s*\n+\s*/g," ")||"Sans titre")}
 
 /* ---------- actions ---------- */
 function viewCenter(){var cv=$("cv");return[(cv.clientWidth/2-tr.x)/tr.k,(cv.clientHeight/2-tr.y)/tr.k]}
@@ -1187,7 +1205,7 @@ $("trashbox").addEventListener("pointerdown",function(e){trDown=e.target===this}
 $("trashbox").addEventListener("click",function(e){if(e.target===this&&trDown)closeTrash()});
 $("bUndo").onclick=undo;$("bRedo").onclick=redo;
 function exportAct(){var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(cur(),null,1)],{type:"application/json"}));a.download=cur().title.replace(/[^\w\-]+/g,"_")+".json";a.click()}
-$("file").onchange=function(){var file=this.files[0];this.value="";if(!file)return;var rd=new FileReader();rd.onload=function(){try{var m=JSON.parse(rd.result);if(!m.root&&!m.nodes)throw 0;m.id=uid();normNames([m]);leaveMap();maps.push(m);curId=m.id;sel=null;save();refreshMaps();draw();syncPanel();fit()}catch(e){alert("Fichier invalide : choisissez une carte exportée depuis cet outil.")}};rd.readAsText(file)};
+$("file").onchange=function(){var file=this.files[0];this.value="";if(!file)return;var rd=new FileReader();rd.onload=function(){try{var m=JSON.parse(rd.result);if(!m.root&&!m.nodes)throw 0;m.id=uid();normNames([m]);leaveMap();maps.push(m);curId=m.id;sel=null;save();if(HOME)hideHome();refreshMaps();draw();syncPanel();fit()}catch(e){alert("Fichier invalide : choisissez une carte exportée depuis cet outil.")}};rd.readAsText(file)};
 
 /* ---------- pan / zoom / clavier ---------- */
 var cv=$("cv"),pan=null,panMoved=false;
@@ -1633,7 +1651,47 @@ document.addEventListener("keydown",function(e){
  else if((e.key==="Delete")&&!inField){if(selLink)removeLink(selLink);else if(selNote&&getN(selNote)){if(!LK()){delete getN(selNote).note;selNote=null;save();draw();syncPanel()}}else if(selImg&&getN(selImg))removeImgAt(getN(selImg),selImgI);else rm()}
 });
 
-purgeTrash();resetHist();refreshMaps();sel=(cur().nodes[0]||{}).id||null;relayoutCur();draw();syncPanel();fit();updBadge();
+
+/* ---------- accueil : toutes les cartes en vignettes ---------- */
+function nz(t){return String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
+function hmThumb(m){var s=document.createElementNS(NS,"svg");s.setAttribute("class","hm-t");s.setAttribute("aria-hidden","true");var hid={};try{hid=colInfo(m).hid||{}}catch(e){}
+ var L=m.nodes.filter(function(n){return!hid[n.id]}).slice(0,300);if(!L.length)return s;
+ var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,by={};L.forEach(function(n){by[n.id]=n;x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x+(n.w||110));y1=Math.max(y1,n.y+(n.h||30))});
+ var p=20;s.setAttribute("viewBox",(x0-p)+" "+(y0-p)+" "+(x1-x0+2*p)+" "+(y1-y0+2*p));
+ function mk(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);s.appendChild(e)}
+ (m.links||[]).forEach(function(l){var a=by[l.from],b=by[l.to];if(a&&b)mk("line",{x1:a.x+(a.w||110)/2,y1:a.y+(a.h||30)/2,x2:b.x+(b.w||110)/2,y2:b.y+(b.h||30)/2,stroke:"var(--edge)","stroke-width":1.3,"vector-effect":"non-scaling-stroke"})});
+ L.forEach(function(n){mk("rect",{x:n.x,y:n.y,width:n.w||110,height:n.h||30,rx:8,fill:COLORS[(n.c||0)%COLORS.length],stroke:"rgba(0,0,0,.3)","stroke-width":1,"vector-effect":"non-scaling-stroke",opacity:.92})});return s}
+function hmEl(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
+function hmMenu(id,x,y){var m=maps.filter(function(k){return k.id===id})[0];if(!m)return;var nm=flat(m.title);
+ showCtx(x,y,[{icon:"✏️",label:"Renommer la carte « "+nm+" »…",fn:function(){renameMapById(id)}},{icon:"⧉",label:"Dupliquer la carte « "+nm+" »",fn:function(){dupMapById(id)}},{icon:"🗑",label:"Supprimer la carte « "+nm+" »…",danger:true,fn:function(){delMapById(id)}}])}
+function renderHome(){var q=nz($("hmQ").value.trim()),g=$("hmGrid"),n=0;g.textContent="";
+ document.querySelectorAll("#home [data-s]").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-s")===SORT)});
+ try{$("hmAuto").checked=localStorage.getItem("mm_home_off")==="1"}catch(e){}
+ sortedMaps().forEach(function(m){var title=flat(m.title),hit="";
+  if(q&&nz(title).indexOf(q)<0){var f=m.nodes.filter(function(b){return nz(b.t).indexOf(q)>=0||nz(typeof b.note==="string"?b.note:(b.note&&b.note.t)).indexOf(q)>=0})[0];if(!f)return;hit=flat(f.t).slice(0,80)||"(note)"}
+  n++;var c=hmEl("div","hm-c"+(m.id===curId?" cur":""));c.tabIndex=0;c.setAttribute("data-id",m.id);c.appendChild(hmThumb(m));
+  var i=hmEl("div","hm-m");i.appendChild(hmEl("div","hm-n",title));
+  var d=m.mod?new Date(m.mod).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"}):"";
+  i.appendChild(hmEl("div","hm-s",(m.mode==="schema"?"🧩 Schéma":"📝 Notes")+" · "+m.nodes.length+" bulle"+(m.nodes.length>1?"s":"")+(d?" · "+d:"")+(m.locked?" · 🔒":"")+(m.id===curId?" · ouverte":"")));
+  if(hit)i.appendChild(hmEl("div","hm-h","…"+hit+"…"));c.appendChild(i);
+  var dots=hmEl("button","hm-d","⋯");dots.title="Renommer, dupliquer, supprimer";dots.onclick=function(e){e.stopPropagation();var r=dots.getBoundingClientRect();hmMenu(m.id,r.left,r.bottom+4)};c.appendChild(dots);
+  c.onclick=function(){hmOpen(m.id)};c.onauxclick=function(e){if(e.button===1){e.preventDefault();openMapTab(m.id)}};c.oncontextmenu=function(e){e.preventDefault();hmMenu(m.id,e.clientX,e.clientY)};g.appendChild(c)});
+ $("hmEmpty").textContent=n?"":(q?"Aucune carte ne correspond à cette recherche.":"Aucune carte : créez-en une.")}
+function showHome(){HOME=true;$("home").classList.add("on");syncUrl();renderHome();$("home").scrollTop=0}
+function hideHome(){HOME=false;$("home").classList.remove("on")}
+function hmOpen(id){hideHome();if(id!==curId)switchMap(id);else{touchMap();refreshMaps();fit()}}
+$("fabHome").onclick=showHome;$("hmBack").onclick=function(){hideHome();refreshMaps()};
+$("hmQ").oninput=renderHome;
+document.querySelectorAll("#home [data-s]").forEach(function(b){b.onclick=function(){setSort(b.getAttribute("data-s"));renderHome()}});
+$("hmAuto").onchange=function(){try{if(this.checked)localStorage.setItem("mm_home_off","1");else localStorage.removeItem("mm_home_off")}catch(e){}};
+$("hmImp").onclick=function(){$("file").click()};
+$("hmNew").onclick=function(){var k=maps.length,id0=curId;newMapAct();if(maps.length>k||curId!==id0){hideHome();refreshMaps();fit()}};
+/* pendant que l'accueil est ouvert, les raccourcis, collages et dépôts ne touchent pas la carte cachée */
+window.addEventListener("keydown",function(e){if(!HOME||ctxOpen()||modalOpen()||(e.target.closest&&e.target.closest("#ctx")))return;e.stopPropagation();
+ var c=e.target.closest&&e.target.closest(".hm-c");if(c&&(e.key==="Enter"||e.key===" ")){e.preventDefault();hmOpen(c.getAttribute("data-id"))}
+ else if(e.key==="Escape"){var q=$("hmQ");if(q.value){q.value="";renderHome()}else{hideHome();refreshMaps()}}},true);
+["paste","drop","dragover"].forEach(function(t){window.addEventListener(t,function(e){if(!HOME)return;e.stopPropagation();if(t!=="paste")e.preventDefault()},true)});
+purgeTrash();resetHist();refreshMaps();sel=(cur().nodes[0]||{}).id||null;relayoutCur();draw();syncPanel();fit();updBadge();if(START_HOME)showHome();
 window.addEventListener("resize",fit);
 /* menu contextuel standard du navigateur désactivé partout (sauf dans les champs de texte, pour couper / coller) */
 document.addEventListener("contextmenu",function(e){var t=e.target;if(t&&t.closest&&t.closest("input,textarea"))return;e.preventDefault()});
