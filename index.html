@@ -193,7 +193,6 @@ body.notes #bSnap{display:none}
 #home{position:absolute;inset:0;z-index:24;background:var(--bg);color:var(--ink);display:none;overflow:auto}#home.on{display:block}#toast{z-index:25}
 .hm-in{width:min(1100px,100%);margin:0 auto;padding:22px 76px 40px;box-sizing:border-box}@media(max-width:700px){.hm-in{padding:80px 16px 40px}}
 .hm-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.hm-top h1{font-size:22px;margin:0 auto 0 0}
-#hmQ{flex:1 1 240px;min-width:0;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--ink);font:inherit;font-size:14px}
 .hm-b{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;font-size:13px}.hm-b:hover,.hm-b.on,.hm-b.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .hm-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}.hm-row .hm-sp{margin-left:auto;display:flex;gap:8px;align-items:center}
 #hmGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:16px}
@@ -212,12 +211,12 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v86</div>
+    <div id="ver" title="Numéro de version de la page">v87</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
     <div id="home" role="dialog" aria-label="Accueil"><div class="hm-in">
-      <div class="hm-top"><h1>Mes cartes</h1><input id="hmQ" type="search" placeholder="Rechercher une carte ou un texte dans les bulles…" autocomplete="off"></div>
+      <div class="hm-top"><h1>Accueil</h1></div>
       <div class="hm-row"><span>Trier par</span><button class="hm-b" data-s="use">Utilisation</button><button class="hm-b" data-s="mod">Modification</button><button class="hm-b" data-s="az">A → Z</button></div>
       <div id="hmGrid"></div><div id="hmEmpty"></div></div></div>
     <div id="toast" role="status"></div>
@@ -1177,7 +1176,7 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen())FROZEN=null;
   else{var pos={};FROZEN.forEach(function(id,i){pos[id]=i});
    sm=sm.map(function(m,i){return{m:m,i:i}}).sort(function(a,b){var pa=pos[a.m.id],pb=pos[b.m.id];if(pa===undefined&&pb===undefined)return a.i-b.i;if(pa===undefined)return -1;if(pb===undefined)return 1;return pa-pb}).map(function(o){return o.m})}}
  else FROZEN=null;
- var it=[{icon:"⌂",label:"Accueil (toutes les cartes)",fn:showHome},"-",{icon:"＋",label:"Nouvelle carte…",keep:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
+ var it=[{icon:"⌂",label:"Accueil",fn:showHome},{icon:"＋",label:"Nouvelle carte…",keep:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true}];
  sm.forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
   rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;showSub(br?mr.right+6:x,br?br.top:y,[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}},{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}}])}})});return it}
@@ -1660,7 +1659,6 @@ document.addEventListener("keydown",function(e){
 
 
 /* ---------- accueil : toutes les cartes en vignettes ---------- */
-function nz(t){return String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
 function hmThumb(m){var s=document.createElementNS(NS,"svg");s.setAttribute("class","hm-t");s.setAttribute("aria-hidden","true");var hid={};try{hid=colInfo(m).hid||{}}catch(e){}
  var L=m.nodes.filter(function(n){return!hid[n.id]}).slice(0,300);if(!L.length)return s;
  var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,by={};L.forEach(function(n){by[n.id]=n;x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x+(n.w||110));y1=Math.max(y1,n.y+(n.h||30))});
@@ -1671,22 +1669,20 @@ function hmThumb(m){var s=document.createElementNS(NS,"svg");s.setAttribute("cla
 function hmEl(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
 function hmMenu(id,x,y){var m=maps.filter(function(k){return k.id===id})[0];if(!m)return;var nm=flat(m.title);
  showCtx(x,y,[{icon:"✏️",label:"Renommer la carte « "+nm+" »…",fn:function(){renameMapById(id)}},{icon:"⧉",label:"Dupliquer la carte « "+nm+" »",fn:function(){dupMapById(id)}},{icon:"🗑",label:"Supprimer la carte « "+nm+" »…",danger:true,fn:function(){delMapById(id)}}])}
-function renderHome(){var q=nz($("hmQ").value.trim()),g=$("hmGrid"),n=0;g.textContent="";
+function renderHome(){var g=$("hmGrid"),n=0;g.textContent="";
  document.querySelectorAll("#home [data-s]").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-s")===SORT)});
- sortedMaps().forEach(function(m){var title=flat(m.title),hit="";
-  if(q&&nz(title).indexOf(q)<0){var f=m.nodes.filter(function(b){return nz(b.t).indexOf(q)>=0||nz(typeof b.note==="string"?b.note:(b.note&&b.note.t)).indexOf(q)>=0})[0];if(!f)return;hit=flat(f.t).slice(0,80)||"(note)"}
+ sortedMaps().forEach(function(m){var title=flat(m.title);
   n++;var c=hmEl("div","hm-c"+(m.id===curId?" cur":""));c.tabIndex=0;c.setAttribute("data-id",m.id);c.appendChild(hmThumb(m));
   var i=hmEl("div","hm-m");i.appendChild(hmEl("div","hm-n",title));
   var d=m.mod?new Date(m.mod).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"}):"";
   i.appendChild(hmEl("div","hm-s",(m.mode==="schema"?"🧩 Schéma":"📝 Notes")+" · "+m.nodes.length+" bulle"+(m.nodes.length>1?"s":"")+(d?" · "+d:"")+(m.locked?" · 🔒":"")+(m.id===curId?" · ouverte":"")));
-  if(hit)i.appendChild(hmEl("div","hm-h","…"+hit+"…"));c.appendChild(i);
+  c.appendChild(i);
   var dots=hmEl("button","hm-d","⋯");dots.title="Renommer, dupliquer, supprimer";dots.onclick=function(e){e.stopPropagation();var r=dots.getBoundingClientRect();hmMenu(m.id,r.left,r.bottom+4)};c.appendChild(dots);
   c.onclick=function(){hmOpen(m.id)};c.onauxclick=function(e){if(e.button===1){e.preventDefault();openMapTab(m.id)}};c.oncontextmenu=function(e){e.preventDefault();hmMenu(m.id,e.clientX,e.clientY)};g.appendChild(c)});
- $("hmEmpty").textContent=n?"":(q?"Aucune carte ne correspond à cette recherche.":"Aucune carte : créez-en une.")}
+ $("hmEmpty").textContent=n?"":"Aucune carte : créez-en une."}
 function showHome(){HOME=true;$("stage").classList.add("hm");$("home").classList.add("on");syncUrl();renderHome();$("home").scrollTop=0}
 function hideHome(){HOME=false;$("stage").classList.remove("hm");$("home").classList.remove("on")}
 function hmOpen(id){hideHome();if(id!==curId)switchMap(id);else{touchMap();refreshMaps();fit()}}
-$("hmQ").oninput=renderHome;
 document.querySelectorAll("#home [data-s]").forEach(function(b){b.onclick=function(){setSort(b.getAttribute("data-s"));renderHome()}});
 /* pendant que l'accueil est ouvert, les raccourcis, collages et dépôts ne touchent pas la carte cachée */
 window.addEventListener("keydown",function(e){if(!HOME||ctxOpen()||modalOpen()||(e.target.closest&&e.target.closest("#ctx")))return;e.stopPropagation();
