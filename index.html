@@ -207,7 +207,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v90</div>
+    <div id="ver" title="Numéro de version de la page">v91</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1169,7 +1169,7 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen())FROZEN=null;
   else{var pos={};FROZEN.forEach(function(id,i){pos[id]=i});
    sm=sm.map(function(m,i){return{m:m,i:i}}).sort(function(a,b){var pa=pos[a.m.id],pb=pos[b.m.id];if(pa===undefined&&pb===undefined)return a.i-b.i;if(pa===undefined)return -1;if(pb===undefined)return 1;return pa-pb}).map(function(o){return o.m})}}
  else FROZEN=null;
- var it=[{icon:"⌂",label:"Accueil",fn:showHome},{icon:"＋",label:"Nouvelle carte…",keep:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
+ var it=[{icon:"⌂",label:"Accueil",fn:function(){showHome(true)}},{icon:"＋",label:"Nouvelle carte…",keep:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true}];
  sm.forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
   rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}},{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}}])}})});return it}
@@ -1675,7 +1675,23 @@ function hmGo(fn){if(HMBUSY)return;var lg=$("hmSvg").firstChild,lr=lg.getBoundin
   fn();
   if(HOME){done();renderHome();return}/* action annulée : on reste sur l'accueil */
   fb.style.visibility="";fb.animate([{opacity:0},{opacity:1}],{duration:160});done()}).catch(function(){done();if(HOME)renderHome()})}
-function showHome(){HOME=true;$("stage").classList.add("hm");$("home").classList.add("on");syncUrl();renderHome();$("hmMenu").scrollTop=0}
+/* arrivée sur l'accueil depuis une carte : effet inverse (les textes sortent du cerveau, puis il rejoint le centre) */
+function showHome(anim){var st=$("stage"),fb=$("fabM"),fr=anim?fb.getBoundingClientRect():null;
+ HOME=true;st.classList.add("hm");$("home").classList.add("on");syncUrl();renderHome();$("hmMenu").scrollTop=0;
+ var lg=$("hmSvg").firstChild,lr=lg.getBoundingClientRect();
+ if(!anim||HMBUSY||!fr.width||!lr.width||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches))return;
+ HMBUSY=true;var hm=$("home"),an=[],fx=fr.left+fr.width/2,fy=fr.top+fr.height/2,tx=lr.left+lr.width/2,ty=lr.top+lr.height/2,sp=lg.parentNode;
+ hm.classList.add("busy");sp.style.visibility="hidden";
+ var fl=document.createElement("div");fl.className="hm-fly";fl.style.cssText="left:"+lr.left+"px;top:"+lr.top+"px;width:"+lr.width+"px;height:"+lr.height+"px";
+ var c=lg.cloneNode(true);c.setAttribute("width","100%");c.setAttribute("height","100%");fl.appendChild(c);document.body.appendChild(fl);
+ var T="translate("+(fx-tx)+"px,"+(fy-ty)+"px) scale("+(34/lr.width)+")";fl.style.transform=T;
+ function done(){an.forEach(function(a){a.cancel()});fl.remove();sp.style.visibility="";HMBUSY=false;hm.classList.remove("busy")}
+ c.animate([{transform:"scale(1)"},{transform:"scale(1.3)"},{transform:"scale(1)"}],{duration:240,easing:"ease-in-out"});
+ [].slice.call($("hmMenu").children).concat([document.querySelector(".hm-name")]).forEach(function(e,i){var r=e.getBoundingClientRect();if(!r.width)return;
+  var nm=e.classList.contains("hm-name"),r0=nm?-13:0,sg=i%2?150:-150;
+  an.push(e.animate([{transform:"translate("+(fx-r.left-r.width/2)+"px,"+(fy-r.top-r.height/2)+"px) rotate("+(r0+sg)+"deg) scale(.08)",opacity:0},{transform:"translate(0,0) rotate("+r0+"deg) scale(1)",opacity:nm?.45:1}],{duration:520,delay:i*28,easing:"cubic-bezier(.25,.65,.45,1)",fill:"both"}))});
+ Promise.all(an.map(function(a){return a.finished})).then(function(){
+  return fl.animate([{transform:T},{transform:"translate(0,0) scale(1)"}],{duration:560,easing:"cubic-bezier(.65,0,.25,1)",fill:"forwards"}).finished}).then(done).catch(done)}
 function hideHome(){HOME=false;$("stage").classList.remove("hm");$("home").classList.remove("on")}
 /* pendant que l'accueil est ouvert, les raccourcis, collages et dépôts ne touchent pas la carte cachée */
 window.addEventListener("keydown",function(e){if(!HOME||ctxOpen()||modalOpen()||(e.target.closest&&e.target.closest("#ctx,#ctx2")))return;e.stopPropagation()},true);
