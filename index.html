@@ -191,7 +191,7 @@ body.notes #bSnap{display:none}
 @media(max-width:700px){#tBar{top:80px;max-width:calc(100% - 24px)}}
 /* accueil */
 #home{position:absolute;inset:0;z-index:24;background:var(--bg);color:var(--ink);display:none;overflow:hidden}#home.on{display:block}#toast{z-index:25}
-#stage.hm #fabC,#stage.hm #ver{z-index:26}#stage.hm #tl{display:none}#home.busy{pointer-events:none}.hm-fly{position:fixed;z-index:70;pointer-events:none;transform-origin:center}
+#stage.hm #fabC,#stage.hm #ver,#stage.hm #tl{z-index:26}#stage.hm #tl>:not(#fabM){display:none}#home.busy{pointer-events:none}.hm-fly{position:fixed;z-index:70;pointer-events:none;transform-origin:center}
 /* même position, même taille et mêmes lignes que le menu du cerveau (le cadre apparaît ou disparaît en fondu) */
 #hmMenu{position:fixed;z-index:27;display:none;min-width:230px;max-width:320px;max-height:80vh;overflow:auto;padding:6px;border:1px solid transparent;border-radius:10px;background:transparent;font-size:14px;outline:none;transition:background .25s,border-color .25s,box-shadow .25s}
 #stage.hm #hmMenu,#hmMenu.pin{display:block}#hmMenu.fr{background:var(--panel);border-color:var(--line);box-shadow:0 10px 30px rgba(0,0,0,.28)}
@@ -208,7 +208,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v93</div>
+    <div id="ver" title="Numéro de version de la page">v94</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1170,9 +1170,9 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen()&&!PIN)FROZEN
   else{var pos={};FROZEN.forEach(function(id,i){pos[id]=i});
    sm=sm.map(function(m,i){return{m:m,i:i}}).sort(function(a,b){var pa=pos[a.m.id],pb=pos[b.m.id];if(pa===undefined&&pb===undefined)return a.i-b.i;if(pa===undefined)return -1;if(pb===undefined)return 1;return pa-pb}).map(function(o){return o.m})}}
  else FROZEN=null;
- var it=[{icon:"⌂",label:"Accueil",fn:function(){showHome(true)}},{icon:"＋",label:"Nouvelle carte…",keep:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
+ var it=[{icon:"⌂",label:"Accueil",fly:true,fn:function(){showHome(true)}},{icon:"＋",label:"Nouvelle carte…",keep:true,fly:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true}];
- sm.forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
+ sm.forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fly:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
   rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}},{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}}])}})});return it}
 /* la liste des cartes du menu principal est reconstruite si le menu est encore ouvert (après une suppression) */
 function refreshMainMenu(){if(HOME||PIN){renderHome();return}if(!ctxOpen())return;var x=parseFloat(ctxEl.style.left)||6,y=parseFloat(ctxEl.style.top)||6,st=ctxEl.scrollTop;showCtx(x,y,mainMenu());ctxEl.scrollTop=st}
@@ -1425,7 +1425,7 @@ function renderCtx(el,x,y,items,anc){var shut=el===ctxEl?closeCtx:closeSub;el.in
    el.appendChild(sr);return}
   var b=document.createElement("button");b.setAttribute("role","menuitem");if(it.danger)b.className="danger";
   var ic=document.createElement("span");ic.className="cx-i";if(ICONS[it.icon])ic.innerHTML=ICONS[it.icon];else ic.textContent=it.icon||"";var tx=document.createElement("span");if(it.sk!=null)strikeHtml(tx,it.sk);else tx.textContent=it.label;
-  b.appendChild(ic);b.appendChild(tx);b.onclick=function(){if(it.keep){it.fn();refreshMainMenu();LEAVEARM=true}else{shut();it.fn()}};/* keep : le menu reste ouvert (il se referme par un clic dans la carte) */
+  b.appendChild(ic);b.appendChild(tx);b.onclick=function(){var go=function(){if(it.keep){it.fn();refreshMainMenu();LEAVEARM=true}else{shut();it.fn()}};if(it.fly)flyItem(b,go);else go()};/* keep : le menu reste ouvert (il se referme par un clic dans la carte) */
   if(it.rc){b.addEventListener("contextmenu",function(e){e.preventDefault();e.stopPropagation();it.rc(e.clientX,e.clientY,b)})}
   if(it.mid){b.addEventListener("mousedown",function(e){if(e.button===1)e.preventDefault()});b.addEventListener("auxclick",function(e){if(e.button===1){e.preventDefault();shut();it.mid()}})}
   el.appendChild(b)});
@@ -1654,44 +1654,31 @@ document.addEventListener("keydown",function(e){
 
 /* ---------- accueil : logo au centre, menu des cartes à gauche ---------- */
 (function(){var sv=$("fabM").querySelector("svg").cloneNode(true);sv.setAttribute("width",190);sv.setAttribute("height",190);$("hmSvg").appendChild(sv)})();
-var HMBUSY=false,PIN=false;
-function renderHome(){if(HMBUSY)return;var it=mainMenu();MAINOPEN=false;
- it.forEach(function(x){if(x&&x.keep&&x.fn){var f=x.fn;x.fn=function(){hmGo(f)}}});/* choisir une carte ou en créer une : animation puis action */
- var st=$("stage"),had=st.classList.contains("hm");st.classList.remove("hm");var r=$("fabM").getBoundingClientRect();if(had)st.classList.add("hm");
- renderCtx($("hmMenu"),r.left,r.bottom+8,it);$("hmMenu").classList.remove("on")}/* « on » (ajoutée par renderCtx) forcerait l'affichage */
+var PIN=false,FLYING=false;
+/* la ligne cliquée (carte, Accueil, Nouvelle carte) s'envole depuis le menu vers le centre de l'écran, puis l'action a lieu */
+function flyItem(b,go){if(FLYING)return;
+ if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){go();return}
+ FLYING=true;var r=b.getBoundingClientRect(),cs=getComputedStyle(b),c=b.cloneNode(true),dx=innerWidth/2-(r.left+r.width/2),dy=innerHeight/2-(r.top+r.height/2);
+ c.style.cssText="position:fixed;left:"+r.left+"px;top:"+r.top+"px;width:"+r.width+"px;height:"+r.height+"px;margin:0;box-sizing:border-box;z-index:80;pointer-events:none;border-radius:6px;background:var(--accent);color:var(--accent-ink);font:"+cs.font+";display:flex;align-items:center;gap:10px;padding:"+cs.padding+";white-space:nowrap";
+ document.body.appendChild(c);b.style.visibility="hidden";
+ if(b.closest&&b.closest("#hmMenu"))$("hmMenu").classList.add("fr");/* le cadre apparaît autour du menu de l'accueil */
+ var an=c.animate([{transform:"translate(0,0) scale(1)",opacity:1},{transform:"translate("+dx+"px,"+dy+"px) scale(2.4)",opacity:1,offset:.6},{transform:"translate("+dx+"px,"+dy+"px) scale(3)",opacity:0}],{duration:900,easing:"cubic-bezier(.4,0,.2,1)",fill:"forwards"});
+ setTimeout(function(){b.style.visibility="";FLYING=false;go()},540);
+ an.finished.then(function(){c.remove()},function(){c.remove()})}
+function renderHome(){var it=mainMenu();MAINOPEN=false;
+ it.forEach(function(x){if(x&&x.fly&&x.fn){var f=x.fn;x.fn=function(){hmRun(f)}}});
+ var r=$("fabM").getBoundingClientRect();renderCtx($("hmMenu"),r.left,r.bottom+8,it);$("hmMenu").classList.remove("on")/* « on » (ajoutée par renderCtx) forcerait l'affichage */}
 /* le menu de l'accueil reste affiché (avec son cadre) une fois la carte ouverte, comme le menu du cerveau, et disparaît quand le curseur le quitte */
-function unpin(){PIN=false;var m=$("hmMenu");m.classList.remove("pin","fr")}
-$("hmMenu").addEventListener("mouseleave",function(){if(PIN&&!HMBUSY)unpin()});
-document.addEventListener("pointerdown",function(e){if(PIN&&!HMBUSY&&!(e.target.closest&&e.target.closest("#hmMenu")))unpin()},true);
-/* effet : le cadre apparaît autour du menu pendant que le logo s'envole vers le coin (il devient l'icône du menu) */
-function hmGo(fn){if(HMBUSY)return;if(PIN){fn();return}var lg=$("hmSvg").firstChild,lr=lg.getBoundingClientRect();
- if(!lr.width||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){fn();return}
- HMBUSY=true;var hm=$("home"),st=$("stage"),fb=$("fabM"),menu=$("hmMenu"),fl=document.createElement("div"),tx=lr.left+lr.width/2,ty=lr.top+lr.height/2;hm.classList.add("busy");
- st.classList.remove("hm");var fr=fb.getBoundingClientRect();st.classList.add("hm");/* position de l'icône du menu, mesurée sans rien afficher */
- var fx=fr.left+fr.width/2,fy=fr.top+fr.height/2;
- function done(){fl.remove();lg.parentNode.style.visibility="";HMBUSY=false;hm.classList.remove("busy")}
- fl.className="hm-fly";fl.style.cssText="left:"+lr.left+"px;top:"+lr.top+"px;width:"+lr.width+"px;height:"+lr.height+"px";
- var c=lg.cloneNode(true);c.setAttribute("width","100%");c.setAttribute("height","100%");fl.appendChild(c);document.body.appendChild(fl);lg.parentNode.style.visibility="hidden";
- menu.classList.add("fr");
- fl.animate([{transform:"translate(0,0) scale(1)"},{transform:"translate("+(fx-tx)+"px,"+(fy-ty)+"px) scale("+(34/lr.width)+")"}],{duration:560,easing:"cubic-bezier(.65,0,.25,1)",fill:"forwards"}).finished.then(function(){
-  PIN=true;menu.classList.add("pin");fn();
-  if(HOME){PIN=false;menu.classList.remove("pin","fr");done();renderHome();return}/* action annulée : le logo revient au centre */
-  fb.style.visibility="";fb.animate([{opacity:0},{opacity:1}],{duration:160});done();
-  if(!menu.matches(":hover"))unpin()}).catch(function(){PIN=false;menu.classList.remove("pin","fr");done();if(HOME)renderHome()})}
-/* arrivée sur l'accueil depuis une carte : effet inverse (le cadre s'efface et le logo rejoint le centre) */
-function showHome(anim){var st=$("stage"),fb=$("fabM"),menu=$("hmMenu"),fr=anim?fb.getBoundingClientRect():null;
- if(PIN){PIN=false;menu.classList.remove("pin")}
- HOME=true;st.classList.add("hm");$("home").classList.add("on");syncUrl();renderHome();$("hmMenu").scrollTop=0;
- var lg=$("hmSvg").firstChild,lr=lg.getBoundingClientRect();
- if(!anim||HMBUSY||!fr.width||!lr.width||(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches)){menu.classList.remove("fr");return}
- HMBUSY=true;var hm=$("home"),fx=fr.left+fr.width/2,fy=fr.top+fr.height/2,tx=lr.left+lr.width/2,ty=lr.top+lr.height/2,sp=lg.parentNode;
- hm.classList.add("busy");sp.style.visibility="hidden";menu.classList.add("fr");
- var fl=document.createElement("div");fl.className="hm-fly";fl.style.cssText="left:"+lr.left+"px;top:"+lr.top+"px;width:"+lr.width+"px;height:"+lr.height+"px";
- var c=lg.cloneNode(true);c.setAttribute("width","100%");c.setAttribute("height","100%");fl.appendChild(c);document.body.appendChild(fl);
- var T="translate("+(fx-tx)+"px,"+(fy-ty)+"px) scale("+(34/lr.width)+")";fl.style.transform=T;
- function done(){menu.classList.remove("fr");fl.remove();sp.style.visibility="";HMBUSY=false;hm.classList.remove("busy")}
- setTimeout(function(){menu.classList.remove("fr")},60);
- fl.animate([{transform:T},{transform:"translate(0,0) scale(1)"}],{duration:560,easing:"cubic-bezier(.65,0,.25,1)",fill:"forwards"}).finished.then(done).catch(done)}
+function hmRun(f){var menu=$("hmMenu");if(PIN){f();return}
+ PIN=true;menu.classList.add("pin","fr");f();
+ if(HOME){PIN=false;menu.classList.remove("pin","fr");renderHome();return}/* action annulée ou déjà sur l'accueil */
+ if(!menu.matches(":hover"))unpin()}
+function unpin(){PIN=false;$("hmMenu").classList.remove("pin","fr")}
+$("hmMenu").addEventListener("mouseleave",function(){if(PIN)unpin()});
+document.addEventListener("pointerdown",function(e){if(PIN&&!(e.target.closest&&e.target.closest("#hmMenu")))unpin()},true);
+function showHome(anim){var menu=$("hmMenu");if(PIN){PIN=false;menu.classList.remove("pin")}
+ HOME=true;$("stage").classList.add("hm");$("home").classList.add("on");syncUrl();renderHome();menu.scrollTop=0;
+ menu.classList.toggle("fr",!!anim);if(anim)setTimeout(function(){menu.classList.remove("fr")},60)}
 function hideHome(){HOME=false;$("stage").classList.remove("hm");$("home").classList.remove("on")}
 /* pendant que l'accueil est ouvert, les raccourcis, collages et dépôts ne touchent pas la carte cachée */
 window.addEventListener("keydown",function(e){if(!HOME||ctxOpen()||modalOpen()||(e.target.closest&&e.target.closest("#ctx,#ctx2")))return;e.stopPropagation()},true);
