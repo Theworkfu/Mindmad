@@ -132,19 +132,19 @@ button:disabled{opacity:.4;cursor:default}
 .zb{fill:none;stroke:#35c3ff;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
 .zb.w{stroke-width:6;opacity:.13}.zb.m{stroke-width:3;opacity:.38}.zb.c{stroke:#fff;stroke-width:1.3;opacity:.85}.zb.base{stroke-width:2}
 #ctx{position:fixed;z-index:60;display:none;min-width:230px;max-width:320px;max-height:80vh;overflow:auto;padding:6px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.28);outline:none;font-size:14px}
-#ctx.on{display:block}
-#ctx button{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:6px;background:none;text-align:left;cursor:pointer}
-#ctx button:hover,#ctx button:focus-visible{background:var(--accent);color:var(--accent-ink);outline:none}
-#ctx button.danger{color:#d0443e}#ctx button.danger:hover,#ctx button.danger:focus-visible{background:#d0443e;color:#fff}
-#ctx .cx-i{width:18px;flex:none;text-align:center;display:inline-flex;align-items:center;justify-content:center}
-#ctx .cx-h{padding:6px 10px 2px;font-weight:700;font-size:13px;color:var(--muted)}
-#ctx .cx-sort{display:flex;gap:4px;padding:2px 6px 6px}
-#ctx .cx-sort button{width:auto;flex:1;justify-content:center;padding:4px 6px;font-size:12px;border:1px solid var(--line)}
-#ctx .cx-sort button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-#ctx hr{border:0;border-top:1px solid var(--line);margin:5px 2px}
-#ctx .cx-sw{display:flex;flex-wrap:wrap;gap:7px;padding:6px 10px}
-#ctx .cx-sw button.cx-c{width:22px;height:22px;padding:0;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
-#ctx .cx-sw button.cx-c.on{outline:2px solid var(--ink)}
+#ctx.on,#hmMenu.on{display:block}
+#ctx button,#hmMenu button{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:6px;background:none;text-align:left;cursor:pointer}
+#ctx button:hover,#ctx button:focus-visible,#hmMenu button:hover,#hmMenu button:focus-visible{background:var(--accent);color:var(--accent-ink);outline:none}
+#ctx button.danger,#hmMenu button.danger{color:#d0443e}#ctx button.danger:hover,#ctx button.danger:focus-visible{background:#d0443e;color:#fff}
+#ctx .cx-i,#hmMenu .cx-i{width:18px;flex:none;text-align:center;display:inline-flex;align-items:center;justify-content:center}
+#ctx .cx-h,#hmMenu .cx-h{padding:6px 10px 2px;font-weight:700;font-size:13px;color:var(--muted)}
+#ctx .cx-sort,#hmMenu .cx-sort{display:flex;gap:4px;padding:2px 6px 6px}
+#ctx .cx-sort button,#hmMenu .cx-sort button{width:auto;flex:1;justify-content:center;padding:4px 6px;font-size:12px;border:1px solid var(--line)}
+#ctx .cx-sort button.on,#hmMenu .cx-sort button.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+#ctx hr,#hmMenu hr{border:0;border-top:1px solid var(--line);margin:5px 2px}
+#ctx .cx-sw,#hmMenu .cx-sw{display:flex;flex-wrap:wrap;gap:7px;padding:6px 10px}
+#ctx .cx-sw button.cx-c,#hmMenu .cx-sw button.cx-c{width:22px;height:22px;padding:0;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
+#ctx .cx-sw button.cx-c.on,#hmMenu .cx-sw button.cx-c.on{outline:2px solid var(--ink)}
 #ctx2{position:fixed;z-index:61;display:none;min-width:230px;max-width:320px;max-height:80vh;overflow:auto;padding:6px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.28);outline:none;font-size:14px}
 #ctx2.on{display:block}
 #ctx2 button{display:flex;align-items:center;gap:10px;width:100%;padding:7px 10px;border:0;border-radius:6px;background:none;text-align:left;cursor:pointer}
@@ -190,17 +190,13 @@ body.notes #bSnap{display:none}
 #tBar #fabV{width:44px;height:44px;font-size:22px;flex:none}
 @media(max-width:700px){#tBar{top:80px;max-width:calc(100% - 24px)}}
 /* accueil */
-#home{position:absolute;inset:0;z-index:24;background:var(--bg);color:var(--ink);display:none;overflow:auto}#home.on{display:block}#toast{z-index:25}
-.hm-in{width:min(1100px,100%);margin:0 auto;padding:22px 76px 40px;box-sizing:border-box}@media(max-width:700px){.hm-in{padding:80px 16px 40px}}
-.hm-top{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.hm-top h1{font-size:22px;margin:0 auto 0 0}
-.hm-b{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:8px;padding:7px 12px;cursor:pointer;font:inherit;font-size:13px}.hm-b:hover,.hm-b.on,.hm-b.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.hm-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--muted)}.hm-row .hm-sp{margin-left:auto;display:flex;gap:8px;align-items:center}
-#hmGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:16px}
-.hm-c{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer}.hm-c:hover,.hm-c:focus-visible{border-color:var(--accent);outline:none;box-shadow:0 4px 14px rgba(0,0,0,.14)}.hm-c.cur{border-color:var(--accent)}
-.hm-t{display:block;width:100%;height:120px;background:var(--bg)}.hm-m{padding:9px 12px 11px}.hm-n{font-weight:600;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.hm-s{font-size:12px;color:var(--muted);margin-top:3px}.hm-h{font-size:12px;color:var(--accent);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.hm-d{position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer;font-size:15px;line-height:1}
+#home{position:absolute;inset:0;z-index:24;background:var(--bg);color:var(--ink);display:none;overflow:hidden}#home.on{display:block}#toast{z-index:25}
 #stage.hm #tl,#stage.hm #fabC{z-index:26}#stage.hm #tl>:not(#fabM){display:none}
-#hmEmpty{margin-top:30px;text-align:center;color:var(--muted)}
+#hmMenu{position:absolute;left:0;top:0;bottom:0;width:min(340px,100%);box-sizing:border-box;overflow:auto;padding:84px 20px 30px 26px;font-size:16.5px}
+#hmMenu button{padding:9px 12px}#hmMenu .cx-i{width:22px;font-size:18px}#hmMenu .cx-sort button{font-size:13px;padding:5px 8px}
+#hmLogo{position:absolute;left:50%;top:50%;transform:translate(-50%,-54%);display:flex;flex-direction:column;align-items:center;pointer-events:none;user-select:none}
+.hm-name{margin-top:4px;font-size:46px;font-weight:700;font-style:italic;letter-spacing:.05em;color:var(--muted);opacity:.45;transform:rotate(-13deg)}
+@media(max-width:760px){#hmLogo{display:none}}
 </style>
 </head>
 <body>
@@ -211,14 +207,11 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v87</div>
+    <div id="ver" title="Numéro de version de la page">v88</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
-    <div id="home" role="dialog" aria-label="Accueil"><div class="hm-in">
-      <div class="hm-top"><h1>Accueil</h1></div>
-      <div class="hm-row"><span>Trier par</span><button class="hm-b" data-s="use">Utilisation</button><button class="hm-b" data-s="mod">Modification</button><button class="hm-b" data-s="az">A → Z</button></div>
-      <div id="hmGrid"></div><div id="hmEmpty"></div></div></div>
+    <div id="home" role="dialog" aria-label="Accueil"><div id="hmMenu" role="menu"></div><div id="hmLogo"><span id="hmSvg"></span><div class="hm-name">Mindmad</div></div></div>
     <div id="toast" role="status"></div>
     <div id="drop">Déposez l’image sur la bulle en surbrillance</div>
     <div id="help"><div><i class="m" data-m="L2"></i> sur le fond : nouvelle bulle</div><div><i class="m" data-m="L2"></i> sur une bulle : modifier le texte</div><div><i class="m" data-m="R"></i> (ou ☝ appui long sur mobile) : menu de la bulle, de la flèche ou du fond</div><div><i class="m" data-m="LD"></i> sur une bulle : la déplacer (les flèches s’ajustent) · ⇧ + <i class="m" data-m="L"></i> : sélectionner plusieurs bulles</div><div><i class="m" data-m="LD"></i> depuis la pastille ➜ d’une bulle sélectionnée : vers une autre bulle pour les relier, ou vers le vide pour créer une bulle</div><div>⇥ Tab : bulle reliée à la bulle sélectionnée</div><div>↵ Entrée : bulle sœur (mêmes bulles parentes que la bulle sélectionnée)</div><div>Groupe : double-clic sur le cadre pour lui donner un titre · Image : clic sur la bulle puis sur l’image pour la sélectionner seule, clic droit → Retirer l’image · clic droit sur une bulle → Ajouter des images…</div><div>Menu du fond → Sélectionner plusieurs bulles : rectangle (glisser) ou forme libre (maintenir puis glisser), puis clic droit : copier, couper ou regrouper (glisser une bulle sélectionnée les déplace toutes)</div><div><i class="m" data-m="M"></i> sur une carte du menu ☰ : l’ouvrir dans un nouvel onglet</div><div>Ctrl+C / Ctrl+X / Ctrl+V : copier / couper / coller les bulles sélectionnées (aussi dans le menu clic droit)</div><div>🔒 : verrouiller la carte (plus aucune modification, lecture seule) · 🧲 : magnétisme, les bulles s’alignent sur les autres pendant le déplacement (Alt : l’ignorer)</div><div><i class="m" data-m="LD"></i> sur l’extrémité d’une flèche sélectionnée : la tirer sur une autre bulle pour la rattacher</div><div><i class="m" data-m="R"></i> sur le titre ou sur une carte du menu de gauche : renommer la carte · <i class="m" data-m="L2"></i> sur un libellé : l’éditer</div><div><i class="m" data-m="M"></i> sur une bulle : replier/déplier · Ctrl+V : coller une image</div><div>Bouton hiérarchie (en bas à droite) : tout replier / déplier d’un niveau / tout déplier</div><div>✌ deux doigts : zoomer (mobile)</div></div>
@@ -1179,9 +1172,9 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen())FROZEN=null;
  var it=[{icon:"⌂",label:"Accueil",fn:showHome},{icon:"＋",label:"Nouvelle carte…",keep:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true}];
  sm.forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
-  rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;showSub(br?mr.right+6:x,br?br.top:y,[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}},{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}}])}})});return it}
+  rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}},{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}}])}})});return it}
 /* la liste des cartes du menu principal est reconstruite si le menu est encore ouvert (après une suppression) */
-function refreshMainMenu(){if(!ctxOpen())return;var x=parseFloat(ctxEl.style.left)||6,y=parseFloat(ctxEl.style.top)||6,st=ctxEl.scrollTop;showCtx(x,y,mainMenu());ctxEl.scrollTop=st}
+function refreshMainMenu(){if(HOME){renderHome();return}if(!ctxOpen())return;var x=parseFloat(ctxEl.style.left)||6,y=parseFloat(ctxEl.style.top)||6,st=ctxEl.scrollTop;showCtx(x,y,mainMenu());ctxEl.scrollTop=st}
 $("fabM").onclick=function(){if(ctxSkip==="fabM"&&Date.now()-ctxSkipT<700){ctxSkip=null;return}var r=this.getBoundingClientRect();menuPos=[r.left,r.bottom+8];showCtx(menuPos[0],menuPos[1],mainMenu())};
 $("fabC").onclick=function(){$("side").classList.toggle("on");$("help").classList.remove("on")};
 $("fabH").onclick=function(){$("help").classList.toggle("on");$("side").classList.remove("on")};
@@ -1658,36 +1651,13 @@ document.addEventListener("keydown",function(e){
 });
 
 
-/* ---------- accueil : toutes les cartes en vignettes ---------- */
-function hmThumb(m){var s=document.createElementNS(NS,"svg");s.setAttribute("class","hm-t");s.setAttribute("aria-hidden","true");var hid={};try{hid=colInfo(m).hid||{}}catch(e){}
- var L=m.nodes.filter(function(n){return!hid[n.id]}).slice(0,300);if(!L.length)return s;
- var x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,by={};L.forEach(function(n){by[n.id]=n;x0=Math.min(x0,n.x);y0=Math.min(y0,n.y);x1=Math.max(x1,n.x+(n.w||110));y1=Math.max(y1,n.y+(n.h||30))});
- var p=20;s.setAttribute("viewBox",(x0-p)+" "+(y0-p)+" "+(x1-x0+2*p)+" "+(y1-y0+2*p));
- function mk(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);s.appendChild(e)}
- (m.links||[]).forEach(function(l){var a=by[l.from],b=by[l.to];if(a&&b)mk("line",{x1:a.x+(a.w||110)/2,y1:a.y+(a.h||30)/2,x2:b.x+(b.w||110)/2,y2:b.y+(b.h||30)/2,stroke:"var(--edge)","stroke-width":1.3,"vector-effect":"non-scaling-stroke"})});
- L.forEach(function(n){mk("rect",{x:n.x,y:n.y,width:n.w||110,height:n.h||30,rx:8,fill:COLORS[(n.c||0)%COLORS.length],stroke:"rgba(0,0,0,.3)","stroke-width":1,"vector-effect":"non-scaling-stroke",opacity:.92})});return s}
-function hmEl(t,c,x){var e=document.createElement(t);if(c)e.className=c;if(x!==undefined)e.textContent=x;return e}
-function hmMenu(id,x,y){var m=maps.filter(function(k){return k.id===id})[0];if(!m)return;var nm=flat(m.title);
- showCtx(x,y,[{icon:"✏️",label:"Renommer la carte « "+nm+" »…",fn:function(){renameMapById(id)}},{icon:"⧉",label:"Dupliquer la carte « "+nm+" »",fn:function(){dupMapById(id)}},{icon:"🗑",label:"Supprimer la carte « "+nm+" »…",danger:true,fn:function(){delMapById(id)}}])}
-function renderHome(){var g=$("hmGrid"),n=0;g.textContent="";
- document.querySelectorAll("#home [data-s]").forEach(function(b){b.classList.toggle("on",b.getAttribute("data-s")===SORT)});
- sortedMaps().forEach(function(m){var title=flat(m.title);
-  n++;var c=hmEl("div","hm-c"+(m.id===curId?" cur":""));c.tabIndex=0;c.setAttribute("data-id",m.id);c.appendChild(hmThumb(m));
-  var i=hmEl("div","hm-m");i.appendChild(hmEl("div","hm-n",title));
-  var d=m.mod?new Date(m.mod).toLocaleDateString("fr-FR",{day:"numeric",month:"short",year:"numeric"}):"";
-  i.appendChild(hmEl("div","hm-s",(m.mode==="schema"?"🧩 Schéma":"📝 Notes")+" · "+m.nodes.length+" bulle"+(m.nodes.length>1?"s":"")+(d?" · "+d:"")+(m.locked?" · 🔒":"")+(m.id===curId?" · ouverte":"")));
-  c.appendChild(i);
-  var dots=hmEl("button","hm-d","⋯");dots.title="Renommer, dupliquer, supprimer";dots.onclick=function(e){e.stopPropagation();var r=dots.getBoundingClientRect();hmMenu(m.id,r.left,r.bottom+4)};c.appendChild(dots);
-  c.onclick=function(){hmOpen(m.id)};c.onauxclick=function(e){if(e.button===1){e.preventDefault();openMapTab(m.id)}};c.oncontextmenu=function(e){e.preventDefault();hmMenu(m.id,e.clientX,e.clientY)};g.appendChild(c)});
- $("hmEmpty").textContent=n?"":"Aucune carte : créez-en une."}
-function showHome(){HOME=true;$("stage").classList.add("hm");$("home").classList.add("on");syncUrl();renderHome();$("home").scrollTop=0}
+/* ---------- accueil : logo au centre, menu des cartes à gauche ---------- */
+(function(){var sv=$("fabM").querySelector("svg").cloneNode(true);sv.setAttribute("width",190);sv.setAttribute("height",190);$("hmSvg").appendChild(sv)})();
+function renderHome(){var it=mainMenu().slice(1);MAINOPEN=false;renderCtx($("hmMenu"),0,0,it)}
+function showHome(){HOME=true;$("stage").classList.add("hm");$("home").classList.add("on");syncUrl();renderHome();$("hmMenu").scrollTop=0}
 function hideHome(){HOME=false;$("stage").classList.remove("hm");$("home").classList.remove("on")}
-function hmOpen(id){hideHome();if(id!==curId)switchMap(id);else{touchMap();refreshMaps();fit()}}
-document.querySelectorAll("#home [data-s]").forEach(function(b){b.onclick=function(){setSort(b.getAttribute("data-s"));renderHome()}});
 /* pendant que l'accueil est ouvert, les raccourcis, collages et dépôts ne touchent pas la carte cachée */
-window.addEventListener("keydown",function(e){if(!HOME||ctxOpen()||modalOpen()||(e.target.closest&&e.target.closest("#ctx")))return;e.stopPropagation();
- var c=e.target.closest&&e.target.closest(".hm-c");if(c&&(e.key==="Enter"||e.key===" ")){e.preventDefault();hmOpen(c.getAttribute("data-id"))}
-},true);
+window.addEventListener("keydown",function(e){if(!HOME||ctxOpen()||modalOpen()||(e.target.closest&&e.target.closest("#ctx,#ctx2")))return;e.stopPropagation()},true);
 ["paste","drop","dragover"].forEach(function(t){window.addEventListener(t,function(e){if(!HOME)return;e.stopPropagation();if(t!=="paste")e.preventDefault()},true)});
 purgeTrash();resetHist();refreshMaps();sel=(cur().nodes[0]||{}).id||null;relayoutCur();draw();syncPanel();fit();updBadge();if(START_HOME)showHome();
 window.addEventListener("resize",fit);
