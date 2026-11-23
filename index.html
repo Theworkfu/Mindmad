@@ -208,7 +208,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v98</div>
+    <div id="ver" title="Numéro de version de la page">v100</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -930,7 +930,7 @@ function snapDelta(grp,mset,dr){if(cur().mode==="notes"){clearGuides();return[0,
    if(bx!==null)mx.forEach(function(a){p.x.forEach(function(b){if(Math.abs(b-(a+sx))<.5)ln(b,Math.min(y1+sy,p.y[0])-10,b,Math.max(y2+sy,p.y[2])+10)})});
    if(by!==null)my.forEach(function(a){p.y.forEach(function(b){if(Math.abs(b-(a+sy))<.5)ln(Math.min(x1+sx,p.x[0])-10,b,Math.max(x2+sx,p.x[2])+10,b)})})})}
  return[sx,sy]}
-function applyBg(m){var c=$("cv"),u=m.bg?imgUrl(m.bg):"",v="color-mix(in srgb,var(--bg) 92%,transparent)";c.style.backgroundImage=u?"linear-gradient("+v+","+v+"),url(\""+u.replace(/"/g,"%22")+"\")":""}
+function applyBg(m){var c=$("cv"),u=m.bg?imgUrl(m.bg):"",v="color-mix(in srgb,var(--bg) 92%,transparent)";c.style.backgroundImage=u?"linear-gradient("+v+","+v+"),url(\""+u.replace(/"/g,"%22")+"\")":"";/* l'image entière est ajustée à la fenêtre (centrée, sans rognage) ; le voile couvre toute la fenêtre */c.style.backgroundSize=u?"100% 100%, contain":"";c.style.backgroundPosition="center";c.style.backgroundRepeat="no-repeat"}
 function pickBg(){$("uplBg").click()}
 function clearBg(){delete cur().bg;save();draw();toast("Fond d’écran retiré.")}
 $("uplBg").onchange=function(){var f=this.files[0];this.value="";if(f)toUrl(f,1400).then(function(u){cur().bg=u;save();draw();toast("Fond d’écran appliqué.")})};
@@ -1658,15 +1658,15 @@ var PIN=false,FLYING=false;
 /* le texte de la ligne cliquée (carte, Accueil, Nouvelle carte) quitte le menu, rejoint le centre de l'écran en tournoyant et y tourbillonne ; l'action a lieu à son arrivée */
 function flyItem(b,go){if(FLYING)return;
  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){go();return}
- var lab=b.lastElementChild||b;FLYING=true;var r=lab.getBoundingClientRect(),cs=getComputedStyle(lab),dx=innerWidth/2-(r.left+r.width/2),dy=innerHeight/2-(r.top+r.height/2),DUR=1800,c=document.createElement("div");
+ var lab=b.lastElementChild||b;FLYING=true;var r=lab.getBoundingClientRect(),cs=getComputedStyle(lab),dx=innerWidth/2-(r.left+r.width/2),dy=innerHeight/2-(r.top+r.height/2),DUR=1500,c=document.createElement("div");
  c.innerHTML=lab.innerHTML;
  c.style.cssText="position:fixed;left:"+r.left+"px;top:"+r.top+"px;width:"+(r.width+2)+"px;margin:0;z-index:80;pointer-events:none;white-space:nowrap;transform-origin:center;color:var(--ink);font:"+cs.font+";line-height:"+cs.lineHeight;
  document.body.appendChild(c);/* la ligne cliquée reste en place dans le menu : seule une copie du texte voyage */
  if(b.closest&&b.closest("#hmMenu"))$("hmMenu").classList.add("fr");/* le cadre apparaît autour du menu de l'accueil */
  function T(x,y,a,sc,o,e){return{transform:"translate("+x+"px,"+y+"px) rotate("+a+"deg) scale("+sc+")",opacity:o,easing:e||"linear"}}
  var E="cubic-bezier(.4,0,.2,1)";
- c.animate([Object.assign(T(0,0,0,1,1,"linear"),{offset:0}),Object.assign(T(dx*.5,dy*.5,270,1.45,1,"ease-out"),{offset:.27}),Object.assign(T(dx,dy,540,2,1,"ease-in-out"),{offset:.55}),Object.assign(T(dx,dy,900,2.3,1,"ease-in"),{offset:.85}),Object.assign(T(dx,dy,1080,.2,0),{offset:1})],{duration:DUR,fill:"both"}).finished.then(function(){c.remove()},function(){c.remove()});
- setTimeout(function(){b.style.visibility="";FLYING=false;go()},DUR*.55)}
+ c.animate([Object.assign(T(0,0,0,1,1,"linear"),{offset:0}),Object.assign(T(dx*.12,dy*.12,300,1.3,1,"linear"),{offset:.2}),Object.assign(T(dx*.45,dy*.45,620,1.6,1,"ease-out"),{offset:.4}),Object.assign(T(dx,dy,900,2,1,"ease-in-out"),{offset:.6}),Object.assign(T(dx,dy,1260,2.3,1,"ease-in"),{offset:.85}),Object.assign(T(dx,dy,1440,.2,0),{offset:1})],{duration:DUR,fill:"both"}).finished.then(function(){c.remove()},function(){c.remove()});
+ setTimeout(function(){b.style.visibility="";FLYING=false;go()},DUR*.6)}
 function renderHome(){var it=mainMenu();MAINOPEN=false;
  it.forEach(function(x){if(x&&(x.fly||x.pin)&&x.fn){var f=x.fn;x.fn=function(){hmRun(f)}}});
  var r=$("fabM").getBoundingClientRect();renderCtx($("hmMenu"),r.left,r.bottom+8,it);$("hmMenu").classList.remove("on")/* « on » (ajoutée par renderCtx) forcerait l'affichage */}
