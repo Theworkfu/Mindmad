@@ -208,7 +208,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v96</div>
+    <div id="ver" title="Numéro de version de la page">v97</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1170,7 +1170,7 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen()&&!PIN)FROZEN
   else{var pos={};FROZEN.forEach(function(id,i){pos[id]=i});
    sm=sm.map(function(m,i){return{m:m,i:i}}).sort(function(a,b){var pa=pos[a.m.id],pb=pos[b.m.id];if(pa===undefined&&pb===undefined)return a.i-b.i;if(pa===undefined)return -1;if(pb===undefined)return 1;return pa-pb}).map(function(o){return o.m})}}
  else FROZEN=null;
- var it=[{icon:"⌂",label:"Accueil",fly:true,fn:function(){showHome(true)}},{icon:"＋",label:"Nouvelle carte…",keep:true,fly:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
+ var it=[{icon:"⌂",label:"Accueil",fly:true,fn:function(){showHome(true)}},{icon:"＋",label:"Nouvelle carte…",keep:true,pin:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true}];
  sm.forEach(function(m){it.push({icon:m.id===curId?"✓":"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fly:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
   rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}},{icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}}])}})});return it}
@@ -1658,17 +1658,17 @@ var PIN=false,FLYING=false;
 /* le texte de la ligne cliquée (carte, Accueil, Nouvelle carte) quitte le menu, rejoint le centre de l'écran en tournoyant et y tourbillonne ; l'action a lieu à son arrivée */
 function flyItem(b,go){if(FLYING)return;
  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){go();return}
- var lab=b.lastElementChild||b;FLYING=true;var r=lab.getBoundingClientRect(),cs=getComputedStyle(lab),dx=innerWidth/2-(r.left+r.width/2),dy=innerHeight/2-(r.top+r.height/2),DUR=1100,c=document.createElement("div");
+ var lab=b.lastElementChild||b;FLYING=true;var r=lab.getBoundingClientRect(),cs=getComputedStyle(lab),dx=innerWidth/2-(r.left+r.width/2),dy=innerHeight/2-(r.top+r.height/2),DUR=1800,c=document.createElement("div");
  c.innerHTML=lab.innerHTML;
  c.style.cssText="position:fixed;left:"+r.left+"px;top:"+r.top+"px;width:"+(r.width+2)+"px;margin:0;z-index:80;pointer-events:none;white-space:nowrap;transform-origin:center;color:var(--ink);font:"+cs.font+";line-height:"+cs.lineHeight;
- document.body.appendChild(c);b.style.visibility="hidden";/* la ligne (texte, icône et fond) disparaît du menu */
+ document.body.appendChild(c);/* la ligne cliquée reste en place dans le menu : seule une copie du texte voyage */
  if(b.closest&&b.closest("#hmMenu"))$("hmMenu").classList.add("fr");/* le cadre apparaît autour du menu de l'accueil */
  function T(x,y,a,sc,o,e){return{transform:"translate("+x+"px,"+y+"px) rotate("+a+"deg) scale("+sc+")",opacity:o,easing:e||"linear"}}
  var E="cubic-bezier(.4,0,.2,1)";
- c.animate([Object.assign(T(0,0,0,1,1,E),{offset:0}),Object.assign(T(dx*.5-dy*.3,dy*.5+dx*.3,270,1.45,1,E),{offset:.27}),Object.assign(T(dx,dy,540,2,1,"ease-in-out"),{offset:.55}),Object.assign(T(dx,dy,900,2.3,1,"ease-in"),{offset:.85}),Object.assign(T(dx,dy,1080,.2,0),{offset:1})],{duration:DUR,fill:"both"}).finished.then(function(){c.remove()},function(){c.remove()});
+ c.animate([Object.assign(T(0,0,0,1,1,"linear"),{offset:0}),Object.assign(T(dx*.5,dy*.5,270,1.45,1,"ease-out"),{offset:.27}),Object.assign(T(dx,dy,540,2,1,"ease-in-out"),{offset:.55}),Object.assign(T(dx,dy,900,2.3,1,"ease-in"),{offset:.85}),Object.assign(T(dx,dy,1080,.2,0),{offset:1})],{duration:DUR,fill:"both"}).finished.then(function(){c.remove()},function(){c.remove()});
  setTimeout(function(){b.style.visibility="";FLYING=false;go()},DUR*.55)}
 function renderHome(){var it=mainMenu();MAINOPEN=false;
- it.forEach(function(x){if(x&&x.fly&&x.fn){var f=x.fn;x.fn=function(){hmRun(f)}}});
+ it.forEach(function(x){if(x&&(x.fly||x.pin)&&x.fn){var f=x.fn;x.fn=function(){hmRun(f)}}});
  var r=$("fabM").getBoundingClientRect();renderCtx($("hmMenu"),r.left,r.bottom+8,it);$("hmMenu").classList.remove("on")/* « on » (ajoutée par renderCtx) forcerait l'affichage */}
 /* le menu de l'accueil reste affiché (avec son cadre) une fois la carte ouverte, comme le menu du cerveau, et disparaît quand le curseur le quitte */
 function hmRun(f){var menu=$("hmMenu");if(PIN){f();return}
