@@ -208,7 +208,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v95</div>
+    <div id="ver" title="Numéro de version de la page">v96</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1655,19 +1655,18 @@ document.addEventListener("keydown",function(e){
 /* ---------- accueil : logo au centre, menu des cartes à gauche ---------- */
 (function(){var sv=$("fabM").querySelector("svg").cloneNode(true);sv.setAttribute("width",190);sv.setAttribute("height",190);$("hmSvg").appendChild(sv)})();
 var PIN=false,FLYING=false;
-/* la ligne cliquée (carte, Accueil, Nouvelle carte) reste en place et une onde part d'elle vers le centre de l'écran : l'action a lieu quand l'onde atteint le centre */
+/* le texte de la ligne cliquée (carte, Accueil, Nouvelle carte) quitte le menu, rejoint le centre de l'écran en tournoyant et y tourbillonne ; l'action a lieu à son arrivée */
 function flyItem(b,go){if(FLYING)return;
  if(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches){go();return}
- FLYING=true;var r=b.getBoundingClientRect(),ox=r.left+r.width/2,oy=r.top+r.height/2,W=innerWidth,H=innerHeight,
-  R=Math.hypot(Math.max(ox,W-ox),Math.max(oy,H-oy)),d=Math.hypot(W/2-ox,H/2-oy),DUR=1000,
-  tc=Math.max(120,Math.min(DUR*.8,DUR*(1-Math.sqrt(Math.max(0,1-d/R)))));/* instant où l'onde (ease-out) atteint le centre */
+ var lab=b.lastElementChild||b;FLYING=true;var r=lab.getBoundingClientRect(),cs=getComputedStyle(lab),dx=innerWidth/2-(r.left+r.width/2),dy=innerHeight/2-(r.top+r.height/2),DUR=1100,c=document.createElement("div");
+ c.innerHTML=lab.innerHTML;
+ c.style.cssText="position:fixed;left:"+r.left+"px;top:"+r.top+"px;width:"+(r.width+2)+"px;margin:0;z-index:80;pointer-events:none;white-space:nowrap;transform-origin:center;color:var(--ink);font:"+cs.font+";line-height:"+cs.lineHeight;
+ document.body.appendChild(c);b.style.visibility="hidden";/* la ligne (texte, icône et fond) disparaît du menu */
  if(b.closest&&b.closest("#hmMenu"))$("hmMenu").classList.add("fr");/* le cadre apparaît autour du menu de l'accueil */
- b.style.background="var(--accent)";b.style.color="var(--accent-ink)";
- [[0,.9,3],[130,.5,2]].forEach(function(o){var w=document.createElement("div");
-  w.style.cssText="position:fixed;left:"+(ox-R)+"px;top:"+(oy-R)+"px;width:"+2*R+"px;height:"+2*R+"px;box-sizing:border-box;border:"+o[2]+"px solid var(--accent);border-radius:50%;z-index:80;pointer-events:none";
-  document.body.appendChild(w);
-  w.animate([{transform:"scale(0)",opacity:o[1]},{transform:"scale(1)",opacity:0}],{duration:DUR,delay:o[0],easing:"cubic-bezier(.5,1,.89,1)",fill:"both"}).finished.then(function(){w.remove()},function(){w.remove()})});
- setTimeout(function(){b.style.background="";b.style.color="";FLYING=false;go()},tc)}
+ function T(x,y,a,sc,o,e){return{transform:"translate("+x+"px,"+y+"px) rotate("+a+"deg) scale("+sc+")",opacity:o,easing:e||"linear"}}
+ var E="cubic-bezier(.4,0,.2,1)";
+ c.animate([Object.assign(T(0,0,0,1,1,E),{offset:0}),Object.assign(T(dx*.5-dy*.3,dy*.5+dx*.3,270,1.45,1,E),{offset:.27}),Object.assign(T(dx,dy,540,2,1,"ease-in-out"),{offset:.55}),Object.assign(T(dx,dy,900,2.3,1,"ease-in"),{offset:.85}),Object.assign(T(dx,dy,1080,.2,0),{offset:1})],{duration:DUR,fill:"both"}).finished.then(function(){c.remove()},function(){c.remove()});
+ setTimeout(function(){b.style.visibility="";FLYING=false;go()},DUR*.55)}
 function renderHome(){var it=mainMenu();MAINOPEN=false;
  it.forEach(function(x){if(x&&x.fly&&x.fn){var f=x.fn;x.fn=function(){hmRun(f)}}});
  var r=$("fabM").getBoundingClientRect();renderCtx($("hmMenu"),r.left,r.bottom+8,it);$("hmMenu").classList.remove("on")/* « on » (ajoutée par renderCtx) forcerait l'affichage */}
