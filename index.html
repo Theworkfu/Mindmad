@@ -161,6 +161,7 @@ button:disabled{opacity:.4;cursor:default}
 #ctx2 .cx-sw button.cx-c.on{outline:2px solid var(--ink)}
 #edc{max-height:calc(100vh - 48px);overflow:auto}
 #edStrike{align-self:flex-start;font-size:13px;padding:4px 10px}
+#edAl{display:flex;gap:6px;align-self:flex-start}#edAl[hidden]{display:none}#edAl button{font-size:13px;padding:4px 10px;display:inline-flex;align-items:center}#edAl button.on{background:var(--line)}
 #edi{display:block;max-width:100%;height:auto;align-self:center;border-radius:8px;background:var(--bg)}
 #edi[hidden]{display:none}
 
@@ -208,7 +209,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v99</div>
+    <div id="ver" title="Numéro de version de la page">v101</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -239,7 +240,7 @@ body.notes #bSnap{display:none}
     <div class="hint" id="ghCleanState"></div>
   </aside>
 </main>
-<div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><img id="edi" alt="Image de la bulle" hidden><div id="edl" aria-label="Liens du texte"></div><button id="edStrike" type="button" title="Barrer / ne plus barrer la sélection, ou tout le texte si rien n’est sélectionné (Ctrl+Maj+X)"><s>S</s>&nbsp; Barrer</button><div class="hint" id="edHint">Entrée : nouvelle ligne · Ctrl+clic sur un lien pour l’ouvrir · cliquez à l’extérieur pour valider</div></div></div>
+<div id="ed" role="dialog" aria-modal="true" aria-label="Modifier le texte"><div id="edc"><textarea id="edt" rows="5" spellcheck="false"></textarea><img id="edi" alt="Image de la bulle" hidden><div id="edl" aria-label="Liens du texte"></div><button id="edStrike" type="button" title="Barrer / ne plus barrer la sélection, ou tout le texte si rien n’est sélectionné (Ctrl+Maj+X)"><s>S</s>&nbsp; Barrer</button><div id="edAl" role="group" aria-label="Alignement du texte" hidden><button type="button" data-al="l" title="Aligner le texte à gauche"><svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M1 2h14M1 5.5h9M1 9h14M1 12.5h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button type="button" data-al="c" title="Centrer le texte"><svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M1 2h14M3.5 5.5h9M1 9h14M3.5 12.5h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button><button type="button" data-al="r" title="Aligner le texte à droite"><svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M1 2h14M6 5.5h9M1 9h14M6 12.5h9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button></div><div class="hint" id="edHint">Entrée : nouvelle ligne · Ctrl+clic sur un lien pour l’ouvrir · cliquez à l’extérieur pour valider</div></div></div>
 <div id="nt" role="dialog" aria-modal="true" aria-label="Modifier la note"><div id="ntc"><div class="hint" id="ntTitle"></div><button id="ntStrike" type="button" title="Barrer / ne plus barrer la sélection, ou tout le texte si rien n’est sélectionné (Ctrl+Maj+X)" style="align-self:flex-start;font-size:13px;padding:4px 10px"><s>S</s>&nbsp; Barrer</button><textarea id="ntt" rows="6" placeholder="Votre note…"></textarea><div class="row" style="align-items:center"><span class="hint" style="flex:1">Cliquez à l’extérieur pour valider</span><button id="ntDel" class="danger">Supprimer la note</button></div></div></div>
 <div id="tip" role="tooltip"></div>
 <div id="ctx" role="menu" tabindex="-1"></div>
@@ -464,8 +465,8 @@ function draw(){modeBtn();
   g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;if(linkFrom){var from=linkFrom;endLink();if(from!==n.id)addLink(from,n.id,toWorld(e));return}selLink=null;selImg=null;selNote=null;if(e.shiftKey){toggleSel(n.id);return}ms={};var t=Date.now(),second=lastNode.id===n.id&&t-lastNode.t<500;lastNode=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openEd(n.id)});
   g.addEventListener("dblclick",function(e){e.stopPropagation();selImg=null;selNote=null;ms={};sel=n.id;draw();syncPanel();openEd(n.id)});
   el("rect",{"class":"box",width:n.w,height:n.h,rx:10,stroke:color},g);
-  var t=el("text",{x:n.w/2,y:20,"text-anchor":"middle"},g);
-  addStrikeLines(t,strikeLines(dispTextM(n.t)||" "),n.w/2,18);
+  var tax=n.al==="l"?8:n.al==="r"?n.w-8:n.w/2,t=el("text",{x:tax,y:20,"text-anchor":n.al==="l"?"start":n.al==="r"?"end":"middle"},g);
+  addStrikeLines(t,strikeLines(dispTextM(n.t)||" "),tax,18);
    var IL=imgsOf(n);
    if(IL.length){var ilo=imgLayout(n);
     IL.forEach(function(v,k){var bx=ilo.b[k],cid="c"+n.id+"_"+k;
@@ -930,7 +931,7 @@ function snapDelta(grp,mset,dr){if(cur().mode==="notes"){clearGuides();return[0,
    if(bx!==null)mx.forEach(function(a){p.x.forEach(function(b){if(Math.abs(b-(a+sx))<.5)ln(b,Math.min(y1+sy,p.y[0])-10,b,Math.max(y2+sy,p.y[2])+10)})});
    if(by!==null)my.forEach(function(a){p.y.forEach(function(b){if(Math.abs(b-(a+sy))<.5)ln(Math.min(x1+sx,p.x[0])-10,b,Math.max(x2+sx,p.x[2])+10,b)})})})}
  return[sx,sy]}
-function applyBg(m){var c=$("cv"),u=m.bg?imgUrl(m.bg):"",v="color-mix(in srgb,var(--bg) 92%,transparent)";c.style.backgroundImage=u?"linear-gradient("+v+","+v+"),url(\""+u.replace(/"/g,"%22")+"\")":""}
+function applyBg(m){var c=$("cv"),u=m.bg?imgUrl(m.bg):"",v="color-mix(in srgb,var(--bg) 92%,transparent)";c.style.backgroundImage=u?"linear-gradient("+v+","+v+"),url(\""+u.replace(/"/g,"%22")+"\")":"";/* l'image entière est ajustée à la fenêtre (centrée, sans rognage) ; le voile couvre toute la fenêtre */c.style.backgroundSize=u?"100% 100%, contain":"";c.style.backgroundPosition="center";c.style.backgroundRepeat="no-repeat"}
 function pickBg(){$("uplBg").click()}
 function clearBg(){delete cur().bg;save();draw();toast("Fond d’écran retiré.")}
 $("uplBg").onchange=function(){var f=this.files[0];this.value="";if(f)toUrl(f,1400).then(function(u){cur().bg=u;save();draw();toast("Fond d’écran appliqué.")})};
@@ -1309,7 +1310,7 @@ function drawGroups(m){var g=$("grps");g.innerHTML="";var by={};
   r.addEventListener("click",onClick);r.addEventListener("dblclick",onDbl);
   if(tx){tx.addEventListener("pointerdown",function(e){if(selMode||e.button)return;startDrag(e,a[0]);if(drag)drag.group=k});tx.addEventListener("click",onClick);tx.addEventListener("dblclick",onDbl)}})}
 /* titre d'un groupe : même fenêtre d'édition que le texte d'une bulle ; Entrée valide, un titre vide l'efface */
-function editGroupTitle(gid){closeCtx();if(LK())return;if(!cur().nodes.some(function(n){return n.grp===gid}))return;showEdImg(null);edId=null;edLink=null;edGroup=gid;$("edStrike").hidden=false;
+function editGroupTitle(gid){closeCtx();if(LK())return;if(!cur().nodes.some(function(n){return n.grp===gid}))return;showEdImg(null);edId=null;edLink=null;edGroup=gid;$("edStrike").hidden=false;edAlign();
  var t=$("edt");t.value=grpTitle(gid);t.placeholder="Titre du groupe";edFit(t,$("edc"));$("edl").innerHTML="";$("edl").classList.remove("on");$("edHint").textContent="Entrée ou clic à l’extérieur pour valider · titre vide : aucun titre";
  $("ed").classList.add("on");edFit(t,$("edc"));t.focus();t.select()}
 $("edt").addEventListener("keydown",function(e){if(edGroup&&e.key==="Enter"){e.preventDefault();closeEd()}});
@@ -1326,6 +1327,10 @@ function strikeEd(t){t=t||$("edt");var v=t.value,a=t.selectionStart,b=t.selectio
  if(!ok||t.value===v){t.setRangeText(out,from,to,"end");t.dispatchEvent(new Event("input",{bubbles:true}))}
  t.setSelectionRange(from+(un?0:2),from+out.length-(un?0:2))}
 $("edStrike").addEventListener("click",function(){strikeEd()});
+/* alignement du texte de la bulle (n.al : "l" gauche, "r" droite ; absent = centré) — seulement pour le texte d'une bulle */
+function edAlign(){var n=edId&&!edLink&&!edGroup?getN(edId):null,b=$("edAl"),t=$("edt");b.hidden=!n;t.style.textAlign=n?(n.al==="l"?"left":n.al==="r"?"right":"center"):"";
+ Array.prototype.forEach.call(b.querySelectorAll("button"),function(x){x.classList.toggle("on",!!n&&x.dataset.al===(n.al||"c"))})}
+Array.prototype.forEach.call($("edAl").querySelectorAll("button"),function(b){b.addEventListener("click",function(){var n=edId&&!edLink&&!edGroup?getN(edId):null;if(!n)return;if(b.dataset.al==="c")delete n.al;else n.al=b.dataset.al;save("t"+n.id);draw();edAlign();$("edt").focus()})});
 $("edt").addEventListener("keydown",function(e){if((e.ctrlKey||e.metaKey)&&e.shiftKey&&!e.altKey&&(e.key||"").toLowerCase()==="x"){e.preventDefault();strikeEd()}});
 function ungroupGroup(gid){var c=0;cur().nodes.forEach(function(n){if(n.grp===gid){delete n.grp;c++}});if(c){if(cur().gt)delete cur().gt[gid];save();draw();toast("Groupe défait.")}}
 /* « Dégrouper tout le groupe » seulement si le groupe lui-même est sélectionné (clic sur son cadre) : la sélection est exactement l'ensemble de ses bulles */
@@ -1380,13 +1385,13 @@ function removeImgAt(n,k){if(!n||LK())return;var a=imgsOf(n);if(k<0||k>=a.length
 function showEdImg(n){var im=$("edi"),box=$("edc");box.style.width="";box.dataset.bw="";$("edt").style.width="";$("edt").style.height="";im.onload=null;
  if(!n||!n.img){im.hidden=true;im.removeAttribute("src");return}
  im.onload=function(){var w=Math.min(Math.max(480,im.naturalWidth+30),Math.round(window.innerWidth*.92));box.dataset.bw=w;if($("edt").style.width)box.style.width=w+"px";else edFit($("edt"),box)};im.hidden=false;im.setAttribute("src",imgUrl(n.img))}
-function openEd(id,all){var n=getN(id);if(!n||LK())return;edId=id;edLink=null;edGroup=null;edOld={};edOld[n.id]={w:n.w,h:n.h};$("edStrike").hidden=false;showEdImg(n);var t=$("edt");t.value=n.t;renderEdLinks();edFit(t,$("edc"));$("ed").classList.add("on");edFit(t,$("edc"));t.focus();if(all)t.select();else t.setSelectionRange(t.value.length,t.value.length)}
+function openEd(id,all){var n=getN(id);if(!n||LK())return;edId=id;edLink=null;edGroup=null;edOld={};edOld[n.id]={w:n.w,h:n.h};$("edStrike").hidden=false;edAlign();showEdImg(n);var t=$("edt");t.value=n.t;renderEdLinks();edFit(t,$("edc"));$("ed").classList.add("on");edFit(t,$("edc"));t.focus();if(all)t.select();else t.setSelectionRange(t.value.length,t.value.length)}
 function closeEd(){$("ed").classList.remove("on");showEdImg(null);
  if(edGroup){var m1=cur(),tt0=((m1.gt||{})[edGroup]||"").trim();if(tt0)m1.gt[edGroup]=tt0;else if(m1.gt)delete m1.gt[edGroup];settle(m1.nodes.filter(function(x){return x.grp===edGroup}).map(function(x){return x.id}));save();draw();edGroup=null;$("edt").placeholder="";$("edHint").textContent="Entrée : nouvelle ligne · Ctrl+clic sur un lien pour l’ouvrir · cliquez à l’extérieur pour valider";edId=null;edLink=null;return}
  if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(l&&!(l.label||"").trim()){delete l.label;save();draw()}else if(l&&/[ \t]+$/m.test(l.label)){l.label=l.label.replace(/[ \t]+$/gm,"");save();draw()}}
  if(edId){var en=getN(edId);if(en){var tt=(en.t||"").replace(/[ \t]+$/gm,"").replace(/\s+$/,"");var ch=tt!==en.t;if(ch)en.t=tt;if(settle([edId],edOld)||ch){save();draw()}}}
  edId=null;edLink=null}
-function editLabel(l){closeCtx();showEdImg(null);edGroup=null;if(selLink!==l.id||sel){selLink=l.id;sel=null;draw()}edId=null;edLink=l.id;$("edStrike").hidden=false;var t=$("edt");t.value=l.label||"";renderEdLinks();edFit(t,$("edc"));$("ed").classList.add("on");edFit(t,$("edc"));t.focus();t.setSelectionRange(t.value.length,t.value.length)}
+function editLabel(l){closeCtx();showEdImg(null);edGroup=null;if(selLink!==l.id||sel){selLink=l.id;sel=null;draw()}edId=null;edLink=l.id;$("edStrike").hidden=false;edAlign();var t=$("edt");t.value=l.label||"";renderEdLinks();edFit(t,$("edc"));$("ed").classList.add("on");edFit(t,$("edc"));t.focus();t.setSelectionRange(t.value.length,t.value.length)}
 $("edt").addEventListener("input",function(){if(edGroup){var m0=cur();m0.gt=m0.gt||{};m0.gt[edGroup]=this.value.replace(/\s*\n\s*/g," ").slice(0,80);save("g"+edGroup);draw();return}if(edLink){var l=(cur().links||[]).filter(function(x){return x.id===edLink})[0];if(!l)return;l.label=this.value;save("l"+l.id);draw();renderEdLinks();return}var n=getN(edId);if(!n)return;n.t=this.value;save("t"+n.id);draw();renderEdLinks()});
 $("ed").addEventListener("pointerdown",function(e){edDown=e.target===this});
 $("ed").addEventListener("click",function(e){if(e.target===this&&edDown)closeEd()});
