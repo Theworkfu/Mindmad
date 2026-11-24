@@ -96,6 +96,7 @@ button:disabled{opacity:.4;cursor:default}
 
 .lkh{fill:var(--panel);stroke:var(--link);cursor:grab}
 .lkh.m{fill:var(--link)}
+.node.held{opacity:.55}/* bulle(s) tenue(s) pendant le glisser : un peu transparentes pour voir la bulle en dessous */
 .node.dropt{filter:drop-shadow(0 0 9px var(--accent))}
 .node.dropt rect.box{stroke:var(--accent);stroke-width:5;fill:color-mix(in srgb,var(--accent) 20%,var(--node))}
 #trashbox{position:fixed;inset:0;z-index:40;background:rgba(8,12,16,.55);display:none;align-items:center;justify-content:center;padding:24px}
@@ -212,7 +213,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v110</div>
+    <div id="ver" title="Numéro de version de la page">v111</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -474,7 +475,7 @@ function draw(){modeBtn();
  m.nodes.forEach(function(n){if(CI.hid[n.id])return;
   var color=COLORS[(n.c||0)%COLORS.length];
   var isS=(n.id===sel||!!ms[n.id])&&selImg!==n.id,multi=Object.keys(ms).length>1;
-  var g=el("g",{"data-id":n.id,"class":"node"+(isS?" sel":"")+(selImg===n.id?" isel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+n.x+","+n.y+")"},ng);if(isS||selImg===n.id)g.style.setProperty("--sc",color);
+  var g=el("g",{"data-id":n.id,"class":"node"+(isS?" sel":"")+(selImg===n.id?" isel":"")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":"")+(drag&&drag.on&&drag.mv&&drag.mv.indexOf(n.id)>=0?" held":""),transform:"translate("+n.x+","+n.y+")"},ng);if(isS||selImg===n.id)g.style.setProperty("--sc",color);
   g.addEventListener("pointerdown",function(e){if(e.button===1){e.preventDefault();midDown={id:n.id};return}startDrag(e,n)});
   g.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;if(linkFrom){var from=linkFrom;endLink();if(from!==n.id)addLink(from,n.id,toWorld(e));return}selLink=null;selImg=null;selNote=null;if(e.shiftKey){toggleSel(n.id);return}ms={};var t=Date.now(),second=lastNode.id===n.id&&t-lastNode.t<500;lastNode=second?{id:null,t:0}:{id:n.id,t:t};sel=n.id;draw();syncPanel();if(second)openEd(n.id)});
   g.addEventListener("dblclick",function(e){e.stopPropagation();selImg=null;selNote=null;ms={};sel=n.id;draw();syncPanel();openEd(n.id)});
