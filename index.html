@@ -209,7 +209,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v101</div>
+    <div id="ver" title="Numéro de version de la page">v102</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -796,7 +796,7 @@ function refreshMaps(){syncUrl();if(HOME)renderHome();var t=$("mTitle");if(t.que
 /* ---------- actions ---------- */
 function viewCenter(){var cv=$("cv");return[(cv.clientWidth/2-tr.x)/tr.k,(cv.clientHeight/2-tr.y)/tr.k]}
 function toWorld(e){var r=$("cv").getBoundingClientRect();return[(e.clientX-r.left-tr.x)/tr.k,(e.clientY-r.top-tr.y)/tr.k]}
-function spawn(cx,cy,c,txt,noSettle){var m=cur(),ln=m.nodes[m.nodes.length-1],n={id:uid(),t:txt||"",c:c||0,img:"",x:0,y:0};measure(n);n.x=Math.round(cx-n.w/2);n.y=Math.round(cy-n.h/2);m.nodes.push(n);if(!noSettle)unover(n);return n}
+function spawn(cx,cy,c,txt,noSettle){var m=cur(),ln=m.nodes[m.nodes.length-1],n={id:uid(),t:txt||"",c:c||0,img:"",x:0,y:0,al:"l"};/* texte aligné à gauche par défaut */measure(n);n.x=Math.round(cx-n.w/2);n.y=Math.round(cy-n.h/2);m.nodes.push(n);if(!noSettle)unover(n);return n}
 function addBubble(c,noEdit){if(LK())return;var p=c||viewCenter(),n=spawn(p[0],p[1],0);sel=n.id;selLink=null;save();draw();syncPanel();if(!noEdit)openEd(n.id,true)}
 function addLinked(){if(LK())return;var f=getN(sel);if(!f){toast("Sélectionnez d’abord une bulle.");return}delete f.col;var m=cur(),kids=m.links.filter(function(l){return l.from===f.id}).map(function(l){return getNIn(m,l.to)}).filter(function(c){return c&&!CI.hid[c.id]&&c.x>=f.x+f.w});
  var n=spawn(f.x+f.w+150,f.y+f.h/2,f.c||0,"",true);
