@@ -161,6 +161,7 @@ button:disabled{opacity:.4;cursor:default}
 #ctx2 .cx-sw button.cx-c.on{outline:2px solid var(--ink)}
 #edc{max-height:calc(100vh - 48px);overflow:auto}
 #edStrike{align-self:flex-start;font-size:13px;padding:4px 10px}
+#edHint{display:none}/* plus d'aide des touches en bas de l'éditeur de texte */
 #edAl{display:flex;gap:6px;align-self:flex-start}#edAl[hidden]{display:none}#edAl button{font-size:13px;padding:4px 10px;display:inline-flex;align-items:center}#edAl button.on{background:var(--line)}
 #edi{display:block;max-width:100%;height:auto;align-self:center;border-radius:8px;background:var(--bg)}
 #edi[hidden]{display:none}
@@ -209,7 +210,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v103</div>
+    <div id="ver" title="Numéro de version de la page">v104</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1469,7 +1470,6 @@ function nodeMenu(n){var ids=selIds(),multi=ids.length>1&&ids.indexOf(n.id)>=0,a
   it.push({icon:"group",label:"Regrouper les bulles",fn:groupSel});if(anyG)it.push({icon:"ungroup",label:"Dégrouper la sélection",fn:ungroupSel})}
  else if(n.grp)it.push({icon:"✎",label:grpTitle(n.grp)?"Modifier le titre du groupe":"Donner un titre au groupe",fn:function(){editGroupTitle(n.grp)}},{icon:"ungroup",label:"Dégrouper cette bulle",fn:function(){ungroupNodes([n])}});
  else it.push({icon:"group",label:"Créer un groupe",fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}groupSel()}});
- it.push("-",{icon:"~",label:allStruck(n.t)?"Ne plus barrer le texte":"Barrer le texte",fn:function(){strikeNodes(n)}});
  it.push("-",{icon:"🗑",label:"Supprimer la bulle",danger:true,fn:function(){if(selIds().indexOf(n.id)<0){sel=n.id;ms={}}rm()}});
  return it}
 /* menu de l'image, quand elle est sélectionnée seule */
