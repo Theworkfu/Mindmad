@@ -210,7 +210,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v106</div>
+    <div id="ver" title="Numéro de version de la page">v107</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -349,7 +349,12 @@ function toggleCol(id){var n=getN(id);if(!n||!CI.out[id])return;var was=CI.hid,o
  var m=cur(),now=colInfo(m).hid,shown={},any=false;m.nodes.forEach(function(x){if(was[x.id]&&!now[x.id]){shown[x.id]=1;any=true}});
  if(any)placeFree(Object.keys(shown));
  /* mode Notes : les filles qui réapparaissent partent du bord droit de la mère (milieu), et non de leur ancienne position périmée ni du centre de la mère */
- if(m.mode==="notes"&&old[id])Object.keys(shown).forEach(function(k){var q=getN(k);old[k]=[old[id][0]+n.w,old[id][1]+n.h/2-(q?q.h/2:0)]});
+ if(m.mode==="notes"&&old[id]){var hpm=firstParents(m),st={},busy={};
+  /* chaque bulle qui réapparaît part du bord droit (milieu) de SA mère : les petites-filles sortent de leur mère (qui sort elle-même de la bulle dépliée) et ne traversent plus les filles */
+  var startOf=function(k){if(st[k])return st[k];var q=getN(k),p=hpm[k],b0;busy[k]=1;
+   if(p===id||(shown[p]&&!busy[p])){var pp=p===id?old[id]:startOf(p),pn=getN(p);b0=[pp[0]+pn.w,pp[1]+pn.h/2]}else b0=[old[id][0]+n.w,old[id][1]+n.h/2];
+   busy[k]=0;return(st[k]=[b0[0],b0[1]-(q?q.h/2:0)])};
+  Object.keys(shown).forEach(function(k){old[k]=startOf(k)})}
  save(undefined,true);animMove(old,id)}
 var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps);
 var trash=store.get("mm_trash",[]);normNames(trash);
