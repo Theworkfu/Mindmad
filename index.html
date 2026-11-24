@@ -210,7 +210,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v105</div>
+    <div id="ver" title="Numéro de version de la page">v106</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -348,8 +348,8 @@ function toggleCol(id){var n=getN(id);if(!n||!CI.out[id])return;var was=CI.hid,o
  /* des bulles réapparaissent : elles ne doivent pas recouvrir celles qui étaient déjà visibles, ce sont elles qui sont repoussées */
  var m=cur(),now=colInfo(m).hid,shown={},any=false;m.nodes.forEach(function(x){if(was[x.id]&&!now[x.id]){shown[x.id]=1;any=true}});
  if(any)placeFree(Object.keys(shown));
- /* mode Notes : les filles qui réapparaissent partent de la position de la mère (et non de leur ancienne position, périmée) */
- if(m.mode==="notes"&&old[id])Object.keys(shown).forEach(function(k){old[k]=old[id].slice()});
+ /* mode Notes : les filles qui réapparaissent partent du bord droit de la mère (milieu), et non de leur ancienne position périmée ni du centre de la mère */
+ if(m.mode==="notes"&&old[id])Object.keys(shown).forEach(function(k){var q=getN(k);old[k]=[old[id][0]+n.w,old[id][1]+n.h/2-(q?q.h/2:0)]});
  save(undefined,true);animMove(old,id)}
 var maps=store.get("mm_maps",[]);if(!maps.length)maps=[newMap()];normNames(maps);
 var trash=store.get("mm_trash",[]);normNames(trash);
