@@ -215,7 +215,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v114</div>
+    <div id="ver" title="Numéro de version de la page">v115</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -327,10 +327,12 @@ function normNames(list){list.forEach(migrate)}
 /* ---------- repli des bulles de destination ----------
    Une bulle repliée cache les bulles vers lesquelles partent ses flèches (et leurs suites),
    sauf celles qui restent alimentées par une autre bulle visible et dépliée. */
-var CI={hid:{},out:{},cnt:{}};
+var CI={hid:{},out:{},cnt:{},root:null};
 function colInfo(m){var adj={},radj={},out={},cnt={},hid={},cols={};
  (m.links||[]).forEach(function(l){if(l.from===l.to||!(l.a===undefined||l.a===1))return;(adj[l.from]=adj[l.from]||[]).push(l.to);(radj[l.to]=radj[l.to]||[]).push(l.from);out[l.from]=1});
- m.nodes.forEach(function(n){if(n.col&&out[n.id])cols[n.id]=1});
+ /* mode Notes : la 1re bulle mère (1re bulle sans mère qui a des filles) ne peut pas être repliée */
+ var root=null;if(m.mode==="notes")m.nodes.some(function(n){if(out[n.id]&&!radj[n.id]){root=n.id;return true}});
+ m.nodes.forEach(function(n){if(n.col&&out[n.id]&&n.id!==root)cols[n.id]=1});
  Object.keys(cols).forEach(function(c){
   var back={},q=[c];back[c]=1;while(q.length){var x=q.pop();(radj[x]||[]).forEach(function(y){if(!back[y]){back[y]=1;q.push(y)}})}
   var seen={};q=[];(adj[c]||[]).forEach(function(v){if(!back[v]&&!seen[v]){seen[v]=1;q.push(v)}});
@@ -338,7 +340,7 @@ function colInfo(m){var adj={},radj={},out={},cnt={},hid={},cols={};
  var ch=true;while(ch){ch=false;Object.keys(hid).forEach(function(x){if(!hid[x])return;if((radj[x]||[]).some(function(y){return !hid[y]&&!cols[y]})){delete hid[x];ch=true}})}
  Object.keys(cols).forEach(function(c){var seen={},q=[],k=0;(adj[c]||[]).forEach(function(v){if(hid[v]&&!seen[v]){seen[v]=1;q.push(v);k++}});
   while(q.length){var x=q.pop();(adj[x]||[]).forEach(function(v){if(hid[v]&&!seen[v]){seen[v]=1;q.push(v);k++}})}cnt[c]=k});
- return{hid:hid,out:out,cnt:cnt}}
+ return{hid:hid,out:out,cnt:cnt,root:root}}
 /* déplacement doux des bulles (ex. replier / déplier) : elles glissent vers leur nouvelle place et la bulle cliquée reste au même endroit à l'écran */
 var animCancel=null;
 function animMove(old,anchorId){var m=cur(),fin={};m.nodes.forEach(function(n){fin[n.id]=[n.x,n.y]});if(animCancel)animCancel();var a=anchorId?getNIn(m,anchorId):null,o0=a&&old[anchorId]?old[anchorId]:null,k=tr.k,sx=0,sy=0,t0=null,rid=0,done=false;
@@ -353,7 +355,7 @@ function animMove(old,anchorId){var m=cur(),fin={};m.nodes.forEach(function(n){f
 /* bouton du milieu : on déplace la carte tant qu'il est enfoncé ; replier / déplier ne se fait qu'au relâchement, si le curseur est sur la bulle visée et que la carte n'a pas bougé */
 var midDown=null;
 window.addEventListener("pointerdown",function(){midDown=null;if(animCancel)animCancel()},true);
-function toggleCol(id){var n=getN(id);if(!n||!CI.out[id])return;var was=CI.hid,old={};cur().nodes.forEach(function(x){old[x.id]=[x.x,x.y]});if(n.col)delete n.col;else n.col=true;
+function toggleCol(id){var n=getN(id);if(!n||!CI.out[id]||id===CI.root)return;var was=CI.hid,old={};cur().nodes.forEach(function(x){old[x.id]=[x.x,x.y]});if(n.col)delete n.col;else n.col=true;
  /* des bulles réapparaissent : elles ne doivent pas recouvrir celles qui étaient déjà visibles, ce sont elles qui sont repoussées */
  var m=cur(),now=colInfo(m).hid,shown={},any=false;m.nodes.forEach(function(x){if(was[x.id]&&!now[x.id]){shown[x.id]=1;any=true}});
  if(any)placeFree(Object.keys(shown));
@@ -504,7 +506,7 @@ function draw(){modeBtn();
    /* un clic sélectionne la note, un double-clic la modifie ; clic droit sur la note sélectionnée : menu de suppression */
    nb.addEventListener("dblclick",function(e){e.stopPropagation();selLink=null;selImg=null;ms={};sel=n.id;selNote=n.id;draw();syncPanel();openNote(n.id)});
    nb.addEventListener("click",function(e){e.stopPropagation();if(dragged)return;var t=Date.now(),second=lastNote.id===n.id&&t-lastNote.t<500;lastNote=second?{id:null,t:0}:{id:n.id,t:t};selLink=null;selImg=null;ms={};sel=n.id;selNote=n.id;draw();syncPanel();if(second)openNote(n.id)})}
-  if(CI.out[n.id]){var tg=el("g",{"class":"tog "+(n.col?"col":"open")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w/2)+","+n.h+")"},g);
+  if(CI.out[n.id]&&n.id!==CI.root){var tg=el("g",{"class":"tog "+(n.col?"col":"open")+(color==="#ffffff"?" cw":"")+(color==="#1c1c1c"?" ck":""),transform:"translate("+(n.w/2)+","+n.h+")"},g);
    tg.style.setProperty("--nc",color);el("title",{},tg).textContent=n.col?"Déplier les bulles de destination":"Replier les bulles de destination";
    el("circle",{r:n.col?7:5.5},tg);if(n.col)el("text",{y:2.8},tg).textContent=CI.cnt[n.id];else el("path",{d:"M-2.4,0 H2.4"},tg);
    tg.addEventListener("pointerdown",function(e){if(e.button===1){e.preventDefault();return}e.stopPropagation();e.preventDefault()});tg.addEventListener("dblclick",function(e){e.stopPropagation()});
@@ -1184,7 +1186,7 @@ $("mTitle").addEventListener("dblclick",function(e){if(e.target.tagName==="INPUT
 function dupMapById(id){var o=maps.filter(function(x){return x.id===id})[0];if(!o)return;var c=JSON.parse(JSON.stringify(o));delete c._h;delete c._g;c.mod=Date.now();c.id=uid();c.title=(o.title||"Votre carte")+" (copie)";leaveMap();maps.splice(maps.indexOf(o)+1,0,c);curId=c.id;sel=null;selLink=null;ensureHist(c);save();refreshMaps();draw();syncPanel();fit();toast("Carte dupliquée.")}
 /* replier / déplier toutes les bulles : "fold" tout replier, "one" déplier d'un niveau (les bulles repliées visibles), "all" tout déplier */
 function foldTree(mode){var m=cur(),ci=colInfo(m),c=0;
- m.nodes.forEach(function(n){if(mode==="fold"){if(ci.out[n.id]&&!n.col){n.col=true;c++}}
+ m.nodes.forEach(function(n){if(mode==="fold"){if(ci.out[n.id]&&n.id!==ci.root&&!n.col){n.col=true;c++}}
   else if(mode==="one"){if(n.col&&!ci.hid[n.id]){delete n.col;c++}}
   else if(n.col){delete n.col;c++}});
  if(!c){toast(mode==="fold"?"Tout est déjà replié.":"Rien à déplier.");return}
