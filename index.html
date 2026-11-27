@@ -217,7 +217,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v119</div>
+    <div id="ver" title="Numéro de version de la page">v120</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1220,7 +1220,7 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen()&&!PIN)FROZEN
    sub.push({icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}});
    showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,sub)}}}
  function addFolder(f,lv){var ms=sm.filter(function(m){return inFolder(m,f)}),open=!!FOPEN[f],hasCur=!HOME&&ms.some(function(m){return m.id===curId});
-  it.push({icon:open?"📂":"📁",ind:lv,dropFolder:f,label:fName(f)+" ("+ms.length+")"+(hasCur&&!open?" ✓":""),keep:true,fn:function(){if(FOPEN[f]){FOPEN[f]=false;saveF()}else openOnly(f)},
+  it.push({icon:open?"📂":"📁",ind:lv,dropFolder:f,label:fName(f)+(hasCur&&!open?" ✓":""),keep:true,fn:function(){if(FOPEN[f]){FOPEN[f]=false;saveF()}else openOnly(f)},
    rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;
     showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"📁",label:"Nouveau sous-dossier dans « "+fName(f)+" »…",fn:function(){newFolder(f)}},{icon:"✏️",label:"Renommer le dossier « "+fName(f)+" »…",fn:function(){var n=askFolder(fName(f),fParent(f));if(n&&n!==f)renameFolder(f,n)}},{icon:"🗑",label:"Supprimer le dossier « "+fName(f)+" » (les cartes sont conservées)",danger:true,fn:function(){renameFolder(f,"")}}])}});
   if(open){FL.filter(function(q){return fParent(q)===f}).forEach(function(q){addFolder(q,lv+1)});sm.forEach(function(m){if(m.folder===f)it.push(mapItem(m,lv+1))})}}
