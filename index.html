@@ -206,6 +206,7 @@ body.notes #bSnap{display:none}
 #ntBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}#ntBar [hidden]{display:none}#ntBar>button{font-size:13px;padding:4px 10px;min-width:34px;display:inline-flex;align-items:center;justify-content:center}#ntEmo{margin-left:auto;font-size:15px}
 #ntEmoP{display:none;flex-wrap:wrap;gap:2px;max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)}#ntEmoP.on{display:flex}#ntEmoP button{font-size:20px;line-height:1.2;padding:2px 4px;border:0;background:transparent;cursor:pointer;border-radius:6px}#ntEmoP button:hover{background:var(--line)}/* plus d'aide des touches en bas de l'éditeur de texte */
 #ntAl{display:flex;gap:6px;align-self:flex-start}#ntAl[hidden]{display:none}#ntAl button{font-size:13px;padding:4px 10px;display:inline-flex;align-items:center}#ntAl button.on{background:var(--line)}#ctx .cx-sort,#hmMenu .cx-sort{flex-wrap:nowrap}#ctx .cx-sort button,#hmMenu .cx-sort button{flex:1 1 auto;white-space:nowrap;font-size:11px;padding:4px 3px;gap:0;min-width:max-content}
+.dropt{outline:2px solid var(--accent);outline-offset:-2px;background:rgba(15,123,138,.14)!important}.dragging{opacity:.45}.cx-drop{margin:6px 6px 2px;padding:9px 10px;border:2px dashed var(--line);border-radius:8px;text-align:center;font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -216,7 +217,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v117</div>
+    <div id="ver" title="Numéro de version de la page">v118</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1214,21 +1215,26 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen()&&!PIN)FROZEN
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true,title:"Trier les cartes par :"}];
  /* dossiers : le dossier d'une carte est un chemin « Parent/Sous-dossier » (champ « folder », enregistré et synchronisé avec la carte) ; un dossier vide créé ici n'est mémorisé que sur cet appareil */
  var FL=folderPaths();
- function mapItem(m,lv){return{icon:(!HOME&&m.id===curId)?"✓":"",ind:lv,label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fly:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
+ function mapItem(m,lv){return{icon:(!HOME&&m.id===curId)?"✓":"",ind:lv,dragId:m.id,dropFolder:m.folder||"",label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fly:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
   rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;var sub=[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}}];
-   FL.forEach(function(f){if(f!==m.folder)sub.push({icon:"📁",label:"Ranger dans « "+fShow(f)+" »",fn:function(){setFolder(m.id,f)}})});
-   sub.push({icon:"📁",label:"Ranger dans un nouveau dossier…",fn:function(){var f=askFolder("","");if(f)setFolder(m.id,f)}});
-   if(m.folder)sub.push({icon:"↩",label:"Sortir du dossier « "+fShow(m.folder)+" »",fn:function(){setFolder(m.id,"")}});
    sub.push({icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}});
    showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,sub)}}}
  function addFolder(f,lv){var ms=sm.filter(function(m){return inFolder(m,f)}),open=!!FOPEN[f],hasCur=!HOME&&ms.some(function(m){return m.id===curId});
-  it.push({icon:open?"📂":"📁",ind:lv,label:fName(f)+" ("+ms.length+")"+(hasCur&&!open?" ✓":""),keep:true,fn:function(){FOPEN[f]=!FOPEN[f];saveF()},
+  it.push({icon:open?"📂":"📁",ind:lv,dropFolder:f,label:fName(f)+" ("+ms.length+")"+(hasCur&&!open?" ✓":""),keep:true,fn:function(){FOPEN[f]=!FOPEN[f];saveF()},
    rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;
     showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"📁",label:"Nouveau sous-dossier dans « "+fName(f)+" »…",fn:function(){newFolder(f)}},{icon:"✏️",label:"Renommer le dossier « "+fName(f)+" »…",fn:function(){var n=askFolder(fName(f),fParent(f));if(n&&n!==f)renameFolder(f,n)}},{icon:"🗑",label:"Supprimer le dossier « "+fName(f)+" » (les cartes sont conservées)",danger:true,fn:function(){renameFolder(f,"")}}])}});
   if(open){FL.filter(function(q){return fParent(q)===f}).forEach(function(q){addFolder(q,lv+1)});sm.forEach(function(m){if(m.folder===f)it.push(mapItem(m,lv+1))})}}
  FL.filter(function(q){return !fParent(q)}).forEach(function(q){addFolder(q,0)});
  sm.forEach(function(m){if(!m.folder)it.push(mapItem(m,0))});return it}
 var FOPEN={},EFOLD={};try{var fo=JSON.parse(localStorage.getItem("mm_fopen")||"{}");if(fo&&typeof fo==="object"&&!Array.isArray(fo))FOPEN=fo;var ef=JSON.parse(localStorage.getItem("mm_efold")||"{}");if(ef&&typeof ef==="object"&&!Array.isArray(ef))EFOLD=ef}catch(e){}
+/* glisser-déposer d'une carte du menu : sur un dossier = dedans ; sur une autre carte = dans le dossier de cette carte ; sur la zone « sortir » = hors des dossiers */
+var DRAGMAP=null;
+function clearDrop(){Array.prototype.forEach.call(document.querySelectorAll(".cx-drop"),function(z){z.remove()});Array.prototype.forEach.call(document.querySelectorAll(".dropt"),function(z){z.classList.remove("dropt")})}
+function dropWire(node,path){
+ function over(e){if(!DRAGMAP)return;var m=maps.filter(function(x){return x.id===DRAGMAP})[0];if(!m||(m.folder||"")===path)return;e.preventDefault();try{e.dataTransfer.dropEffect="move"}catch(x){}node.classList.add("dropt")}
+ node.addEventListener("dragenter",over);node.addEventListener("dragover",over);
+ node.addEventListener("dragleave",function(){node.classList.remove("dropt")});
+ node.addEventListener("drop",function(e){if(!DRAGMAP)return;e.preventDefault();var id=DRAGMAP;DRAGMAP=null;clearDrop();setFolder(id,path)})}
 function saveF(){try{localStorage.setItem("mm_fopen",JSON.stringify(FOPEN));localStorage.setItem("mm_efold",JSON.stringify(EFOLD))}catch(e){}}
 function fName(p){return p.split("/").pop()}
 function fParent(p){var i=p.lastIndexOf("/");return i<0?"":p.slice(0,i)}
@@ -1543,7 +1549,13 @@ function renderCtx(el,x,y,items,anc){var shut=el===ctxEl?closeCtx:closeSub;el.in
    el.appendChild(sr);return}
   var b=document.createElement("button");b.setAttribute("role","menuitem");if(it.danger)b.className="danger";if(it.ind)b.style.paddingLeft=(10+20*it.ind)+"px";
   var ic=document.createElement("span");ic.className="cx-i";if(ICONS[it.icon])ic.innerHTML=ICONS[it.icon];else ic.textContent=it.icon||"";var tx=document.createElement("span");if(it.sk!=null)strikeHtml(tx,it.sk);else tx.textContent=it.label;
-  b.appendChild(ic);b.appendChild(tx);b.onclick=function(){var go=function(){if(it.keep){it.fn();refreshMainMenu();LEAVEARM=true}else{shut();it.fn()}};if(it.fly)flyItem(b,go);else go()};/* keep : le menu reste ouvert (il se referme par un clic dans la carte) */
+  if(it.dragId){b.draggable=true;
+    b.addEventListener("dragstart",function(e){DRAGMAP=it.dragId;try{e.dataTransfer.setData("text/plain",it.dragId);e.dataTransfer.effectAllowed="move"}catch(x){}b.classList.add("dragging");var host=b.closest("#ctx,#hmMenu");
+     /* zone de dépôt pour sortir une carte de son dossier */
+     setTimeout(function(){if(!DRAGMAP||!host)return;var z=document.createElement("div");z.className="cx-drop";z.textContent="↩ Déposer ici pour sortir du dossier";dropWire(z,"");host.appendChild(z)},0)});
+    b.addEventListener("dragend",function(){DRAGMAP=null;b.classList.remove("dragging");clearDrop()})}
+   if(it.dropFolder!==undefined)dropWire(b,it.dropFolder);
+   b.appendChild(ic);b.appendChild(tx);b.onclick=function(){var go=function(){if(it.keep){it.fn();refreshMainMenu();LEAVEARM=true}else{shut();it.fn()}};if(it.fly)flyItem(b,go);else go()};/* keep : le menu reste ouvert (il se referme par un clic dans la carte) */
   if(it.rc){b.addEventListener("contextmenu",function(e){e.preventDefault();e.stopPropagation();it.rc(e.clientX,e.clientY,b)})}
   if(it.mid){b.addEventListener("mousedown",function(e){if(e.button===1)e.preventDefault()});b.addEventListener("auxclick",function(e){if(e.button===1){e.preventDefault();shut();it.mid()}})}
   el.appendChild(b)});
@@ -1801,7 +1813,7 @@ function showHome(anim){var menu=$("hmMenu");if(PIN){PIN=false;menu.classList.re
 function hideHome(){HOME=false;$("stage").classList.remove("hm");$("home").classList.remove("on")}
 /* pendant que l'accueil est ouvert, les raccourcis, collages et dépôts ne touchent pas la carte cachée */
 window.addEventListener("keydown",function(e){if(!HOME||ctxOpen()||modalOpen()||(e.target.closest&&e.target.closest("#ctx,#ctx2")))return;e.stopPropagation()},true);
-["paste","drop","dragover"].forEach(function(t){window.addEventListener(t,function(e){if(!HOME)return;e.stopPropagation();if(t!=="paste")e.preventDefault()},true)});
+["paste","drop","dragover"].forEach(function(t){window.addEventListener(t,function(e){if(!HOME||DRAGMAP)return;e.stopPropagation();if(t!=="paste")e.preventDefault()},true)});
 purgeTrash();resetHist();refreshMaps();sel=(cur().nodes[0]||{}).id||null;relayoutCur();draw();syncPanel();fit();updBadge();if(START_HOME)showHome();
 window.addEventListener("resize",fit);
 /* menu contextuel standard du navigateur désactivé partout (sauf dans les champs de texte, pour couper / coller) */
