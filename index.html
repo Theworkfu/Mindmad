@@ -205,7 +205,7 @@ body.notes #bSnap{display:none}
 @media(max-width:760px){#hmLogo{display:none}}
 #ntBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}#ntBar [hidden]{display:none}#ntBar>button{font-size:13px;padding:4px 10px;min-width:34px;display:inline-flex;align-items:center;justify-content:center}#ntEmo{margin-left:auto;font-size:15px}
 #ntEmoP{display:none;flex-wrap:wrap;gap:2px;max-height:150px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--bg)}#ntEmoP.on{display:flex}#ntEmoP button{font-size:20px;line-height:1.2;padding:2px 4px;border:0;background:transparent;cursor:pointer;border-radius:6px}#ntEmoP button:hover{background:var(--line)}/* plus d'aide des touches en bas de l'éditeur de texte */
-#ntAl{display:flex;gap:6px;align-self:flex-start}#ntAl[hidden]{display:none}#ntAl button{font-size:13px;padding:4px 10px;display:inline-flex;align-items:center}#ntAl button.on{background:var(--line)}.cx-sort,#hmMenu .cx-sort{flex-wrap:wrap}.cx-sort button,#hmMenu .cx-sort button{flex:1 1 auto;white-space:nowrap}
+#ntAl{display:flex;gap:6px;align-self:flex-start}#ntAl[hidden]{display:none}#ntAl button{font-size:13px;padding:4px 10px;display:inline-flex;align-items:center}#ntAl button.on{background:var(--line)}#ctx .cx-sort,#hmMenu .cx-sort{flex-wrap:nowrap}#ctx .cx-sort button,#hmMenu .cx-sort button{flex:1 1 auto;white-space:nowrap;font-size:11px;padding:4px 3px;gap:0;min-width:max-content}
 </style>
 </head>
 <body>
@@ -216,7 +216,7 @@ body.notes #bSnap{display:none}
     <div id="tBar"><span id="mTitle" title="Double-clic pour renommer la carte"></span><button class="fab" id="fabV" title="Mode Schéma / Notes" aria-label="Basculer entre mode Schéma et mode Notes">🧩</button></div>
     <button class="fab" id="fabC" title="Images et sauvegarde GitHub" aria-label="Images et sauvegarde">☁<span id="cloudBadge" class="badge"></span></button>
     <!-- NUMÉRO DE VERSION : à augmenter de 1 à CHAQUE modification livrée (ne jamais oublier) -->
-    <div id="ver" title="Numéro de version de la page">v116</div>
+    <div id="ver" title="Numéro de version de la page">v117</div>
     <input id="file" type="file" accept="application/json" hidden>
     <svg id="selov" aria-hidden="true"><rect id="selrect" width="0" height="0"/><path id="selpath" d=""/></svg>
     <div id="selhint"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span>Tracez un rectangle · ou maintenez appuyé puis tracez une forme libre</span><button id="selcancel">Annuler</button></div>
@@ -1210,30 +1210,45 @@ function mainMenu(){MAINOPEN=true;var sm=sortedMaps();if(!ctxOpen()&&!PIN)FROZEN
   else{var pos={};FROZEN.forEach(function(id,i){pos[id]=i});
    sm=sm.map(function(m,i){return{m:m,i:i}}).sort(function(a,b){var pa=pos[a.m.id],pb=pos[b.m.id];if(pa===undefined&&pb===undefined)return a.i-b.i;if(pa===undefined)return -1;if(pb===undefined)return 1;return pa-pb}).map(function(o){return o.m})}}
  else FROZEN=null;
- var it=[{icon:"⌂",label:"Accueil",fly:true,fn:function(){showHome(true)}},{icon:"＋",label:"Nouvelle carte…",keep:true,pin:true,fn:newMapAct},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
+ var it=[{icon:"⌂",label:"Accueil",fly:true,fn:function(){showHome(true)}},{icon:"＋",label:"Nouvelle carte…",keep:true,pin:true,fn:newMapAct},{icon:"📁",label:"Nouveau dossier…",keep:true,fn:function(){newFolder("")}},{icon:"📂",label:"Importer une carte…",fn:function(){$("file").click()}},
   {icon:"🗑",label:"Corbeille"+(trash.length?" ("+trash.length+")":""),fn:openTrash},"-",{sortbar:true,title:"Trier les cartes par :"}];
- /* dossiers : une carte appartient à un dossier par son champ « folder » (enregistré et synchronisé avec la carte) ; un dossier existe tant qu'il contient une carte */
- var FL=folderNames();
- function mapItem(m,ind){return{icon:(!HOME&&m.id===curId)?"✓":"",ind:ind,label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fly:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
+ /* dossiers : le dossier d'une carte est un chemin « Parent/Sous-dossier » (champ « folder », enregistré et synchronisé avec la carte) ; un dossier vide créé ici n'est mémorisé que sur cet appareil */
+ var FL=folderPaths();
+ function mapItem(m,lv){return{icon:(!HOME&&m.id===curId)?"✓":"",ind:lv,label:flat(m.title),sk:(m.title||"").replace(/\s*\n+\s*/g," ")||"Sans titre",keep:true,fly:true,fn:function(){switchMap(m.id)},mid:function(){openMapTab(m.id)},
   rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;var sub=[{icon:"✏️",label:"Renommer la carte « "+flat(m.title)+" »…",fn:function(){renameMapById(m.id)}},{icon:"⧉",label:"Dupliquer la carte « "+flat(m.title)+" »",fn:function(){dupMapById(m.id);refreshMainMenu()}}];
-   FL.forEach(function(f){if(f!==m.folder)sub.push({icon:"📁",label:"Ranger dans le dossier « "+f+" »",fn:function(){setFolder(m.id,f)}})});
-   sub.push({icon:"📁",label:"Ranger dans un nouveau dossier…",fn:function(){var f=askFolder("");if(f)setFolder(m.id,f)}});
-   if(m.folder)sub.push({icon:"↩",label:"Sortir du dossier « "+m.folder+" »",fn:function(){setFolder(m.id,"")}});
+   FL.forEach(function(f){if(f!==m.folder)sub.push({icon:"📁",label:"Ranger dans « "+fShow(f)+" »",fn:function(){setFolder(m.id,f)}})});
+   sub.push({icon:"📁",label:"Ranger dans un nouveau dossier…",fn:function(){var f=askFolder("","");if(f)setFolder(m.id,f)}});
+   if(m.folder)sub.push({icon:"↩",label:"Sortir du dossier « "+fShow(m.folder)+" »",fn:function(){setFolder(m.id,"")}});
    sub.push({icon:"🗑",label:"Supprimer la carte « "+flat(m.title)+" »…",danger:true,fn:function(){if(delMapById(m.id))refreshMainMenu()}});
    showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,sub)}}}
- FL.forEach(function(f){var inF=sm.filter(function(m){return m.folder===f}),open=!!FOPEN[f],hasCur=!HOME&&inF.some(function(m){return m.id===curId});
-  it.push({icon:open?"📂":"📁",label:f+" ("+inF.length+")"+(hasCur&&!open?" ✓":""),keep:true,fn:function(){FOPEN[f]=!FOPEN[f];try{localStorage.setItem("mm_fopen",JSON.stringify(FOPEN))}catch(e){}},
+ function addFolder(f,lv){var ms=sm.filter(function(m){return inFolder(m,f)}),open=!!FOPEN[f],hasCur=!HOME&&ms.some(function(m){return m.id===curId});
+  it.push({icon:open?"📂":"📁",ind:lv,label:fName(f)+" ("+ms.length+")"+(hasCur&&!open?" ✓":""),keep:true,fn:function(){FOPEN[f]=!FOPEN[f];saveF()},
    rc:function(x,y,btn){var mr=ctxEl.getBoundingClientRect(),br=btn?btn.getBoundingClientRect():null;
-    showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"✏️",label:"Renommer le dossier « "+f+" »…",fn:function(){var n=askFolder(f);if(n&&n!==f)renameFolder(f,n)}},{icon:"🗑",label:"Supprimer le dossier « "+f+" » (les cartes sont conservées)",danger:true,fn:function(){renameFolder(f,"")}}])}});
-  if(open)inF.forEach(function(m){it.push(mapItem(m,true))})});
- sm.forEach(function(m){if(!m.folder)it.push(mapItem(m,false))});return it}
-var FOPEN={};try{var fo=JSON.parse(localStorage.getItem("mm_fopen")||"{}");if(fo&&typeof fo==="object"&&!Array.isArray(fo))FOPEN=fo}catch(e){}
-function folderNames(){var o={};maps.forEach(function(m){if(m.folder)o[m.folder]=1});return Object.keys(o).sort(function(a,b){return a.localeCompare(b,"fr",{sensitivity:"base",numeric:true})})}
-/* demande un nom de dossier ; si un dossier du même nom existe déjà (sans tenir compte des majuscules), on réutilise son écriture */
-function askFolder(def){blurIgnoreUntil=Date.now()+60000;var t=prompt("Nom du dossier :",def||"");blurIgnoreUntil=Date.now()+800;if(t===null)return "";t=t.replace(/\s+/g," ").trim().slice(0,60);if(!t)return "";
- var ex=folderNames().filter(function(f){return f.toLowerCase()===t.toLowerCase()})[0];return ex||t}
-function setFolder(id,f){var m=maps.filter(function(x){return x.id===id})[0];if(!m)return;if(f){m.folder=f;FOPEN[f]=true;try{localStorage.setItem("mm_fopen",JSON.stringify(FOPEN))}catch(e){}}else delete m.folder;persist();refreshMainMenu()}
-function renameFolder(a,b){maps.forEach(function(m){if(m.folder===a){if(b)m.folder=b;else delete m.folder}});if(b&&FOPEN[a])FOPEN[b]=true;delete FOPEN[a];try{localStorage.setItem("mm_fopen",JSON.stringify(FOPEN))}catch(e){}persist();refreshMainMenu();if(!b)toast("Dossier supprimé : les cartes sont conservées.")}
+    showSub(br?(mr.width?mr.right:br.right)+6:x,br?br.top:y,[{icon:"📁",label:"Nouveau sous-dossier dans « "+fName(f)+" »…",fn:function(){newFolder(f)}},{icon:"✏️",label:"Renommer le dossier « "+fName(f)+" »…",fn:function(){var n=askFolder(fName(f),fParent(f));if(n&&n!==f)renameFolder(f,n)}},{icon:"🗑",label:"Supprimer le dossier « "+fName(f)+" » (les cartes sont conservées)",danger:true,fn:function(){renameFolder(f,"")}}])}});
+  if(open){FL.filter(function(q){return fParent(q)===f}).forEach(function(q){addFolder(q,lv+1)});sm.forEach(function(m){if(m.folder===f)it.push(mapItem(m,lv+1))})}}
+ FL.filter(function(q){return !fParent(q)}).forEach(function(q){addFolder(q,0)});
+ sm.forEach(function(m){if(!m.folder)it.push(mapItem(m,0))});return it}
+var FOPEN={},EFOLD={};try{var fo=JSON.parse(localStorage.getItem("mm_fopen")||"{}");if(fo&&typeof fo==="object"&&!Array.isArray(fo))FOPEN=fo;var ef=JSON.parse(localStorage.getItem("mm_efold")||"{}");if(ef&&typeof ef==="object"&&!Array.isArray(ef))EFOLD=ef}catch(e){}
+function saveF(){try{localStorage.setItem("mm_fopen",JSON.stringify(FOPEN));localStorage.setItem("mm_efold",JSON.stringify(EFOLD))}catch(e){}}
+function fName(p){return p.split("/").pop()}
+function fParent(p){var i=p.lastIndexOf("/");return i<0?"":p.slice(0,i)}
+function fShow(p){return p.split("/").join(" › ")}
+function inFolder(m,p){return !!m.folder&&(m.folder===p||m.folder.indexOf(p+"/")===0)}
+/* tous les dossiers (avec leurs dossiers parents), classés dans l'ordre alphabétique : un parent précède toujours ses sous-dossiers */
+function folderPaths(){var o={};function add(p){var acc="";p.split("/").forEach(function(sg){acc=acc?acc+"/"+sg:sg;o[acc]=1})}
+ maps.forEach(function(m){if(m.folder)add(m.folder)});Object.keys(EFOLD).forEach(add);
+ return Object.keys(o).sort(function(a,b){var x=a.split("/"),y=b.split("/"),i,c;for(i=0;i<x.length&&i<y.length;i++){c=x[i].localeCompare(y[i],"fr",{sensitivity:"base",numeric:true});if(c)return c}return x.length-y.length})}
+/* demande un nom de dossier (sans « / ») et renvoie son chemin complet ; si un dossier de même nom (sans tenir compte des majuscules) existe déjà au même endroit, on le réutilise */
+function askFolder(def,parent){blurIgnoreUntil=Date.now()+60000;var t=prompt(parent?"Nom du sous-dossier :":"Nom du dossier :",def||"");blurIgnoreUntil=Date.now()+800;if(t===null)return "";t=t.replace(/[\/\s]+/g," ").trim().slice(0,60);if(!t)return "";
+ var ex=folderPaths().filter(function(f){return fParent(f)===(parent||"")&&fName(f).toLowerCase()===t.toLowerCase()})[0];return ex||(parent?parent+"/"+t:t)}
+function setFolder(id,f){var m=maps.filter(function(x){return x.id===id})[0];if(!m)return;if(f){m.folder=f;var acc="";f.split("/").forEach(function(sg){acc=acc?acc+"/"+sg:sg;FOPEN[acc]=true});saveF()}else delete m.folder;persist();refreshMainMenu()}
+/* nouveau dossier vide (à la racine ou dans un dossier) */
+function newFolder(parent){var f=askFolder("",parent);if(!f)return;EFOLD[f]=1;var acc="";f.split("/").forEach(function(sg){acc=acc?acc+"/"+sg:sg;FOPEN[acc]=true});FOPEN[f]=false;saveF();refreshMainMenu()}
+/* renomme un dossier (b = nouveau chemin) ou le supprime (b vide) : les cartes d'un dossier supprimé, et de ses sous-dossiers, remontent dans le dossier parent */
+function renameFolder(a,b){var par=fParent(a);
+ maps.forEach(function(m){if(!inFolder(m,a))return;if(b)m.folder=b+m.folder.slice(a.length);else if(par)m.folder=par;else delete m.folder});
+ function moveKeys(o){var n={};Object.keys(o).forEach(function(k){if(k===a||k.indexOf(a+"/")===0){if(b)n[b+k.slice(a.length)]=o[k]}else n[k]=o[k]});return n}
+ EFOLD=moveKeys(EFOLD);FOPEN=moveKeys(FOPEN);saveF();persist();refreshMainMenu();if(!b)toast("Dossier supprimé : les cartes sont conservées.")}
 /* la liste des cartes du menu principal est reconstruite si le menu est encore ouvert (après une suppression) */
 function refreshMainMenu(){if(HOME||PIN){renderHome();return}if(!ctxOpen())return;var x=parseFloat(ctxEl.style.left)||6,y=parseFloat(ctxEl.style.top)||6,st=ctxEl.scrollTop;showCtx(x,y,mainMenu());ctxEl.scrollTop=st}
 $("fabM").onclick=function(){if(ctxSkip==="fabM"&&Date.now()-ctxSkipT<700){ctxSkip=null;return}var r=this.getBoundingClientRect();menuPos=[r.left,r.bottom+8];showCtx(menuPos[0],menuPos[1],mainMenu())};
@@ -1526,7 +1541,7 @@ function renderCtx(el,x,y,items,anc){var shut=el===ctxEl?closeCtx:closeSub;el.in
    var sr=document.createElement("div");sr.className="cx-sort";
    [["az","A → Z"],["use","Dernière utilisation"],["mod","Dernière modification"]].forEach(function(o){var cb=document.createElement("button");cb.textContent=o[1];cb.title="Trier par "+SORTN[o[0]];cb.className=SORT===o[0]?"on":"";cb.setAttribute("role","menuitem");cb.onclick=function(){setSort(o[0]);refreshMainMenu();LEAVEARM=true};sr.appendChild(cb)});
    el.appendChild(sr);return}
-  var b=document.createElement("button");b.setAttribute("role","menuitem");if(it.danger)b.className="danger";if(it.ind)b.style.paddingLeft="30px";
+  var b=document.createElement("button");b.setAttribute("role","menuitem");if(it.danger)b.className="danger";if(it.ind)b.style.paddingLeft=(10+20*it.ind)+"px";
   var ic=document.createElement("span");ic.className="cx-i";if(ICONS[it.icon])ic.innerHTML=ICONS[it.icon];else ic.textContent=it.icon||"";var tx=document.createElement("span");if(it.sk!=null)strikeHtml(tx,it.sk);else tx.textContent=it.label;
   b.appendChild(ic);b.appendChild(tx);b.onclick=function(){var go=function(){if(it.keep){it.fn();refreshMainMenu();LEAVEARM=true}else{shut();it.fn()}};if(it.fly)flyItem(b,go);else go()};/* keep : le menu reste ouvert (il se referme par un clic dans la carte) */
   if(it.rc){b.addEventListener("contextmenu",function(e){e.preventDefault();e.stopPropagation();it.rc(e.clientX,e.clientY,b)})}
